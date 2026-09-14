@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title id="pageTitle"><%= initialMode === 'register' ? 'Inscription | HosBank' : 'Connexion | HosBank' %></title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        theme: {
+                            purple: '#746B92',
+                            purpleHover: '#635B7E',
+                            purpleLight: '#8A81A5',
+                            cream: '#F6EFE0',
+                            creamDark: '#EFE7D4',
+                            borderLine: '#D8CEBB',
+                            placeholder: '#9D937F',
+                            textDark: '#282330',
+                            coralLogo: '#E97A7A',
+                            coralAccent: '#FF6F61'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        brand: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #F6EFE0;
+            color: #282330;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .underline-input {
+            border: none;
+            border-bottom: 1.5px solid #D8CEBB;
+            background: transparent;
+            outline: none;
+            transition: border-color 0.2s ease, padding-left 0.2s ease;
+            color: #282330;
+        }
+        .underline-input::placeholder {
+            color: #9D937F;
+            font-weight: 400;
+        }
+        .underline-input:focus {
+            border-bottom-color: #746B92;
+            padding-left: 2px;
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus, 
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #F6EFE0 inset !important;
+            -webkit-text-fill-color: #282330 !important;
+        }
+
+        .panel-slide-transition {
+            transition: transform 750ms cubic-bezier(0.65, 0, 0.35, 1);
+            will-change: transform;
+        }
+
+        .inner-content-slide {
+            transition: transform 750ms cubic-bezier(0.65, 0, 0.35, 1), opacity 400ms ease;
+            will-change: transform, opacity;
+        }
+
+        .fade-swap-transition {
+            transition: opacity 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .curve-fade-transition {
+            transition: opacity 450ms ease;
+        }
+
+        .brand-wordmark {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen overflow-hidden relative select-none">
+
+    <div id="authViewport" class="w-full h-full relative overflow-hidden flex flex-col lg:flex-row">
+
+        <div 
+            id="purplePanel" 
+            class="w-full lg:w-[54vw] h-full bg-[#746B92] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between absolute top-0 bottom-0 left-0 z-20 overflow-hidden panel-slide-transition"
+            style="transform: <%= initialMode === 'login' ? 'translate3d(46vw, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
+        >
+            <div id="curveRight" class="hidden lg:block absolute top-0 right-0 bottom-0 w-[180px] h-full pointer-events-none z-30 curve-fade-transition <%= initialMode === 'login' ? 'opacity-0 pointer-events-none' : 'opacity-100' %>">
+                <svg viewBox="0 0 180 800" preserveAspectRatio="none" class="w-full h-full">
+                    <path d="M 180,0 L 40,0 C 120,160 210,380 0,800 L 180,800 Z" fill="#F6EFE0"></path>
+                </svg>
+            </div>
+
+            <div id="curveLeft" class="hidden lg:block absolute top-0 left-0 bottom-0 w-[180px] h-full pointer-events-none -translate-x-[1px] z-30 curve-fade-transition <%= initialMode === 'login' ? 'opacity-100' : 'opacity-0 pointer-events-none' %>">
+                <svg viewBox="0 0 180 800" preserveAspectRatio="none" class="w-full h-full">
+                    <path d="M 0,0 L 35,0 C 5,120 160,220 140,400 C 125,540 50,680 0,800 Z" fill="#F6EFE0"></path>
+                </svg>
+            </div>
+
+            <div 
+                id="logoContainer" 
+                class="relative z-40 flex items-center inner-content-slide"
+                style="transform: <%= initialMode === 'login' ? 'translate3d(110px, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
+            >
+                <a href="/" class="inline-flex items-center select-none group cursor-pointer" title="HosBank">
+                    <div class="flex items-center">
+                        <svg class="h-7 sm:h-[30px] w-auto mr-[2px] transition-transform duration-200 group-hover:scale-[1.03]" viewBox="0 0 25 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="0" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
+                            <rect x="18.5" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
+                            <path d="M5.5 17.5 L18.5 10.5 L18.5 15.2 L5.5 22.2 Z" fill="#E97A7A"/>
+                        </svg>
+
+                        <div class="flex items-baseline brand-wordmark">
+                            <span class="text-[26px] sm:text-[28px] font-[800] tracking-[-0.04em] text-white leading-none">os</span>
+                            <span class="text-[26px] sm:text-[28px] font-[800] tracking-[-0.03em] text-white/95 leading-none ml-[0.5px]">Bank</span>
+                            <span class="w-[6.5px] h-[6.5px] rounded-full bg-[#E97A7A] ml-1.5 self-end mb-1 shadow-[0_0_8px_rgba(233,122,122,0.65)]"></span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div 
+                id="textContainer"
+                class="relative z-40 my-6 lg:my-auto max-w-md inner-content-slide"
+                style="transform: <%= initialMode === 'login' ? 'translate3d(110px, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
+            >
+                <div id="textRegister" class="fade-swap-transition <%= initialMode === 'register' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
+                    <h1 class="text-3xl sm:text-4xl lg:text-[42px] font-bold tracking-tight leading-[1.15] text-white">
+                        Heureux de vous compter parmi nous !
+                    </h1>
+                    <p class="text-[13px] sm:text-[14px] text-[#DDD7EB] font-normal leading-relaxed mt-4 max-w-xs">
+                        Rejoignez des milliers de clients qui font confiance à HosBank pour une gestion bancaire moderne, fluide et sécurisée.
+                    </p>
+                </div>
+
+                <div id="textLogin" class="fade-swap-transition <%= initialMode === 'login' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
+                    <h2 class="text-3xl sm:text-4xl lg:text-[44px] font-bold tracking-tight leading-[1.15] text-white">
+                        Ravi de vous revoir !
+                    </h2>
+                    <p class="text-sm sm:text-base text-[#DDD7EB] font-normal leading-relaxed mt-3">
+                        Reprenez là où vous vous étiez arrêté
+                    </p>
+                </div>
+            </div>
+
+            <div 
+                id="illustrContainer"
+                class="relative z-40 w-full max-w-[460px] mx-auto pb-2 inner-content-slide"
+                style="transform: <%= initialMode === 'login' ? 'translate3d(90px, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
+            >
+                
+                <div id="illustrRegister" class="fade-swap-transition <%= initialMode === 'register' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
+                    <svg viewBox="0 0 460 270" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="230" cy="250" rx="200" ry="16" fill="#60577B" opacity="0.65"/>
+                        <g id="p1">
+                            <path d="M85 190 L82 248" stroke="#7A6655" stroke-width="6.5" stroke-linecap="round"/>
+                            <path d="M100 190 L103 248" stroke="#7A6655" stroke-width="6.5" stroke-linecap="round"/>
+                            <ellipse cx="80" cy="250" rx="8" ry="4.5" fill="#1C2128"/>
+                            <ellipse cx="106" cy="250" rx="8" ry="4.5" fill="#1C2128"/>
+                            <path d="M80 148 L73 192 L113 192 L106 148 Z" fill="#885A6E"/>
+                            <path d="M79 116 L107 116 L110 150 L76 150 Z" fill="#FAF5ED"/>
+                            <polygon points="87,116 93,126 99,116" fill="#F4CEC4"/>
+                            <path d="M79 118 L66 138 L77 151" stroke="#FAF5ED" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M107 118 L120 138 L109 151" stroke="#FAF5ED" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="93" cy="98" r="12" fill="#B88A68"/>
+                            <path d="M82 98 C82 82 105 82 105 98 C105 92 99 89 93 89 C87 89 82 92 82 98 Z" fill="#1F242C"/>
+                            <circle cx="87" cy="88" r="3.5" fill="#1F242C"/>
+                            <circle cx="90" cy="98" r="1" fill="#1F242C"/>
+                            <circle cx="97" cy="98" r="1" fill="#1F242C"/>
+                            <path d="M91 102 Q93.5 104 96 102" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+                        </g>
+                        <g id="p2">
+                            <path d="M168 140 L164 244" stroke="#2D3A44" stroke-width="11" stroke-linecap="round"/>
+                            <path d="M190 140 L200 240" stroke="#2D3A44" stroke-width="11" stroke-linecap="round"/>
+                            <ellipse cx="162" cy="246" rx="9" ry="4.5" fill="#182025"/>
+                            <ellipse cx="204" cy="242" rx="9" ry="4.5" fill="#182025"/>
+                            <path d="M156 94 L204 94 L198 144 L162 144 Z" fill="#FAF5E8"/>
+                            <path d="M174 94 L180 102 L186 94 Z" fill="#584D42"/>
+                            <path d="M200 97 L214 80 L206 64" stroke="#FAF5E8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="206" cy="61" r="4.5" fill="#B98A64"/>
+                            <path d="M158 97 L148 118 L154 133" stroke="#FAF5E8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="178" cy="74" r="13" fill="#B98A64"/>
+                            <path d="M168 70 C168 57 190 57 192 68 C188 63 181 63 174 65 Z" fill="#473727"/>
+                            <circle cx="174" cy="74" r="1.1" fill="#182025"/>
+                            <circle cx="182" cy="74" r="1.1" fill="#182025"/>
+                            <path d="M174 78 Q178 82 182 78" fill="#FFFFFF" stroke="#182025" stroke-width="0.8"/>
+                        </g>
+                        <g id="p3">
+                            <path d="M250 148 L238 230 L233 240" stroke="#7C5D6C" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M268 148 L276 240" stroke="#7C5D6C" stroke-width="9.5" stroke-linecap="round"/>
+                            <ellipse cx="231" cy="243" rx="7" ry="4" fill="#182025"/>
+                            <ellipse cx="278" cy="243" rx="7" ry="4" fill="#182025"/>
+                            <path d="M246 108 L280 108 L274 150 L250 150 Z" fill="#2B363F"/>
+                            <path d="M248 109 L236 90 L242 76" stroke="#2B363F" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="243" cy="74" r="3.5" fill="#A87A5B"/>
+                            <path d="M280 109 L292 126 L284 138" stroke="#2B363F" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="266" cy="89" r="11" fill="#A87A5B"/>
+                            <path d="M257 87 C257 74 278 74 278 87 C274 81 267 80 260 83 Z" fill="#1E242C"/>
+                            <circle cx="263" cy="89" r="1" fill="#1E242C"/>
+                            <circle cx="270" cy="89" r="1" fill="#1E242C"/>
+                            <path d="M264 93 Q266.5 95 269 93" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+                        </g>
+                        <g id="p4">
+                            <path d="M322 142 L308 242" stroke="#222C33" stroke-width="11" stroke-linecap="round"/>
+                            <path d="M346 142 L354 242" stroke="#222C33" stroke-width="11" stroke-linecap="round"/>
+                            <ellipse cx="305" cy="245" rx="8" ry="4.5" fill="#182025"/>
+                            <ellipse cx="357" cy="245" rx="8" ry="4.5" fill="#182025"/>
+                            <path d="M310 96 L360 96 L354 146 L316 146 Z" fill="#F4CEC4"/>
+                            <path d="M312 99 L299 120 L311 131" stroke="#F4CEC4" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M358 99 L374 114 L368 127" stroke="#F4CEC4" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="335" cy="78" r="12" fill="#B07D53"/>
+                            <path d="M325 74 C325 63 346 63 348 74 C344 68 337 68 330 71 Z" fill="#3D2E21"/>
+                            <circle cx="331" cy="78" r="1.1" fill="#182025"/>
+                            <circle cx="339" cy="78" r="1.1" fill="#182025"/>
+                            <path d="M331 82 Q335 86 339 82" fill="#FFFFFF" stroke="#182025" stroke-width="0.8"/>
+                        </g>
+                    </svg>
+                </div>
+
+                <div id="illustrLogin" class="fade-swap-transition <%= initialMode === 'login' ? 'opacity-100 block' : 'opacity-0 hidden' %> max-w-[420px] mx-auto">
+                    <svg viewBox="0 0 460 340" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="230" cy="190" rx="170" ry="110" fill="#887EA2" opacity="0.45"/>
+                        <ellipse cx="230" cy="305" rx="180" ry="14" fill="#62597C" opacity="0.6"/>
+                        <g id="sparks">
+                            <line x1="230" y1="120" x2="230" y2="108" stroke="#F6EFE0" stroke-width="2.5" stroke-linecap="round"/>
+                            <line x1="223" y1="124" x2="214" y2="117" stroke="#F6EFE0" stroke-width="2.2" stroke-linecap="round"/>
+                            <line x1="237" y1="124" x2="246" y2="117" stroke="#F6EFE0" stroke-width="2.2" stroke-linecap="round"/>
+                        </g>
+                        <g id="man-left">
+                            <path d="M192 195 L180 298" stroke="#B46A5E" stroke-width="12" stroke-linecap="round"/>
+                            <path d="M210 195 L202 298" stroke="#B46A5E" stroke-width="12" stroke-linecap="round"/>
+                            <rect x="173" y="295" width="14" height="4" rx="2" fill="#FAF5ED"/>
+                            <rect x="195" y="295" width="14" height="4" rx="2" fill="#FAF5ED"/>
+                            <ellipse cx="178" cy="303" rx="10" ry="5" fill="#1C2128"/>
+                            <ellipse cx="204" cy="303" rx="10" ry="5" fill="#1C2128"/>
+                            
+                            <path d="M172 150 L220 150 L214 200 L178 200 Z" fill="#FAF5ED"/>
+                            <path d="M188 150 L196 158 L204 150 Z" fill="#DCD5C5"/>
+
+                            <path d="M174 154 L162 178 L170 196" stroke="#FAF5ED" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="171" cy="199" r="4.5" fill="#BF9068"/>
+
+                            <path d="M216 154 L224 138 L228 126" stroke="#FAF5ED" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M226 128 L230 122 L234 125" stroke="#BF9068" stroke-width="5" stroke-linecap="round"/>
+
+                            <circle cx="196" cy="126" r="13.5" fill="#BF9068"/>
+                            <path d="M184 123 C184 109 208 109 209 121 C205 115 198 114 192 117 Z" fill="#2E2319"/>
+                            <circle cx="193" cy="126" r="1.2" fill="#1C2128"/>
+                            <circle cx="201" cy="126" r="1.2" fill="#1C2128"/>
+                            <path d="M194 131 Q198 135 202 131" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+                        </g>
+
+                        <g id="woman-right">
+                            <path d="M256 200 L250 298" stroke="#252F3C" stroke-width="12" stroke-linecap="round"/>
+                            <path d="M276 200 L286 298" stroke="#252F3C" stroke-width="12" stroke-linecap="round"/>
+                            <ellipse cx="248" cy="303" rx="9" ry="5" fill="#171D24"/>
+                            <ellipse cx="290" cy="303" rx="9" ry="5" fill="#171D24"/>
+
+                            <path d="M246 150 L290 150 L286 204 L252 204 Z" fill="#F4CEC4"/>
+                            <path d="M260 150 Q268 156 276 150" stroke="#DFB5AB" stroke-width="2" fill="none"/>
+
+                            <path d="M288 154 L298 178 L292 196" stroke="#F4CEC4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="290" cy="199" r="4" fill="#C49B7A"/>
+
+                            <path d="M248 154 L238 138 L234 126" stroke="#F4CEC4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M236 128 L232 122 L228 125" stroke="#C49B7A" stroke-width="5" stroke-linecap="round"/>
+
+                            <circle cx="260" cy="126" r="8" fill="#C49B7A"/>
+                            <path d="M256 120 C256 106 282 106 284 124 L286 156 C286 166 276 166 270 166 L262 166 C258 166 254 160 254 150 Z" fill="#242D38"/>
+                            <circle cx="256" cy="127" r="2.8" fill="#C49B7A"/>
+                        </g>
+                    </svg>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div 
+            id="creamPanel" 
+            class="w-full lg:w-[46vw] h-full bg-[#F6EFE0] p-8 sm:p-12 lg:p-16 flex flex-col justify-between absolute top-0 bottom-0 left-0 z-10 panel-slide-transition"
+            style="transform: <%= initialMode === 'login' ? 'translate3d(0, 0, 0)' : 'translate3d(54vw, 0, 0)' %>;"
+        >
+
+            <div id="cornerDecor" class="absolute bottom-0 w-36 h-36 bg-[#EFE7D4] -z-10 pointer-events-none curve-fade-transition <%= initialMode === 'login' ? 'left-0 rounded-tr-[54px]' : 'right-0 rounded-tl-[54px]' %>"></div>
+
+            <div class="h-4"></div>
+
+            <div class="max-w-sm w-full mx-auto my-auto">
+
+                <div id="formRegister" class="fade-swap-transition <%= initialMode === 'register' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
+                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#282330] mb-6 text-left">
+                        Inscription
+                    </h2>
+
+                    <form action="/register" method="POST" class="space-y-4 w-full">
+                        <div class="pb-2 border-b border-[#D8CEBB] flex items-center justify-between">
+                            <span class="text-sm text-[#9D937F]">Civilité</span>
+                            <div class="flex items-center gap-6">
+                                <label class="inline-flex items-center gap-2 cursor-pointer group select-none">
+                                    <input type="radio" name="civilite" value="M." class="peer sr-only" required checked>
+                                    <span class="w-[18px] h-[18px] rounded-full border-[1.5px] border-[#D8CEBB] group-hover:border-[#746B92] peer-checked:border-[#746B92] peer-checked:bg-[#746B92] flex items-center justify-center transition-all duration-150">
+                                        <span class="w-[7px] h-[7px] rounded-full bg-[#F6EFE0]"></span>
+                                    </span>
+                                    <span class="text-xs sm:text-sm text-[#9D937F] group-hover:text-[#282330] peer-checked:text-[#282330] peer-checked:font-medium transition-colors">
+                                        M.
+                                    </span>
+                                </label>
+                                <label class="inline-flex items-center gap-2 cursor-pointer group select-none">
+                                    <input type="radio" name="civilite" value="Mme" class="peer sr-only">
+                                    <span class="w-[18px] h-[18px] rounded-full border-[1.5px] border-[#D8CEBB] group-hover:border-[#746B92] peer-checked:border-[#746B92] peer-checked:bg-[#746B92] flex items-center justify-center transition-all duration-150">
+                                        <span class="w-[7px] h-[7px] rounded-full bg-[#F6EFE0]"></span>
+                                    </span>
+                                    <span class="text-xs sm:text-sm text-[#9D937F] group-hover:text-[#282330] peer-checked:text-[#282330] peer-checked:font-medium transition-colors">
+                                        Mme
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <input type="text" name="name" id="regName" required placeholder="Nom complet" class="w-full underline-input pb-2.5 text-sm text-[#282330]">
+                        </div>
+
+                        <div>
+                            <input type="email" name="email" id="regEmail" required placeholder="Adresse e-mail" class="w-full underline-input pb-2.5 text-sm text-[#282330]">
+                        </div>
+
+                        <div>
+                            <input type="password" name="password" id="regPassword" required placeholder="Mot de passe" class="w-full underline-input pb-2.5 text-sm text-[#282330]">
+                        </div>
+
+
+                        <div>
+                            <input type="password" name="confirmPassword" id="regConfirmPassword" required placeholder="Confirmer le mot de passe" class="w-full underline-input pb-2.5 text-sm text-[#282330]">
+                        </div>
+
+
+                        <div class="pt-4 flex justify-start">
+                            <button type="submit" class="bg-[#746B92] hover:bg-[#635B7E] active:bg-[#574F70] text-white text-xs sm:text-sm font-semibold px-7 py-2.5 rounded-lg shadow-sm transition-all duration-150 cursor-pointer">
+                                S'inscrire
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-6 text-left text-xs text-[#9D937F]">
+                        <span>Vous avez déjà un compte ?</span>
+                        <button type="button" onclick="switchMode('login')" class="text-[#746B92] font-semibold hover:underline ml-1 cursor-pointer">
+                            Se connecter
+                        </button>
+                    </div>
+                </div>
+
+                <div id="formLogin" class="fade-swap-transition <%= initialMode === 'login' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
+                    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#282330] mb-8 sm:mb-10 text-left">
+                        Connexion
+                    </h1>
+
+                    <form action="/login" method="POST" class="space-y-7 w-full">                        <!-- Identifiant / Email -->
+                        <div>
+                            <input type="text" name="name" id="loginName" required autocomplete="username" placeholder="Identifiant ou E-mail" class="w-full underline-input pb-2.5 text-sm sm:text-base text-[#282330]">
+                        </div>
+
+                        <div>
+                            <input type="password" name="password" id="loginPassword" required autocomplete="current-password" placeholder="Mot de passe" class="w-full underline-input pb-2.5 text-sm sm:text-base text-[#282330]">
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs sm:text-sm pt-1">
+                            <label class="flex items-center cursor-pointer select-none text-[#9D937F] hover:text-[#282330] transition-colors">
+                                <input type="checkbox" name="remember" class="sr-only peer">
+                                <span class="w-4 h-4 rounded border border-[#D8CEBB] peer-checked:bg-[#746B92] peer-checked:border-[#746B92] flex items-center justify-center mr-2 transition-all">
+                                    <svg class="w-2.5 h-2.5 text-white hidden peer-checked:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </span>
+                                <span>Se souvenir de moi</span>
+                            </label>
+                            <a href="#" class="text-[#9D937F] hover:text-[#746B92] hover:underline transition-colors">
+                                Mot de passe oublié ?
+                            </a>
+                        </div>
+
+                        <div class="pt-5 flex justify-start">
+                            <button type="submit" class="bg-[#746B92] hover:bg-[#635B7E] active:bg-[#574F70] text-white text-xs sm:text-sm font-semibold px-7 py-2.5 rounded-lg shadow-sm transition-all duration-150 cursor-pointer">
+                                Se connecter
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-8 text-left text-xs text-[#9D937F]">
+                        <span>Vous n'avez pas de compte ?</span>
+                        <button type="button" onclick="switchMode('register')" class="text-[#746B92] font-semibold hover:underline ml-1 cursor-pointer">
+                            S'inscrire
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="h-4"></div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentMode = '<%= initialMode %>';
+        let isAnimating = false;
+
+        function switchMode(targetMode, pushState = true) {
+            if (currentMode === targetMode || isAnimating) return;
+            isAnimating = true;
+            currentMode = targetMode;
+
+            const purplePanel = document.getElementById('purplePanel');
+            const creamPanel = document.getElementById('creamPanel');
+            const logoContainer = document.getElementById('logoContainer');
+            const textContainer = document.getElementById('textContainer');
+            const illustrContainer = document.getElementById('illustrContainer');
+            const cornerDecor = document.getElementById('cornerDecor');
+            const curveRight = document.getElementById('curveRight');
+            const curveLeft = document.getElementById('curveLeft');
+            
+            const textRegister = document.getElementById('textRegister');
+            const textLogin = document.getElementById('textLogin');
+            const illustrRegister = document.getElementById('illustrRegister');
+            const illustrLogin = document.getElementById('illustrLogin');
+            const formRegister = document.getElementById('formRegister');
+            const formLogin = document.getElementById('formLogin');
+            const pageTitle = document.getElementById('pageTitle');
+
+            if (targetMode === 'login') {
+                textRegister.style.opacity = '0';
+                illustrRegister.style.opacity = '0';
+                formRegister.style.opacity = '0';
+            } else {
+                textLogin.style.opacity = '0';
+                illustrLogin.style.opacity = '0';
+                formLogin.style.opacity = '0';
+            }
+
+            const isDesktop = window.innerWidth >= 1024;
+
+            if (targetMode === 'login') {
+                if (isDesktop) {
+                    purplePanel.style.transform = 'translate3d(46vw, 0, 0)';
+                    creamPanel.style.transform = 'translate3d(0, 0, 0)';
+                    logoContainer.style.transform = 'translate3d(110px, 0, 0)';
+                    textContainer.style.transform = 'translate3d(110px, 0, 0)';
+                    illustrContainer.style.transform = 'translate3d(90px, 0, 0)';
+                }
+
+                cornerDecor.classList.remove('right-0', 'rounded-tl-[54px]');
+                cornerDecor.classList.add('left-0', 'rounded-tr-[54px]');
+
+                curveRight.classList.add('opacity-0', 'pointer-events-none');
+                curveRight.classList.remove('opacity-100');
+                curveLeft.classList.remove('opacity-0', 'pointer-events-none');
+                curveLeft.classList.add('opacity-100');
+
+                if (pushState) history.pushState({ mode: 'login' }, '', '/login');
+                if (pageTitle) pageTitle.textContent = 'Connexion | HosBank';
+
+            } else {
+                if (isDesktop) {
+                    purplePanel.style.transform = 'translate3d(0, 0, 0)';
+                    creamPanel.style.transform = 'translate3d(54vw, 0, 0)';
+                    logoContainer.style.transform = 'translate3d(0, 0, 0)';
+                    textContainer.style.transform = 'translate3d(0, 0, 0)';
+                    illustrContainer.style.transform = 'translate3d(0, 0, 0)';
+                }
+
+                cornerDecor.classList.remove('left-0', 'rounded-tr-[54px]');
+                cornerDecor.classList.add('right-0', 'rounded-tl-[54px]');
+
+                curveLeft.classList.add('opacity-0', 'pointer-events-none');
+                curveLeft.classList.remove('opacity-100');
+                curveRight.classList.remove('opacity-0', 'pointer-events-none');
+                curveRight.classList.add('opacity-100');
+
+                if (pushState) history.pushState({ mode: 'register' }, '', '/register');
+                if (pageTitle) pageTitle.textContent = 'Inscription | HosBank';
+            }
+
+            setTimeout(() => {
+                if (targetMode === 'login') {
+                    textRegister.classList.add('hidden');
+                    textLogin.classList.remove('hidden');
+                    illustrRegister.classList.add('hidden');
+                    illustrLogin.classList.remove('hidden');
+                    formRegister.classList.add('hidden');
+                    formLogin.classList.remove('hidden');
+
+                    requestAnimationFrame(() => {
+                        textLogin.style.opacity = '1';
+                        illustrLogin.style.opacity = '1';
+                        formLogin.style.opacity = '1';
+                    });
+                } else {
+                    textLogin.classList.add('hidden');
+                    textRegister.classList.remove('hidden');
+                    illustrLogin.classList.add('hidden');
+                    illustrRegister.classList.remove('hidden');
+                    formLogin.classList.add('hidden');
+                    formRegister.classList.remove('hidden');
+
+                    requestAnimationFrame(() => {
+                        textRegister.style.opacity = '1';
+                        illustrRegister.style.opacity = '1';
+                        formRegister.style.opacity = '1';
+                    });
+                }
+            }, 250);
+
+            setTimeout(() => {
+                isAnimating = false;
+            }, 750);
+        }
+
+        window.addEventListener('popstate', (e) => {
+            const target = (e.state && e.state.mode) ? e.state.mode : (location.pathname.includes('register') ? 'register' : 'login');
+            switchMode(target, false);
+        });
+
+        window.addEventListener('resize', () => {
+            const isDesktop = window.innerWidth >= 1024;
+            const purplePanel = document.getElementById('purplePanel');
+            const creamPanel = document.getElementById('creamPanel');
+            const logoContainer = document.getElementById('logoContainer');
+            const textContainer = document.getElementById('textContainer');
+            const illustrContainer = document.getElementById('illustrContainer');
+
+            if (isDesktop) {
+                if (currentMode === 'login') {
+                    purplePanel.style.transform = 'translate3d(46vw, 0, 0)';
+                    creamPanel.style.transform = 'translate3d(0, 0, 0)';
+                    logoContainer.style.transform = 'translate3d(110px, 0, 0)';
+                    textContainer.style.transform = 'translate3d(110px, 0, 0)';
+                    illustrContainer.style.transform = 'translate3d(90px, 0, 0)';
+                } else {
+                    purplePanel.style.transform = 'translate3d(0, 0, 0)';
+                    creamPanel.style.transform = 'translate3d(54vw, 0, 0)';
+                    logoContainer.style.transform = 'translate3d(0, 0, 0)';
+                    textContainer.style.transform = 'translate3d(0, 0, 0)';
+                    illustrContainer.style.transform = 'translate3d(0, 0, 0)';
+                }
+            } else {
+                purplePanel.style.transform = 'none';
+                creamPanel.style.transform = 'none';
+                logoContainer.style.transform = 'none';
+                textContainer.style.transform = 'none';
+                illustrContainer.style.transform = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
