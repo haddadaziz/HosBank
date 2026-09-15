@@ -1,16 +1,266 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="scroll-smooth bg-[#0A0B10]">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HosBank</title>
+    <title><%= typeof title !== 'undefined' ? title : 'HosBank | Une banque radicalement différente' %></title>
+    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
 
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hos: {
+                            purple: '#746B92',
+                            purpleHover: '#635B7E',
+                            coral: '#E97A7A',
+                            coralHover: '#D96565',
+                            cream: '#F6EFE0',
+                            dark: '#0A0B10',
+                            cardDark: '#12141C'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        brand: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0A0B10;
+            color: #FFFFFF;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .glass-pill {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+        }
+
+        .glass-pill:focus-within {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+        }
+
+        .hero-vignette {
+            background: linear-gradient(
+                180deg,
+                rgba(10, 11, 16, 0.55) 0%,
+                rgba(10, 11, 16, 0.1) 20%,
+                rgba(10, 11, 16, 0.05) 60%,
+                rgba(10, 11, 16, 0.75) 100%
+            );
+        }
+
+        .glow-ambient {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(116, 107, 146, 0.18) 0%, rgba(233, 122, 122, 0.05) 50%, transparent 70%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 2;
+        }
+    </style>
 </head>
-<body>
+<body class="relative selection:bg-[#E97A7A] selection:text-white">
 
-    <h1>Bienvenue sur HosBank</h1>
-    <p>Système bancaire digital</p>
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 sm:px-12 py-5 pointer-events-auto">
+        <a href="/" class="inline-flex items-center select-none group cursor-pointer" title="HosBank">
+            <div class="flex items-center">
+                <svg class="h-7 sm:h-[30px] w-auto mr-[2px] transition-transform duration-200 group-hover:scale-[1.03]" viewBox="0 0 25 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
+                    <rect x="18.5" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
+                    <path d="M5.5 17.5 L18.5 10.5 L18.5 15.2 L5.5 22.2 Z" fill="#E97A7A"/>
+                </svg>
 
+                <div class="flex items-baseline brand-wordmark">
+                    <span class="text-[24px] sm:text-[26px] font-[800] tracking-[-0.04em] text-white leading-none">os</span>
+                    <span class="text-[24px] sm:text-[26px] font-[800] tracking-[-0.03em] text-white/95 leading-none ml-[0.5px]">Bank</span>
+                    <span class="w-[6px] h-[6px] rounded-full bg-[#E97A7A] ml-1.5 self-end mb-1 shadow-[0_0_8px_rgba(233,122,122,0.65)]"></span>
+                </div>
+            </div>
+        </a>
+
+        <div class="flex items-center gap-3">
+            <a href="/login" class="px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md transition-all">
+                Se connecter
+            </a>
+            <a href="/register" class="px-5 sm:px-6 py-2 rounded-full text-xs sm:text-sm font-semibold text-white bg-[#746B92] hover:bg-[#635B7E] shadow-md transition-all active:scale-95">
+                Ouvrir un compte
+            </a>
+        </div>
+    </header>
+
+    <div id="scrollTrack" class="relative w-full h-[320vh]">
+
+        <div class="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center justify-center bg-[#0A0B10]">
+
+            <img 
+                id="heroImageStart"
+                src="/assets/images/hero_start_frame.jpg"
+                alt="Mercury PC Desk"
+                class="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0"
+                loading="eager"
+            >
+
+            <video 
+                id="heroScrubVideo"
+                class="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0 opacity-95 transition-opacity duration-300"
+                src="/assets/videos/hero-scrub.mp4"
+                poster="/assets/images/hero_start_frame.jpg"
+                playsinline
+                muted
+                preload="auto"
+            ></video>
+
+            <div class="absolute inset-0 hero-vignette pointer-events-none z-[1]"></div>
+            <div class="glow-ambient"></div>
+
+            <div id="heroContent" class="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 max-w-4xl mx-auto transition-transform duration-75 ease-out">
+                
+                <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold font-brand tracking-tight text-white leading-[1.1] drop-shadow-lg">
+                    Une banque radicalement différente
+                </h1>
+
+                <p class="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-white/80 max-w-2xl font-normal leading-relaxed drop-shadow-md">
+                    Ouvrez votre compte en 10 minutes pour vivre une expérience bancaire inédite.
+                </p>
+
+                <form action="/register" method="GET" class="mt-8 sm:mt-10 glass-pill rounded-full p-1.5 flex items-center max-w-md w-full transition-all duration-200">
+                    <input 
+                        type="email" 
+                        name="email" 
+                        id="heroEmailInput"
+                        required 
+                        placeholder="Entrez votre adresse e-mail" 
+                        class="bg-transparent text-white placeholder-white/55 text-xs sm:text-sm px-4 sm:px-5 py-2.5 w-full outline-none font-medium"
+                        autocomplete="email"
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-[#746B92] hover:bg-[#635B7E] active:scale-95 text-white font-semibold text-xs sm:text-sm px-5 sm:px-7 py-2.5 sm:py-3 rounded-full transition-all duration-200 shadow-md shrink-0 flex items-center gap-1.5"
+                    >
+                        <span>Ouvrir un compte</span>
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            const video = document.getElementById('heroScrubVideo');
+            const imgStart = document.getElementById('heroImageStart');
+            const scrollTrack = document.getElementById('scrollTrack');
+            const heroContent = document.getElementById('heroContent');
+
+            let videoDuration = 3.0;
+            let isTicking = false;
+
+            function syncDuration() {
+                if (video && video.duration && isFinite(video.duration) && video.duration > 0) {
+                    videoDuration = video.duration;
+                }
+            }
+
+            video.addEventListener('loadedmetadata', syncDuration);
+            video.addEventListener('durationchange', syncDuration);
+            video.addEventListener('canplay', syncDuration);
+
+            window.addEventListener('DOMContentLoaded', () => {
+                syncDuration();
+                try {
+                    video.currentTime = 0.001;
+                } catch(e) {}
+            });
+
+            function updateScroll() {
+                const rect = scrollTrack.getBoundingClientRect();
+                const totalScrollableDistance = scrollTrack.offsetHeight - window.innerHeight;
+                
+                const currentScrolled = -rect.top;
+                const progress = Math.max(0, Math.min(1, currentScrolled / totalScrollableDistance));
+
+                if (video) {
+                    syncDuration();
+                    const targetTime = progress * videoDuration;
+                    if (Math.abs(video.currentTime - targetTime) > 0.02) {
+                        try {
+                            video.currentTime = targetTime;
+                        } catch(e) {}
+                    }
+                }
+
+                if (imgStart) {
+                    if (progress > 0.03) {
+                        imgStart.style.opacity = '0';
+                    } else {
+                        imgStart.style.opacity = '1';
+                    }
+                }
+
+                const textFadeThreshold = 0.22;
+                if (heroContent) {
+                    if (progress <= textFadeThreshold) {
+                        const textProgress = progress / textFadeThreshold;
+                        const opacity = Math.max(0, 1 - textProgress);
+                        const scale = 1 - (textProgress * 0.08);
+                        const translateY = -textProgress * 50;
+                        const blur = textProgress * 10;
+
+                        heroContent.style.opacity = opacity.toFixed(3);
+                        heroContent.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale.toFixed(3)})`;
+                        heroContent.style.filter = `blur(${blur}px)`;
+                        heroContent.style.pointerEvents = opacity < 0.1 ? 'none' : 'auto';
+                    } else {
+                        heroContent.style.opacity = '0';
+                        heroContent.style.filter = 'blur(10px)';
+                        heroContent.style.pointerEvents = 'none';
+                    }
+                }
+
+                isTicking = false;
+            }
+
+            window.addEventListener('scroll', function() {
+                if (!isTicking) {
+                    window.requestAnimationFrame(updateScroll);
+                    isTicking = true;
+                }
+            }, { passive: true });
+
+            updateScroll();
+        })();
+    </script>
 </body>
 </html>

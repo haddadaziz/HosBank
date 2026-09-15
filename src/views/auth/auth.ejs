@@ -101,15 +101,30 @@
         .brand-wordmark {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
+
+        @media (max-width: 1023px) {
+            #purplePanel,
+            #creamPanel,
+            #logoContainer,
+            #textContainer,
+            #illustrContainer {
+                transform: none !important;
+                transition: none !important;
+            }
+            .panel-slide-transition,
+            .inner-content-slide {
+                transition: none !important;
+            }
+        }
     </style>
 </head>
-<body class="w-screen h-screen overflow-hidden relative select-none">
+<body class="w-full min-h-screen overflow-x-hidden overflow-y-auto lg:overflow-hidden lg:h-screen lg:w-screen relative select-none bg-[#F6EFE0]">
 
-    <div id="authViewport" class="w-full h-full relative overflow-hidden flex flex-col lg:flex-row">
+    <div id="authViewport" class="w-full min-h-screen lg:h-full relative overflow-x-hidden overflow-y-auto lg:overflow-hidden flex flex-col lg:flex-row">
 
         <div 
             id="purplePanel" 
-            class="w-full lg:w-[54vw] h-full bg-[#746B92] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between absolute top-0 bottom-0 left-0 z-20 overflow-hidden panel-slide-transition"
+            class="relative lg:absolute lg:top-0 lg:bottom-0 lg:left-0 w-full lg:w-[54vw] h-auto lg:h-full bg-[#746B92] text-white p-6 sm:p-8 lg:p-16 flex flex-col justify-between rounded-b-[28px] sm:rounded-b-[36px] lg:rounded-none z-20 overflow-hidden panel-slide-transition shrink-0 shadow-md lg:shadow-none"
             style="transform: <%= initialMode === 'login' ? 'translate3d(46vw, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
         >
             <div id="curveRight" class="hidden lg:block absolute top-0 right-0 bottom-0 w-[180px] h-full pointer-events-none z-30 curve-fade-transition <%= initialMode === 'login' ? 'opacity-0 pointer-events-none' : 'opacity-100' %>">
@@ -148,23 +163,23 @@
 
             <div 
                 id="textContainer"
-                class="relative z-40 my-6 lg:my-auto max-w-md inner-content-slide"
+                class="relative z-40 my-4 sm:my-6 lg:my-auto max-w-md inner-content-slide"
                 style="transform: <%= initialMode === 'login' ? 'translate3d(110px, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
             >
                 <div id="textRegister" class="fade-swap-transition <%= initialMode === 'register' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
-                    <h1 class="text-3xl sm:text-4xl lg:text-[42px] font-bold tracking-tight leading-[1.15] text-white">
+                    <h1 class="text-2xl sm:text-3xl lg:text-[42px] font-bold tracking-tight leading-[1.15] text-white">
                         Heureux de vous compter parmi nous !
                     </h1>
-                    <p class="text-[13px] sm:text-[14px] text-[#DDD7EB] font-normal leading-relaxed mt-4 max-w-xs">
+                    <p class="text-[13px] sm:text-[14px] text-[#DDD7EB] font-normal leading-relaxed mt-2 sm:mt-4 max-w-xs">
                         Rejoignez des milliers de clients qui font confiance à HosBank pour une gestion bancaire moderne, fluide et sécurisée.
                     </p>
                 </div>
 
                 <div id="textLogin" class="fade-swap-transition <%= initialMode === 'login' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
-                    <h2 class="text-3xl sm:text-4xl lg:text-[44px] font-bold tracking-tight leading-[1.15] text-white">
+                    <h2 class="text-2xl sm:text-3xl lg:text-[44px] font-bold tracking-tight leading-[1.15] text-white">
                         Ravi de vous revoir !
                     </h2>
-                    <p class="text-sm sm:text-base text-[#DDD7EB] font-normal leading-relaxed mt-3">
+                    <p class="text-xs sm:text-sm lg:text-base text-[#DDD7EB] font-normal leading-relaxed mt-1 sm:mt-3">
                         Reprenez là où vous vous étiez arrêté
                     </p>
                 </div>
@@ -172,7 +187,7 @@
 
             <div 
                 id="illustrContainer"
-                class="relative z-40 w-full max-w-[460px] mx-auto pb-2 inner-content-slide"
+                class="hidden lg:block relative z-40 w-full max-w-[460px] mx-auto pb-2 inner-content-slide"
                 style="transform: <%= initialMode === 'login' ? 'translate3d(90px, 0, 0)' : 'translate3d(0, 0, 0)' %>;"
             >
                 
@@ -305,11 +320,11 @@
 
         <div 
             id="creamPanel" 
-            class="w-full lg:w-[46vw] h-full bg-[#F6EFE0] p-8 sm:p-12 lg:p-16 flex flex-col justify-between absolute top-0 bottom-0 left-0 z-10 panel-slide-transition"
+            class="relative lg:absolute lg:top-0 lg:bottom-0 lg:left-0 w-full lg:w-[46vw] flex-1 bg-[#F6EFE0] p-6 sm:p-10 lg:p-16 flex flex-col justify-between z-10 panel-slide-transition"
             style="transform: <%= initialMode === 'login' ? 'translate3d(0, 0, 0)' : 'translate3d(54vw, 0, 0)' %>;"
         >
 
-            <div id="cornerDecor" class="absolute bottom-0 w-36 h-36 bg-[#EFE7D4] -z-10 pointer-events-none curve-fade-transition <%= initialMode === 'login' ? 'left-0 rounded-tr-[54px]' : 'right-0 rounded-tl-[54px]' %>"></div>
+            <div id="cornerDecor" class="hidden lg:block absolute bottom-0 w-36 h-36 bg-[#EFE7D4] -z-10 pointer-events-none curve-fade-transition <%= initialMode === 'login' ? 'left-0 rounded-tr-[54px]' : 'right-0 rounded-tl-[54px]' %>"></div>
 
             <div class="h-4"></div>
 
@@ -350,7 +365,7 @@
                         </div>
 
                         <div>
-                            <input type="email" name="email" id="regEmail" required placeholder="Adresse e-mail" class="w-full underline-input pb-2.5 text-sm text-[#282330]">
+                            <input type="email" name="email" id="regEmail" value="<%= typeof email !== 'undefined' ? email : '' %>" required placeholder="Adresse e-mail" class="w-full underline-input pb-2.5 text-sm text-[#282330]">
                         </div>
 
                         <div>
@@ -435,7 +450,6 @@
 
         function switchMode(targetMode, pushState = true) {
             if (currentMode === targetMode || isAnimating) return;
-            isAnimating = true;
             currentMode = targetMode;
 
             const purplePanel = document.getElementById('purplePanel');
@@ -455,26 +469,58 @@
             const formLogin = document.getElementById('formLogin');
             const pageTitle = document.getElementById('pageTitle');
 
+            const isDesktop = window.innerWidth >= 1024;
+
+            // Sur mobile et tablette : bascule verticale immédiate sans animation
+            if (!isDesktop) {
+                if (targetMode === 'login') {
+                    textRegister.classList.add('hidden');
+                    textRegister.classList.remove('block');
+                    textLogin.classList.remove('hidden');
+                    textLogin.classList.add('block');
+                    textLogin.style.opacity = '1';
+
+                    formRegister.classList.add('hidden');
+                    formRegister.classList.remove('block');
+                    formLogin.classList.remove('hidden');
+                    formLogin.classList.add('block');
+                    formLogin.style.opacity = '1';
+
+                    if (pushState) history.pushState({ mode: 'login' }, '', '/login');
+                    if (pageTitle) pageTitle.textContent = 'Connexion | HosBank';
+                } else {
+                    textLogin.classList.add('hidden');
+                    textLogin.classList.remove('block');
+                    textRegister.classList.remove('hidden');
+                    textRegister.classList.add('block');
+                    textRegister.style.opacity = '1';
+
+                    formLogin.classList.add('hidden');
+                    formLogin.classList.remove('block');
+                    formRegister.classList.remove('hidden');
+                    formRegister.classList.add('block');
+                    formRegister.style.opacity = '1';
+
+                    if (pushState) history.pushState({ mode: 'register' }, '', '/register');
+                    if (pageTitle) pageTitle.textContent = 'Inscription | HosBank';
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+
+            // Sur Desktop : animation fluide avec panneaux coulissants
+            isAnimating = true;
+
             if (targetMode === 'login') {
                 textRegister.style.opacity = '0';
                 illustrRegister.style.opacity = '0';
                 formRegister.style.opacity = '0';
-            } else {
-                textLogin.style.opacity = '0';
-                illustrLogin.style.opacity = '0';
-                formLogin.style.opacity = '0';
-            }
 
-            const isDesktop = window.innerWidth >= 1024;
-
-            if (targetMode === 'login') {
-                if (isDesktop) {
-                    purplePanel.style.transform = 'translate3d(46vw, 0, 0)';
-                    creamPanel.style.transform = 'translate3d(0, 0, 0)';
-                    logoContainer.style.transform = 'translate3d(110px, 0, 0)';
-                    textContainer.style.transform = 'translate3d(110px, 0, 0)';
-                    illustrContainer.style.transform = 'translate3d(90px, 0, 0)';
-                }
+                purplePanel.style.transform = 'translate3d(46vw, 0, 0)';
+                creamPanel.style.transform = 'translate3d(0, 0, 0)';
+                logoContainer.style.transform = 'translate3d(110px, 0, 0)';
+                textContainer.style.transform = 'translate3d(110px, 0, 0)';
+                illustrContainer.style.transform = 'translate3d(90px, 0, 0)';
 
                 cornerDecor.classList.remove('right-0', 'rounded-tl-[54px]');
                 cornerDecor.classList.add('left-0', 'rounded-tr-[54px]');
@@ -488,13 +534,15 @@
                 if (pageTitle) pageTitle.textContent = 'Connexion | HosBank';
 
             } else {
-                if (isDesktop) {
-                    purplePanel.style.transform = 'translate3d(0, 0, 0)';
-                    creamPanel.style.transform = 'translate3d(54vw, 0, 0)';
-                    logoContainer.style.transform = 'translate3d(0, 0, 0)';
-                    textContainer.style.transform = 'translate3d(0, 0, 0)';
-                    illustrContainer.style.transform = 'translate3d(0, 0, 0)';
-                }
+                textLogin.style.opacity = '0';
+                illustrLogin.style.opacity = '0';
+                formLogin.style.opacity = '0';
+
+                purplePanel.style.transform = 'translate3d(0, 0, 0)';
+                creamPanel.style.transform = 'translate3d(54vw, 0, 0)';
+                logoContainer.style.transform = 'translate3d(0, 0, 0)';
+                textContainer.style.transform = 'translate3d(0, 0, 0)';
+                illustrContainer.style.transform = 'translate3d(0, 0, 0)';
 
                 cornerDecor.classList.remove('left-0', 'rounded-tr-[54px]');
                 cornerDecor.classList.add('right-0', 'rounded-tl-[54px]');

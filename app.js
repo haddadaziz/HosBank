@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.redirect("/login");
+    res.render("home", { title: "HosBank | Une banque radicalement différente" });
 });
 
 app.use("/", authRoutes);

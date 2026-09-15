@@ -3,7 +3,8 @@ exports.getLogin = (req, res) => {
         title: "Connexion | HosBank",
         initialMode: "login",
         error: null,
-        message: null
+        message: null,
+        email: req.query.email || ""
     });
 };
 
@@ -12,7 +13,8 @@ exports.getRegister = (req, res) => {
         title: "Inscription | HosBank",
         initialMode: "register",
         error: null,
-        message: null
+        message: null,
+        email: req.query.email || ""
     });
 };
 
