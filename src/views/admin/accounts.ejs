@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="admin-layout">
+    <%- include('partials/sidebar') %>
+
+    <div class="admin-main">
+        <%- include('partials/topbar') %>
+
+        <main class="admin-content">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Comptes & Cartes Bancaires</h1>
+                    <p class="page-subtitle">Supervision des IBAN, types de comptes, cartes bancaires associées et plafonds</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span class="card-title">Inventaire des Comptes Actifs</span>
+                        <span class="badge purple"><%= accounts.length %> comptes répertoriés</span>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>N° Compte / IBAN</th>
+                                <th>Type de Compte</th>
+                                <th>Titulaire</th>
+                                <th>Solde Actuel</th>
+                                <th>Carte Associée</th>
+                                <th>Statut Carte</th>
+                                <th>Statut Compte</th>
+                                <th style="text-align: right;">Action Carte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% accounts.forEach(acc => { %>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-main);"><%= acc.id %></div>
+                                        <div style="font-family: monospace; font-size: 0.78rem; color: var(--text-muted);"><%= acc.iban %></div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background: var(--bg-cream-darker); color: var(--text-main); font-weight: 600;">
+                                            <%= acc.type %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;"><%= acc.clientName %></div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><%= acc.clientId %></div>
+                                    </td>
+                                    <td>
+                                        <span style="font-weight: 700; font-size: 0.98rem; color: var(--text-main);">
+                                            <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> <%= acc.currency %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div><%= acc.cardType %></div>
+                                        <% if (acc.cardsCount > 0) { %>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);"><%= acc.cardsCount %> carte(s) émise(s)</div>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (acc.cardStatus === 'Active') { %>
+                                            <span class="badge success"><span class="badge-dot"></span> Active</span>
+                                        <% } else if (acc.cardStatus === 'Bloquée' || acc.cardStatus === 'Suspendue') { %>
+                                            <span class="badge danger"><span class="badge-dot"></span> Bloquée</span>
+                                        <% } else { %>
+                                            <span style="color: var(--text-muted); font-size: 0.85rem;">Aucune</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (acc.status === 'Actif') { %>
+                                            <span class="badge success"><span class="badge-dot"></span> Actif</span>
+                                        <% } else { %>
+                                            <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
+                                        <% } %>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <% if (acc.cardsCount > 0) { %>
+                                            <form action="/admin/accounts/<%= acc.id %>/toggle-card" method="POST" style="display: inline-block;">
+                                                <% if (acc.cardStatus === 'Active') { %>
+                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer cette carte bancaire immédiatement ?">Bloquer carte</button>
+                                                <% } else { %>
+                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Débloquer</button>
+                                                <% } %>
+                                            </form>
+                                        <% } else { %>
+                                            <span style="color: var(--text-muted); font-size: 0.8rem;">-</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>
