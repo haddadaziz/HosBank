@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
-    "db:init": "node src/config/initDb.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

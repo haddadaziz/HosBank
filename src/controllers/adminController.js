@@ -1,15 +1,12 @@
 const adminService = require("../services/adminService");
 
 const adminController = {
-    // Page de connexion admin (reproduction fidèle du design)
+    // Redirection vers la page de connexion unifiée
     getLogin: (req, res) => {
         if (req.session && req.session.admin) {
             return res.redirect("/admin/dashboard");
         }
-        res.render("admin/login", { 
-            error: null,
-            title: "Connexion Espace Administration - HosBank"
-        });
+        res.redirect("/login");
     },
 
     // Traitement de la connexion admin
@@ -31,10 +28,7 @@ const adminController = {
             );
             return res.redirect("/admin/dashboard");
         }
-        res.render("admin/login", {
-            error: "Identifiants invalides. Veuillez renseigner votre e-mail et mot de passe administrateur.",
-            title: "Connexion Espace Administration - HosBank"
-        });
+        res.redirect("/login?error=invalid_credentials");
     },
 
     // Déconnexion
@@ -42,7 +36,7 @@ const adminController = {
         if (req.session) {
             req.session.destroy();
         }
-        res.redirect("/admin/login");
+        res.redirect("/login");
     },
 
     // Tableau de bord principal

@@ -35,7 +35,6 @@ app.use(session({
     }
 }));
 
-// Route d'accueil
 app.get("/", (req, res) => {
     res.render("home", { title: "HosBank | Une banque radicalement différente" });
 });
@@ -59,5 +58,5 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
     console.log(`HosBank démarré avec succès sur http://localhost:${PORT}`);
-    console.log(`Espace Administration : http://localhost:${PORT}/admin/login`);
+    console.log(`Page de Connexion Unique : http://localhost:${PORT}/login`);
 });

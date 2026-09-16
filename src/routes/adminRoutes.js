@@ -6,15 +6,15 @@ const adminController = require("../controllers/adminController");
 // Middleware de vérification de session admin
 const requireAdminAuth = (req, res, next) => {
     if (!req.session || !req.session.admin) {
-        return res.redirect("/admin/login");
+        return res.redirect("/login");
     }
 
     next();
 };
 
-// Authentification Admin
-router.get("/login", adminController.getLogin);
-router.post("/login", adminController.postLogin);
+// Redirections d'authentification vers le Login unifié
+router.get("/login", (req, res) => res.redirect("/login"));
+router.post("/login", (req, res) => res.redirect(307, "/login"));
 router.get("/logout", adminController.logout);
 
 // Tableau de bord

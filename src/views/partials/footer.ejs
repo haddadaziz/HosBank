@@ -1,0 +1,69 @@
+<!-- Footer Exclusif Landing Page HosBank -->
+<footer class="relative z-10 w-full bg-[#0A0B10] border-t border-white/10 text-white pt-16 pb-12 px-6 sm:px-12 lg:px-16">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-white/10">
+            <!-- Colonne Marque & Mission -->
+            <div class="lg:col-span-2 flex flex-col gap-4">
+                <a href="/" class="inline-flex items-center gap-2 group select-none">
+                    <img src="/images/logo-white.svg" alt="HosBank" class="h-8 w-auto transition-transform duration-200 group-hover:scale-105" />
+                </a>
+                <p class="text-sm text-white/65 leading-relaxed max-w-sm mt-2">
+                    L'institution financière nouvelle génération. Une expérience bancaire transparente, instantanée et hautement sécurisée.
+                </p>
+                <div class="flex items-center gap-3 mt-3 text-xs text-white/60">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Système 100% Opérationnel
+                    </span>
+                    <span class="text-white/30">•</span>
+                    <span>Chiffrement SSL 256-bit</span>
+                </div>
+            </div>
+
+            <!-- Colonne 1 : Solutions -->
+            <div class="flex flex-col gap-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Solutions</h4>
+                <ul class="space-y-2.5 text-sm text-white/70">
+                    <li><a href="/register" class="hover:text-white transition-colors">Compte Courant</a></li>
+                    <li><a href="/register" class="hover:text-white transition-colors">Cartes Visa & Mastercard</a></li>
+                    <li><a href="/register" class="hover:text-white transition-colors">Épargne Rémunérée</a></li>
+                    <li><a href="/register" class="hover:text-white transition-colors">Virements Instantanés</a></li>
+                </ul>
+            </div>
+
+            <!-- Colonne 2 : Espaces -->
+            <div class="flex flex-col gap-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Espaces</h4>
+                <ul class="space-y-2.5 text-sm text-white/70">
+                    <li><a href="/login" class="hover:text-white transition-colors">Espace Client</a></li>
+                    <li><a href="/advisor/dashboard" class="hover:text-white transition-colors">Portail Conseiller</a></li>
+                    <li><a href="/admin/dashboard" class="hover:text-white transition-colors">Administration</a></li>
+                    <li><a href="/register" class="hover:text-white transition-colors">Ouvrir un compte</a></li>
+                </ul>
+            </div>
+
+            <!-- Colonne 3 : Sécurité & Légal -->
+            <div class="flex flex-col gap-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-white/40">Sécurité & Légal</h4>
+                <ul class="space-y-2.5 text-sm text-white/70">
+                    <li><a href="#" class="hover:text-white transition-colors">Protection des Dépôts</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Mentions Légales</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Politique de Confidentialité</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Gestion des Cookies</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Bas de page -->
+        <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
+            <div>
+                © <%= new Date().getFullYear() %> HosBank S.A. Établissement bancaire agréé. Tous droits réservés.
+            </div>
+            <div class="flex items-center gap-6">
+                <span>Agrément ACPR / Banque de France</span>
+                <span class="text-white/20">•</span>
+                <span>Fonds de Garantie FGDR (100 000 €)</span>
+            </div>
+        </div>
+    </div>
+</footer>
