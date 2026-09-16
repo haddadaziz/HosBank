@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const session = require("express-session");
 const path = require("path");
@@ -23,11 +25,12 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Session utilisateur
 app.use(session({
-    secret: "hosbank-secure-admin-session-secret-2024",
+    secret: process.env.SESSION_SECRET || "hosbank-dev-secret-key",
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
+        httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
