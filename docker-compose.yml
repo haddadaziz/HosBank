@@ -1,0 +1,50 @@
+services:
+  # Service Base de Données PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: hosbank-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hosbank
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Exécution automatique du schéma et des données de test au premier lancement
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/seeds.sql:/docker-entrypoint-initdb.d/02-seeds.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hosbank"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Service Application Web HosBank (Node.js / Express)
+  app:
+    build: .
+    container_name: hosbank-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+      SESSION_SECRET: hosbank-dev-session-secret-key-2026
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: hosbank
+    volumes:
+      # Synchronisation du code en direct pour le Hot Reload
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    name: hosbank_postgres_data

@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
+    "docker:up": "docker compose up --build",
+    "docker:db": "docker compose up -d db",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
