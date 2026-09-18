@@ -53,11 +53,11 @@ exports.postLogin = (req, res) => {
     // 3. Espace Client par défaut
     if (req.session) {
         req.session.user = {
-            id: "CLI-1001",
-            name: req.body.name || "Client HosBank",
-            email: identifier || "client@hosbank.fr",
+            id: 3,
+            name: req.body.name || "Alexandre Moreau",
+            email: identifier || "alexandre.moreau@email.fr",
             role: "Client Particulier",
-            avatar: "CL"
+            avatar: "AM"
         };
     }
     return res.redirect("/client/dashboard");

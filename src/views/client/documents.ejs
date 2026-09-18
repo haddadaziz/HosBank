@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#F8F9FA]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Style Sidebar -->
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        hos: {
+                            dark: '#29223A',
+                            hover: '#3C3352',
+                            primary: '#746B92',
+                            cream: '#F6EFE0',
+                            surface: '#FFFFFF',
+                            bg: '#F8F9FA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
+
+<div class="flex min-h-screen">
+    <!-- Sidebar unifiée multi-rôles -->
+    <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/documents', user: user }) %>
+
+    <!-- Zone principale -->
+    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+        
+        <!-- En-tête -->
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
+                    RIB & Démarches
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">Téléchargez vos attestations bancaires et suivez l'avancement de vos demandes.</p>
+            </div>
+            <div>
+                <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                    ✉️ Déposer une réclamation
+                </button>
+            </div>
+        </header>
+
+        <!-- Grille 2 Colonnes -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+            
+            <!-- Colonne Gauche : RIB Officiel Imprimable (7 colonnes) -->
+            <div class="lg:col-span-7">
+                <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
+                    
+                    <!-- En-tête du document RIB -->
+                    <div class="flex justify-between items-start border-b border-gray-100 pb-6 mb-6">
+                        <div>
+                            <img src="/images/logo.svg" alt="HosBank" class="h-7 mb-2">
+                            <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Relevé d'Identité Bancaire (RIB)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="window.print()" class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-hos-dark text-xs font-bold px-3 py-2 rounded-lg transition-colors">
+                                🖨️ Imprimer
+                            </button>
+                            <button onclick="alert('Téléchargement du RIB au format PDF certifié.');" class="inline-flex items-center gap-1.5 bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
+                                ⬇️ Télécharger PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Informations Titulaire & Domiciliation -->
+                    <div class="grid grid-cols-2 gap-6 text-xs mb-6">
+                        <div>
+                            <span class="text-gray-400 font-semibold uppercase tracking-wider block mb-1">Titulaire du compte</span>
+                            <div class="font-extrabold text-sm text-hos-dark"><%= user ? user.name : 'Alexandre Moreau' %></div>
+                            <div class="text-gray-500 mt-0.5">14 Rue de la République, 75001 Paris</div>
+                        </div>
+                        <div>
+                            <span class="text-gray-400 font-semibold uppercase tracking-wider block mb-1">Domiciliation de l'agence</span>
+                            <div class="font-extrabold text-sm text-hos-dark">HosBank Agence Centrale</div>
+                            <div class="text-gray-500 mt-0.5">Paris Opéra • Code BIC : HOSBFR2P</div>
+                        </div>
+                    </div>
+
+                    <!-- Cartouche IBAN / BIC International -->
+                    <div class="p-5 rounded-2xl bg-gray-50/80 border border-gray-200 mb-6 space-y-4">
+                        <div>
+                            <span class="text-[11px] text-gray-400 font-bold uppercase tracking-wider block mb-1">IBAN (International Bank Account Number)</span>
+                            <div class="font-mono text-base font-extrabold text-hos-dark tracking-wider flex items-center justify-between">
+                                <span>FR76 3000 4012 3456 7890 1234 567</span>
+                                <button onclick="navigator.clipboard.writeText('FR76 3000 4012 3456 7890 1234 567'); alert('IBAN copié !');" class="text-xs text-hos-primary hover:underline font-sans font-bold">
+                                    Copier
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-gray-200 flex justify-between items-center text-xs">
+                            <div>
+                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Code BIC / SWIFT</span>
+                                <span class="font-mono font-bold text-hos-dark">HOSBFR2P</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Devise</span>
+                                <span class="font-bold text-hos-dark">Euro (EUR)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Découpage RIB National Français -->
+                    <div>
+                        <span class="text-[11px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Identifiant Bancaire National (RIB)</span>
+                        <div class="grid grid-cols-4 gap-2 text-center font-mono">
+                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                                <div class="text-[10px] text-gray-400 font-sans">Code Banque</div>
+                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">30004</div>
+                            </div>
+                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                                <div class="text-[10px] text-gray-400 font-sans">Code Guichet</div>
+                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">01234</div>
+                            </div>
+                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                                <div class="text-[10px] text-gray-400 font-sans">N° de Compte</div>
+                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">56789012345</div>
+                            </div>
+                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                                <div class="text-[10px] text-gray-400 font-sans">Clé RIB</div>
+                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">67</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Colonne Droite : Suivi des demandes en direct (HOS-37) (5 colonnes) -->
+            <div class="lg:col-span-5 space-y-8">
+                
+                <!-- Carte Suivi des Demandes -->
+                <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-sm text-hos-dark">Suivi de mes demandes en cours</h3>
+                        <span class="text-xs text-gray-400">2 dossiers</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Demande 1 -->
+                        <div class="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="font-bold text-xs text-hos-dark">Ouverture Livret d'Épargne</span>
+                                <span class="text-[11px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-md border border-amber-200">
+                                    En attente
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-gray-400">Réf : DEM-2026-003 • Déposée le 18/09/2026</div>
+                            <div class="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded-lg">
+                                💬 En cours d'instruction par votre conseiller Karim Bennani.
+                            </div>
+                        </div>
+
+                        <!-- Demande 2 -->
+                        <div class="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="font-bold text-xs text-hos-dark">Carte Virtuelle E-Commerce</span>
+                                <span class="text-[11px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md border border-emerald-200">
+                                    Approuvée
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-gray-400">Réf : DEM-2026-001 • Validée le 15/09/2026</div>
+                            <div class="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded-lg">
+                                💬 Carte activée et utilisable immédiatement.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assistance & Réclamations -->
+                <div class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/30 to-white border border-hos-primary/20 rounded-3xl p-6">
+                    <h4 class="font-bold text-xs uppercase tracking-wider text-hos-dark mb-2">Besoin d'aide ou un litige ?</h4>
+                    <p class="text-xs text-gray-600 leading-relaxed mb-4">
+                        Une opération suspecte ou un prélèvement contesté ? Déposez une réclamation directement en ligne pour une prise en charge prioritaire.
+                    </p>
+                    <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="w-full text-center bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
+                        Déposer une réclamation
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal Réclamation (HOS-36) -->
+<div id="reclamationModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-hos-dark">Déposer une réclamation</h3>
+            <button onclick="document.getElementById('reclamationModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-6">
+            Votre réclamation sera assignée à un gestionnaire sous 24 heures ouvrées.
+        </p>
+
+        <form onsubmit="event.preventDefault(); document.getElementById('reclamationModal').classList.add('hidden'); alert('Réclamation REC-2026-002 enregistrée avec succès.');">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Sujet de la réclamation</label>
+                    <input type="text" placeholder="Ex: Frais bancaires non reconnus..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Priorité</label>
+                    <select required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                        <option value="MOYENNE">Moyenne</option>
+                        <option value="HAUTE">Haute</option>
+                        <option value="URGENTE">Urgente</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Description détaillée</label>
+                    <textarea rows="4" placeholder="Expliquez la situation, le montant et la date de l'opération contestée..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm"></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('reclamationModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                    Envoyer ma réclamation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

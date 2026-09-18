@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#F8F9FA]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Style Sidebar -->
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        hos: {
+                            dark: '#29223A',
+                            hover: '#3C3352',
+                            primary: '#746B92',
+                            cream: '#F6EFE0',
+                            surface: '#FFFFFF',
+                            bg: '#F8F9FA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
+
+<div class="flex min-h-screen">
+    <!-- Sidebar unifiée multi-rôles -->
+    <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transactions', user: user }) %>
+
+    <!-- Zone principale -->
+    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+        
+        <!-- En-tête -->
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <a href="/client/dashboard" class="text-xs text-gray-400 hover:text-hos-primary font-bold">← Tableau de bord</a>
+                </div>
+                <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
+                    Historique des Opérations
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">Consultez, filtrez et exportez l'ensemble de vos mouvements bancaires.</p>
+            </div>
+            <div>
+                <button onclick="alert('Exportation CSV de vos écritures bancaires.');" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all">
+                    📥 Exporter en CSV
+                </button>
+            </div>
+        </header>
+
+        <!-- Barre de recherche et filtres (HOS-28) -->
+        <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex-1 min-w-[280px]">
+                <div class="relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                    <input type="text" placeholder="Rechercher par libellé, montant, catégorie..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:border-hos-primary outline-none text-xs text-gray-700">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap text-xs">
+                <button class="px-3.5 py-1.5 rounded-lg bg-hos-dark text-white font-bold">Toutes (14)</button>
+                <button class="px-3.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium">Crédits (+)</button>
+                <button class="px-3.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium">Débits (-)</button>
+                <select class="px-3 py-1.5 rounded-lg bg-gray-100 border-none text-gray-700 font-medium outline-none">
+                    <option>Ce mois-ci</option>
+                    <option>3 derniers mois</option>
+                    <option>Année 2026</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table des opérations (HOS-27) -->
+        <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase font-bold text-[10px] tracking-wider">
+                        <tr>
+                            <th class="py-3.5 px-6">Date & Heure</th>
+                            <th class="py-3.5 px-6">Libellé de l'opération</th>
+                            <th class="py-3.5 px-6">Catégorie</th>
+                            <th class="py-3.5 px-6 text-right">Montant</th>
+                            <th class="py-3.5 px-6 text-right">Solde après</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                        <tr class="hover:bg-gray-50/75 transition-colors">
+                            <td class="py-4 px-6 text-gray-500 font-mono">17/09/2026 14:30</td>
+                            <td class="py-4 px-6 font-bold text-hos-dark">Virement Dr. Vallet</td>
+                            <td class="py-4 px-6"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-semibold">Santé</span></td>
+                            <td class="py-4 px-6 text-right font-extrabold text-hos-dark text-sm">-120,00 €</td>
+                            <td class="py-4 px-6 text-right font-mono text-gray-500">14 850,75 €</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50/75 transition-colors">
+                            <td class="py-4 px-6 text-gray-500 font-mono">16/09/2026 09:15</td>
+                            <td class="py-4 px-6 font-bold text-hos-dark">Virement Salaire Acme Corp</td>
+                            <td class="py-4 px-6"><span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-semibold">Revenus</span></td>
+                            <td class="py-4 px-6 text-right font-extrabold text-emerald-600 text-sm">+3 250,00 €</td>
+                            <td class="py-4 px-6 text-right font-mono text-gray-500">14 970,75 €</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50/75 transition-colors">
+                            <td class="py-4 px-6 text-gray-500 font-mono">12/09/2026 18:42</td>
+                            <td class="py-4 px-6 font-bold text-hos-dark">Paiement CB Monoprix Paris</td>
+                            <td class="py-4 px-6"><span class="bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md font-semibold">Alimentation</span></td>
+                            <td class="py-4 px-6 text-right font-extrabold text-hos-dark text-sm">-46,80 €</td>
+                            <td class="py-4 px-6 text-right font-mono text-gray-500">11 720,75 €</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50/75 transition-colors">
+                            <td class="py-4 px-6 text-gray-500 font-mono">08/09/2026 11:20</td>
+                            <td class="py-4 px-6 font-bold text-hos-dark">Abonnement Spotify Premium</td>
+                            <td class="py-4 px-6"><span class="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md font-semibold">Loisirs</span></td>
+                            <td class="py-4 px-6 text-right font-extrabold text-hos-dark text-sm">-10,99 €</td>
+                            <td class="py-4 px-6 text-right font-mono text-gray-500">11 767,55 €</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination (HOS-27) -->
+            <div class="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                <span>Affichage de 1 à 4 sur 14 opérations</span>
+                <div class="flex items-center gap-1">
+                    <button class="px-2.5 py-1 rounded-md border border-gray-200 text-gray-400 cursor-not-allowed">Précédent</button>
+                    <button class="px-2.5 py-1 rounded-md bg-hos-dark text-white font-bold">1</button>
+                    <button class="px-2.5 py-1 rounded-md border border-gray-200 hover:bg-gray-50">2</button>
+                    <button class="px-2.5 py-1 rounded-md border border-gray-200 hover:bg-gray-50">Suivant</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

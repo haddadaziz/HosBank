@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#F8F9FA]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Style Sidebar -->
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        hos: {
+                            dark: '#29223A',
+                            hover: '#3C3352',
+                            primary: '#746B92',
+                            cream: '#F6EFE0',
+                            surface: '#FFFFFF',
+                            bg: '#F8F9FA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
+
+<div class="flex min-h-screen">
+    <!-- Sidebar unifiée multi-rôles -->
+    <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transfers', user: user }) %>
+
+    <!-- Zone principale -->
+    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+        
+        <!-- En-tête -->
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
+                    Virements Bancaires
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">Transférez des fonds instantanément et en toute sécurité (Zone SEPA).</p>
+            </div>
+        </header>
+
+        <!-- Grille 2 Colonnes -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Colonne Gauche : Formulaire de Virement (7 colonnes) -->
+            <div class="lg:col-span-7">
+                <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
+                    <h2 class="text-lg font-bold text-hos-dark mb-6">Émettre un virement</h2>
+
+                    <form action="/client/transfers" method="POST" onsubmit="event.preventDefault(); document.getElementById('transferSuccess').classList.remove('hidden');">
+                        
+                        <!-- 1. Compte à débiter -->
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Compte émetteur</label>
+                            <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/60 flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold text-sm text-hos-dark">Compte Courant Principal</div>
+                                    <div class="font-mono text-xs text-gray-400 mt-0.5">FR76 3000 4012 3456 7890 1234 567</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-gray-400">Solde disponible</div>
+                                    <div class="font-extrabold text-sm text-hos-dark">14 850,75 €</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Bénéficiaire -->
+                        <div class="mb-5">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Bénéficiaire destinataire</label>
+                                <button type="button" onclick="document.getElementById('addBeneficiaryModal').classList.remove('hidden')" class="text-xs font-bold text-hos-primary hover:underline">
+                                    + Nouveau bénéficiaire
+                                </button>
+                            </div>
+                            
+                            <select name="beneficiaryId" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold bg-white">
+                                <option value="1">Cabinet Dr. Vallet (FR76 3000 1234 5678 ... 789)</option>
+                                <option value="2">Acme Real Estate - Loyer (FR76 3000 9876 5432 ... 334)</option>
+                                <option value="3">Sophie Martin (FR76 3000 4455 6677 ... 990)</option>
+                            </select>
+                        </div>
+
+                        <!-- 3. Montant -->
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Montant du virement (€)</label>
+                            <div class="relative">
+                                <input type="number" step="0.01" min="0.50" max="14850" placeholder="0,00" required 
+                                       class="w-full pl-5 pr-12 py-3.5 rounded-xl border border-gray-200 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-2xl font-extrabold text-hos-dark placeholder-gray-300">
+                                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">€</span>
+                            </div>
+                            <span class="text-[11px] text-gray-400 mt-1 block">Plafond instantané autorisé : 5 000,00 € par opération.</span>
+                        </div>
+
+                        <!-- 4. Motif -->
+                        <div class="mb-6">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Motif (libellé sur le relevé)</label>
+                            <input type="text" placeholder="Ex: Remboursement repas, Facture électricité..." required 
+                                   class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm text-gray-800">
+                        </div>
+
+                        <!-- Récapitulatif -->
+                        <div class="p-4 rounded-xl bg-gray-50 border border-gray-100 mb-6 text-xs text-gray-600 space-y-2">
+                            <div class="flex justify-between">
+                                <span>Type de virement</span>
+                                <span class="font-bold text-hos-dark">SEPA Standard / Instantané</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Frais de transfert</span>
+                                <span class="font-bold text-emerald-600">Gratuit (0,00 €)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Délai d'exécution</span>
+                                <span class="font-bold text-hos-dark">Moins de 10 secondes</span>
+                            </div>
+                        </div>
+
+                        <!-- Bouton d'action -->
+                        <button type="submit" class="w-full bg-hos-dark hover:bg-hos-hover text-white py-3.5 px-6 rounded-xl font-bold text-sm shadow-sm transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer">
+                            Valider et envoyer le virement
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </button>
+
+                        <!-- Notification de confirmation UI -->
+                        <div id="transferSuccess" class="hidden mt-5 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium space-y-1">
+                            <div class="flex items-center gap-2 font-bold text-sm text-emerald-700">
+                                <span>✓ Virement validé avec succès !</span>
+                            </div>
+                            <p>Référence SEPA : <strong>VIR-SEPA-2026-002</strong>. Les fonds ont été débités et transmis au bénéficiaire.</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Colonne Droite : Bénéficiaires récents & Sécurité (5 colonnes) -->
+            <div class="lg:col-span-5 space-y-8">
+                
+                <!-- Carte Bénéficiaires -->
+                <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-sm text-hos-dark">Bénéficiaires enregistrés</h3>
+                        <span class="text-xs text-gray-400">3 actifs</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-[#EDEBF2] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0">
+                                    DV
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-hos-dark">Cabinet Dr. Vallet</div>
+                                    <div class="font-mono text-[11px] text-gray-400">FR76 •••• 3456 789</div>
+                                </div>
+                            </div>
+                            <span class="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold">Santé</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-[#EDEBF2] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0">
+                                    AR
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-hos-dark">Acme Real Estate</div>
+                                    <div class="font-mono text-[11px] text-gray-400">FR76 •••• 1122 334</div>
+                                </div>
+                            </div>
+                            <span class="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold">Loyer</span>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 flex items-center justify-between transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-[#EDEBF2] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0">
+                                    SM
+                                </div>
+                                <div>
+                                    <div class="font-bold text-xs text-hos-dark">Sophie Martin</div>
+                                    <div class="font-mono text-[11px] text-gray-400">FR76 •••• 6677 990</div>
+                                </div>
+                            </div>
+                            <span class="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold">Proche</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal Ajout Bénéficiaire -->
+<div id="addBeneficiaryModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-hos-dark">Ajouter un bénéficiaire</h3>
+            <button onclick="document.getElementById('addBeneficiaryModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-6">
+            Renseignez les coordonnées bancaires du nouveau destinataire pour vos virements.
+        </p>
+
+        <form onsubmit="event.preventDefault(); document.getElementById('addBeneficiaryModal').classList.add('hidden'); alert('Bénéficiaire ajouté avec succès !');">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1">Nom / Intitulé du compte</label>
+                    <input type="text" placeholder="Ex: Julien Dupont" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1">IBAN (FR...)</label>
+                    <input type="text" placeholder="FR76 3000 ..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none font-mono text-sm uppercase">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1">Code BIC / SWIFT (optionnel)</label>
+                    <input type="text" placeholder="HOSBFR2P" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none font-mono text-sm uppercase">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('addBeneficiaryModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                    Enregistrer le bénéficiaire
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
