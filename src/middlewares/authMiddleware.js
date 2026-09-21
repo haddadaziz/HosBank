@@ -18,3 +18,13 @@ exports.requireAdminAuth = (req, res, next) => {
     }
     next();
 };
+
+exports.isGuest = (req, res, next) => {
+    if (req.session) {
+        if (req.session.admin) return res.redirect("/admin/dashboard");
+        if (req.session.advisor) return res.redirect("/advisor/dashboard");
+        if (req.session.user) return res.redirect("/client/dashboard");
+    }
+    next();
+};
+
