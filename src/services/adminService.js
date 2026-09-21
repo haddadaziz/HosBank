@@ -1,5 +1,7 @@
 const clientRepo = require("../repositories/clientRepository");
 const accountRepo = require("../repositories/accountRepository");
+const cardRepo = require("../repositories/cardRepository");
+const requestRepo = require("../repositories/requestRepository");
 const transactionRepo = require("../repositories/transactionRepository");
 const kycRepo = require("../repositories/kycRepository");
 const auditRepo = require("../repositories/auditRepository");
@@ -7,7 +9,6 @@ const db = require("../config/db");
 
 class AdminDataService {
     constructor() {
-        // Jeu de données de secours en mémoire si PostgreSQL n'est pas encore démarré
         this.fallbackClients = [
             {
                 id: "CLI-9821",
@@ -213,7 +214,6 @@ class AdminDataService {
                 phone: data.phone || "+33 6 00 00 00 00",
                 city: data.city || "Paris"
             });
-            // Créer un compte bancaire associé par défaut
             const iban = `FR76 3000 4012 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(100 + Math.random() * 900)}`;
             await accountRepo.createAccount({
                 id: `ACC-${Math.floor(100 + Math.random() * 900)}`,
@@ -273,6 +273,51 @@ class AdminDataService {
             return a;
         }
     }
+
+    async toggleAccountStatus(accountId) {
+        try {
+            return await accountRepo.toggleAccountStatus(accountId);
+        } catch (err) {
+            const a = this.fallbackAccounts.find(item => item.id === accountId);
+            if (a) {
+                a.status = a.status === "Actif" ? "Bloqué" : "Actif";
+            }
+            return a;
+        }
+    }
+
+    async getCards() {
+        try {
+            return await cardRepo.findAll();
+        } catch (err) {
+            return [];
+        }
+    }
+
+    async toggleCardBlock(cardId) {
+        try {
+            return await cardRepo.toggleStatus(cardId);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async opposeCard(cardId) {
+        try {
+            return await cardRepo.opposeCard(cardId);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    async updateCardLimits(cardId, plafondPaiement, plafondRetrait) {
+        try {
+            return await cardRepo.updateLimits(cardId, plafondPaiement, plafondRetrait);
+        } catch (err) {
+            return null;
+        }
+    }
+
 
     async getTransactions() {
         try {
@@ -340,6 +385,30 @@ class AdminDataService {
         } catch (err) {
             return null;
         }
+    }
+
+    async getDemandes() {
+        try {
+            return await requestRepo.findAllDemandes();
+        } catch (err) {
+            return [];
+        }
+    }
+
+    async getReclamations() {
+        try {
+            return await requestRepo.findAllReclamations();
+        } catch (err) {
+            return [];
+        }
+    }
+
+    async updateDemandeStatus(id, statut, reponse = null) {
+        return await requestRepo.updateDemandeStatus(id, statut, reponse);
+    }
+
+    async updateReclamationStatus(id, statut, reponse = null) {
+        return await requestRepo.updateReclamationStatus(id, statut, reponse);
     }
 }
 

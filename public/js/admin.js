@@ -1,7 +1,4 @@
-// Scripts interactifs pour l'administration HosBank
-
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Gestion des Modales ---
     const openModalBtns = document.querySelectorAll("[data-open-modal]");
     const closeModalBtns = document.querySelectorAll("[data-close-modal]");
     const overlays = document.querySelectorAll(".modal-overlay");
@@ -34,7 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // --- Recherche en temps réel dans les tableaux ---
     const liveSearchInput = document.getElementById("tableLiveSearch");
     if (liveSearchInput) {
         liveSearchInput.addEventListener("input", (e) => {
@@ -52,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- Confirmation pour les actions sensibles ---
     const confirmActions = document.querySelectorAll("[data-confirm]");
     confirmActions.forEach(element => {
         element.addEventListener("click", (e) => {
