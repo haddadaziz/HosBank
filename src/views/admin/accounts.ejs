@@ -44,14 +44,14 @@
                                 <th>Carte Associée</th>
                                 <th>Statut Carte</th>
                                 <th>Statut Compte</th>
-                                <th style="text-align: right;">Action Carte</th>
+                                <th style="text-align: right;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <% accounts.forEach(acc => { %>
                                 <tr>
                                     <td>
-                                        <div style="font-weight: 700; color: var(--text-main);"><%= acc.id %></div>
+                                        <div style="font-weight: 700; color: var(--text-main);"><%= acc.numeroCompte || acc.id %></div>
                                         <div style="font-family: monospace; font-size: 0.78rem; color: var(--text-muted);"><%= acc.iban %></div>
                                     </td>
                                     <td>
@@ -77,8 +77,8 @@
                                     <td>
                                         <% if (acc.cardStatus === 'Active') { %>
                                             <span class="badge success"><span class="badge-dot"></span> Active</span>
-                                        <% } else if (acc.cardStatus === 'Bloquée' || acc.cardStatus === 'Suspendue') { %>
-                                            <span class="badge danger"><span class="badge-dot"></span> Bloquée</span>
+                                        <% } else if (acc.cardStatus === 'Bloquée' || acc.cardStatus === 'Suspendue' || acc.cardStatus === 'Opposée') { %>
+                                            <span class="badge danger"><span class="badge-dot"></span> <%= acc.cardStatus %></span>
                                         <% } else { %>
                                             <span style="color: var(--text-muted); font-size: 0.85rem;">Aucune</span>
                                         <% } %>
@@ -90,21 +90,118 @@
                                             <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
                                         <% } %>
                                     </td>
-                                    <td style="text-align: right;">
+                                    <td style="text-align: right; white-space: nowrap;">
+                                        <!-- Action Compte -->
+                                        <form action="/admin/accounts/<%= acc.id %>/toggle-status" method="POST" style="display: inline-block; margin-right: 4px;">
+                                            <% if (acc.status === 'Actif') { %>
+                                                <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer ce compte bancaire ?">Bloquer Compte</button>
+                                            <% } else { %>
+                                                <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Activer Compte</button>
+                                            <% } %>
+                                        </form>
+
+                                        <!-- Action Carte -->
                                         <% if (acc.cardsCount > 0) { %>
                                             <form action="/admin/accounts/<%= acc.id %>/toggle-card" method="POST" style="display: inline-block;">
                                                 <% if (acc.cardStatus === 'Active') { %>
-                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer cette carte bancaire immédiatement ?">Bloquer carte</button>
+                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer cette carte bancaire immédiatement ?">Bloquer Carte</button>
                                                 <% } else { %>
-                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Débloquer</button>
+                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Débloquer Carte</button>
                                                 <% } %>
                                             </form>
-                                        <% } else { %>
-                                            <span style="color: var(--text-muted); font-size: 0.8rem;">-</span>
                                         <% } %>
                                     </td>
                                 </tr>
                             <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Supervision Globale des Cartes Bancaires -->
+            <div class="card" style="margin-top: 28px;">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span class="card-title">Supervision Globale des Cartes Bancaires</span>
+                        <span class="badge purple"><%= (typeof cards !== 'undefined' && cards) ? cards.length : 0 %> cartes répertoriées</span>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Carte & Type</th>
+                                <th>Titulaire</th>
+                                <th>Compte Associé</th>
+                                <th>Plafonds (Mois / Sem.)</th>
+                                <th>Expiration</th>
+                                <th>Statut</th>
+                                <th style="text-align: right;">Actions Administrateur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof cards !== 'undefined' && cards && cards.length > 0) { %>
+                                <% cards.forEach(card => { %>
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 700; font-family: monospace; font-size: 0.95rem; color: var(--text-main);">
+                                                <%= card.panMasque %>
+                                            </div>
+                                            <span class="badge" style="background: <%= card.typeCarte === 'VIRTUELLE' ? '#EBF5FF' : 'var(--bg-cream-darker)' %>; color: <%= card.typeCarte === 'VIRTUELLE' ? '#1E40AF' : 'var(--text-main)' %>; font-size: 0.7rem; font-weight: 600;">
+                                                <%= card.typeCarte %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600;"><%= card.clientName %></div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);"><%= card.clientId %></div>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600; font-size: 0.85rem;"><%= card.numeroCompte %></div>
+                                            <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);"><%= card.iban %></div>
+                                        </td>
+                                        <td>
+                                            <div style="font-size: 0.82rem;">Paiement : <strong><%= card.plafondPaiement ? card.plafondPaiement.toLocaleString('fr-FR') : '3 000' %> EUR</strong></div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">Retrait : <strong><%= card.plafondRetrait ? card.plafondRetrait.toLocaleString('fr-FR') : '1 000' %> EUR</strong></div>
+                                        </td>
+                                        <td>
+                                            <span style="font-family: monospace; font-weight: 600;"><%= card.dateExpiration || '-' %></span>
+                                        </td>
+                                        <td>
+                                            <% if (card.statut === 'ACTIVE') { %>
+                                                <span class="badge success"><span class="badge-dot"></span> Active</span>
+                                            <% } else if (card.statut === 'OPPOSEE') { %>
+                                                <span class="badge danger" style="background: #FEF2F2; color: #991B1B; border: 1px solid #F87171;"><span class="badge-dot" style="background: #991B1B;"></span> Opposée</span>
+                                            <% } else { %>
+                                                <span class="badge warning" style="background: #FFFBEB; color: #92400E; border: 1px solid #FCD34D;"><span class="badge-dot" style="background: #D97706;"></span> Bloquée</span>
+                                            <% } %>
+                                        </td>
+                                        <td style="text-align: right; white-space: nowrap;">
+                                            <% if (card.statut !== 'OPPOSEE') { %>
+                                                <!-- Bloquer / Débloquer temporaire -->
+                                                <form action="/admin/cards/<%= card.id %>/toggle-block" method="POST" style="display: inline-block; margin-right: 4px;">
+                                                    <% if (card.statut === 'ACTIVE') { %>
+                                                        <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer temporairement cette carte ?">Bloquer</button>
+                                                    <% } else { %>
+                                                        <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Débloquer</button>
+                                                    <% } %>
+                                                </form>
+
+                                                <!-- Mettre en opposition définitive -->
+                                                <form action="/admin/cards/<%= card.id %>/oppose" method="POST" style="display: inline-block;">
+                                                    <button type="submit" class="btn-sm btn-danger" style="background: #DC2626; color: white; border: none;" data-confirm="Attention : L'opposition est définitive ! Confirmer ?">Opposition</button>
+                                                </form>
+                                            <% } else { %>
+                                                <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">Carte neutralisée</span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">Aucune carte bancaire trouvée.</td>
+                                </tr>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
