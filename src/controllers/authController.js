@@ -30,6 +30,16 @@ const authController = {
             res.redirect("/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé."));
         } catch (err) {
             res.redirect("/register?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(req.body.email || ""));
+    // 1. Détection Profil Administrateur
+    if (identifier.includes("admin")) {
+        if (req.session) {
+            req.session.admin = {
+                id: "ADM-001",
+                name: "Administrateur HosBank",
+                email: identifier,
+                role: "ADMINISTRATEUR",
+                avatar: "HB"
+            };
         }
     },
 
@@ -48,6 +58,15 @@ const authController = {
                 email: user.email,
                 role: user.role,
                 civilite: user.civilite
+    // 2. Détection Profil Conseiller
+    if (identifier.includes("advisor") || identifier.includes("conseil") || identifier.includes("bennani")) {
+        if (req.session) {
+            req.session.advisor = {
+                id: "ADV-104",
+                name: "Karim Bennani",
+                role: "CHARGE_CLIENT",
+                agency: "Agence Casablanca Finance City",
+                avatar: "KB"
             };
 
             // Rétrocompatibilité avec les espaces Admin et Conseiller existants
@@ -100,6 +119,15 @@ const authController = {
         } else {
             res.redirect("/login");
         }
+    // 3. Espace Client par défaut
+    if (req.session) {
+        req.session.user = {
+            id: 3,
+            name: req.body.name || "Alexandre Moreau",
+            email: identifier || "alexandre.moreau@email.fr",
+            role: "CLIENT",
+            avatar: "AM"
+        };
     }
 };
 

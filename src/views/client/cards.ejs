@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#F8F9FA]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Style Sidebar -->
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        hos: {
+                            dark: '#29223A',
+                            hover: '#3C3352',
+                            primary: '#746B92',
+                            cream: '#F6EFE0',
+                            surface: '#FFFFFF',
+                            bg: '#F8F9FA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
+
+<div class="flex min-h-screen">
+    <!-- Sidebar unifiée multi-rôles -->
+    <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/cards', user: user }) %>
+
+    <!-- Zone principale -->
+    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+        
+        <!-- En-tête -->
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
+                    Mes Cartes Bancaires
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">Gérez vos cartes physiques, cartes virtuelles et paramètres de sécurité en temps réel.</p>
+            </div>
+            <div>
+                <button type="button" onclick="document.getElementById('newCardModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Commander une carte virtuelle
+                </button>
+            </div>
+        </header>
+
+        <!-- Grille des Cartes (Physique & Virtuelle) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            
+            <!-- Carte 1 : Carte Physique Black Titanium -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-7 shadow-sm space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2.5">
+                        <h3 class="font-extrabold text-sm text-hos-dark">Carte Physique Débit</h3>
+                    </div>
+                    <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md border border-emerald-200/50">Active</span>
+                </div>
+
+                <!-- Visuel Carte Physique -->
+                <div class="bg-gradient-to-br from-[#2D253D] to-[#171320] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -top-16 -right-16 w-48 h-48 bg-hos-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="flex justify-between items-center mb-8">
+                        <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner"></div>
+                        <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
+                    </div>
+
+                    <div class="font-mono text-lg tracking-widest mb-6 drop-shadow">
+                        •••• •••• •••• 4289
+                    </div>
+
+                    <div class="flex justify-between items-end text-xs">
+                        <div>
+                            <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Titulaire</span>
+                            <span class="font-bold text-white text-sm"><%= user ? user.name : 'Alexandre Moreau' %></span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Expire fin</span>
+                            <span class="font-semibold text-gray-200 text-xs">08/27</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plafonds -->
+                <div class="space-y-4 pt-2">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500 font-medium">Paiements ce mois-ci</span>
+                            <span class="font-bold text-hos-dark">1 240,00 € / 3 000,00 €</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-hos-dark h-full rounded-full" style="width: 41%;"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500 font-medium">Retraits cette semaine</span>
+                            <span class="font-bold text-hos-dark">150,00 € / 1 000,00 €</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-hos-primary h-full rounded-full" style="width: 15%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Rapides pour cette carte -->
+                <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                    <button type="button" onclick="document.getElementById('pinModal').classList.remove('hidden')" class="flex-1 text-center py-2.5 px-3 rounded-xl border border-gray-200 hover:border-hos-primary text-xs font-bold text-hos-dark transition-all">
+                        Recalculer le code PIN
+                    </button>
+                    <button type="button" onclick="document.getElementById('oppositionModal').classList.remove('hidden')" class="flex-1 text-center py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all">
+                        Faire opposition
+                    </button>
+                </div>
+            </div>
+
+            <!-- Carte 2 : Carte Virtuelle E-Commerce -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-7 shadow-sm space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2.5">
+                        <h3 class="font-extrabold text-sm text-hos-dark">Carte Virtuelle</h3>
+                    </div>
+                    <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md border border-emerald-200/50">Active</span>
+                </div>
+
+                <!-- Visuel Carte Virtuelle Neon -->
+                <div class="bg-gradient-to-br from-[#746B92] via-[#5C537B] to-[#3C3352] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -top-16 -right-16 w-48 h-48 bg-[#F6EFE0]/25 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="flex justify-between items-center mb-8">
+                        <span class="text-[10px] font-bold tracking-widest bg-white/20 px-2.5 py-1 rounded-md uppercase">Virtuelle</span>
+                        <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
+                    </div>
+
+                    <div class="font-mono text-lg tracking-widest mb-6 drop-shadow">
+                        •••• •••• •••• 8841
+                    </div>
+
+                    <div class="flex justify-between items-end text-xs">
+                        <div>
+                            <span class="text-purple-200 uppercase tracking-wider block text-[10px]">Titulaire</span>
+                            <span class="font-bold text-white text-sm"><%= user ? user.name : 'Alexandre Moreau' %></span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-purple-200 uppercase tracking-wider block text-[10px]">Expire fin</span>
+                            <span class="font-semibold text-white text-xs">11/26</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Plafonds -->
+                <div class="space-y-4 pt-2">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-500 font-medium">Paiements e-commerce ce mois-ci</span>
+                            <span class="font-bold text-hos-dark">340,00 € / 1 500,00 €</span>
+                        </div>
+                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                            <div class="bg-hos-primary h-full rounded-full" style="width: 23%;"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Actions Rapides -->
+                <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
+                    <button type="button" onclick="alert('Numéro complet dévoilé temporairement : 4970 8219 0318 8841 (CVV: 492)');" class="flex-1 text-center py-2.5 px-3 rounded-xl border border-gray-200 hover:border-hos-primary text-xs font-bold text-hos-dark transition-all">
+                        Voir les numéros
+                    </button>
+                    <button type="button" onclick="document.getElementById('oppositionModal').classList.remove('hidden')" class="flex-1 text-center py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all">
+                        Bloquer la carte
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Paramètres & Sécurité des Cartes (Toggles) -->
+        <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
+            <h3 class="text-base font-extrabold text-hos-dark mb-6">Préférences & Sécurité</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                
+                <!-- Toggle 1 : Sans Contact -->
+                <div class="p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-sm text-hos-dark">Paiement sans contact</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Jusqu'à 50 € par paiement</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-hos-dark"></div>
+                    </label>
+                </div>
+
+                <!-- Toggle 2 : Paiements Internet -->
+                <div class="p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-sm text-hos-dark">Paiements sur Internet</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Autoriser les achats en ligne</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-hos-dark"></div>
+                    </label>
+                </div>
+
+                <!-- Toggle 3 : Paiements à l'étranger -->
+                <div class="p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-sm text-hos-dark">Opérations à l'étranger</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Hors zone Euro (SEPA)</div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-hos-dark"></div>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal 1 : Mise en opposition (HOS-31) -->
+<div id="oppositionModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-red-600 flex items-center gap-2">
+                <span>🚨</span> Mise en opposition d'urgence
+            </h3>
+            <button onclick="document.getElementById('oppositionModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-600 mb-6 leading-relaxed">
+            Cette action bloquera <strong>immédiatement et définitivement</strong> votre carte bancaire pour prévenir toute utilisation frauduleuse.
+        </p>
+
+        <form onsubmit="event.preventDefault(); document.getElementById('oppositionModal').classList.add('hidden'); alert('Demande d\'opposition enregistrée. Votre carte a été verrouillée.');">
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-hos-dark mb-1.5">Motif de l'opposition</label>
+                <select required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                    <option value="VOL">Vol de la carte</option>
+                    <option value="PERTE">Perte de la carte</option>
+                    <option value="FRAUDE">Utilisation frauduleuse suspectée</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('oppositionModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm transition-colors">
+                    Confirmer l'opposition
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 2 : Recalcul code PIN (HOS-32) -->
+<div id="pinModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-hos-dark">Demande de renouvellement PIN</h3>
+            <button onclick="document.getElementById('pinModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Vous avez oublié votre code PIN ou suspectez qu'il a été compromis ? Vous pouvez demander son recalcul sécurisé.
+        </p>
+
+        <form onsubmit="event.preventDefault(); document.getElementById('pinModal').classList.add('hidden'); alert('Demande de code PIN transmise à votre conseiller Karim Bennani.');">
+            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-600 mb-5">
+                🔒 Votre nouveau code secret vous sera transmis sous pli confidentiel et validé par votre conseiller.
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" onclick="document.getElementById('pinModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                    Demander le code PIN
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 3 : Commander Carte Virtuelle (HOS-30) -->
+<div id="newCardModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-hos-dark">Créer une carte virtuelle</h3>
+            <button onclick="document.getElementById('newCardModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-6">
+            Définissez un plafond mensuel pour vos achats en ligne avec cette nouvelle carte.
+        </p>
+
+        <form onsubmit="event.preventDefault(); document.getElementById('newCardModal').classList.add('hidden'); alert('Nouvelle carte virtuelle générée avec succès !');">
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-hos-dark mb-1.5">Plafond mensuel souhaité (€)</label>
+                <input type="number" min="50" max="3000" value="1000" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="document.getElementById('newCardModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                    Générer la carte
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
