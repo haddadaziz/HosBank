@@ -9,7 +9,7 @@ exports.getDashboard = async (req, res) => {
 
         res.render("client/dashboard", {
             title: "Tableau de bord | HosBank",
-            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            user: req.session.user,
             accounts: data.accounts,
             cards: data.cards,
             transactions: data.transactions,
@@ -25,24 +25,32 @@ exports.getDashboard = async (req, res) => {
 exports.getTransfers = (req, res) => {
     res.render("client/transfers", {
         title: "Virements bancaires | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+        user: req.session.user,
         currentPath: "/client/transfers"
     });
 };
 
-exports.getCards = (req, res) => {
-    res.render("client/cards", {
-        title: "Mes Cartes | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
-        cards: [],
-        currentPath: "/client/cards"
-    });
+exports.getCards = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const cards = await clientService.getCards(userId);
+
+        res.render("client/cards", {
+            title: "Mes Cartes | HosBank",
+            user: req.session.user,
+            cards,
+            currentPath: "/client/cards"
+        });
+    } catch (error) {
+        console.error("Erreur récupération cartes :", error);
+        res.status(500).send("Erreur lors du chargement des cartes.");
+    }
 };
 
 exports.getDocuments = (req, res) => {
     res.render("client/documents", {
         title: "RIB & Démarches | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+        user: req.session.user,
         currentPath: "/client/documents"
     });
 };
@@ -50,7 +58,7 @@ exports.getDocuments = (req, res) => {
 exports.getTransactions = (req, res) => {
     res.render("client/transactions", {
         title: "Historique des opérations | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+        user: req.session.user,
         currentPath: "/client/transactions"
     });
 };

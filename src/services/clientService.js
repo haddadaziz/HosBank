@@ -1,6 +1,27 @@
 const db = require("../config/db");
 
 class ClientService {
+
+    async getCards(userId) {
+        const cardsQuery = `
+            SELECT 
+                c.id, 
+                c.compte_id AS "accountId", 
+                c.pan_masque AS "maskedPan",
+                c.type_carte AS "type", 
+                c.statut AS "status",
+                TO_CHAR(c.date_expiration, 'MM/YY') AS "expiry",
+                c.plafond_paiement_mensuel::float AS "monthlyLimit",
+                c.plafond_retrait_hebdo::float AS "weeklyLimit"
+            FROM cartes_bancaires c
+            JOIN comptes_bancaires cb ON c.compte_id = cb.id
+            WHERE cb.utilisateur_id = $1
+            ORDER BY c.type_carte ASC
+        `;
+        const { rows } = await db.query(cardsQuery, [userId]);
+        return rows;
+    }
+
     async getDashboardData(userId = 3) {
         const accountsQuery = `
             SELECT 
