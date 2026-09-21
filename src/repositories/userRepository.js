@@ -14,6 +14,11 @@ const userRepository = {
     },
 
     async findByToken(token) {
+        const query = `
+            SELECT * FROM utilisateurs 
+            WHERE token_verification = $1 
+            AND expiration_token > CURRENT_TIMESTAMP
+        `;
         const query = `SELECT * FROM utilisateurs WHERE token_verification = $1`;
         const result = await db.query(query, [token]);
         return result.rows[0] || null;
@@ -64,6 +69,12 @@ const userRepository = {
         const query = `
             INSERT INTO utilisateurs (
                 civilite, nom, prenom, email, mot_de_passe_hash, 
+                role, email_verifie, token_verification, expiration_token
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, 
+                'CLIENT', FALSE, $6, CURRENT_TIMESTAMP + INTERVAL '24 HOURS'
+            )
                 role, email_verifie, token_verification
             )
             VALUES ($1, $2, $3, $4, $5, 'CLIENT', FALSE, $6)
@@ -89,6 +100,7 @@ const userRepository = {
             prenom,
             email.trim().toLowerCase(),
             motDePasseHash,
+            token
             role || 'CLIENT',
             telephone || null,
             adressePostale || null
@@ -133,6 +145,7 @@ const userRepository = {
         
         const query = `
             INSERT INTO comptes_bancaires (utilisateur_id, numero_compte, iban, bic, solde, type_compte, statut)
+            VALUES ($1, $2, $3, 'HOSBFR2P', 50.00, 'COURANT', 'ACTIF')
             VALUES ($1, $2, $3, 'HOSBFR2P', 100.00, 'COURANT', 'ACTIF')
             RETURNING *
         `;
@@ -143,6 +156,7 @@ const userRepository = {
     async verifyEmail(id) {
         const query = `
             UPDATE utilisateurs 
+            SET email_verifie = TRUE, token_verification = NULL, expiration_token = NULL 
             SET email_verifie = TRUE, token_verification = NULL 
             WHERE id = $1
             RETURNING *

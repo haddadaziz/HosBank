@@ -12,29 +12,32 @@ const adminRoutes = require("./src/routes/adminRoutes");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuration du moteur de templates EJS
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src", "views"));
 
-// Middlewares pour parser les requêtes
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Fichiers statiques
 app.use(express.static(path.join(__dirname, "public")));
 
-// Session utilisateur
 app.use(session({
-    secret: process.env.SESSION_SECRET || "hosbank-dev-secret-key",
+    name: "hosbank_session",
+    secret: process.env.SESSION_SECRET || "hosbank-dev-secret-key-2026",
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === "production",
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
 
+app.use((req, res, next) => {
+    res.locals.user = req.session ? req.session.user : null;
+    res.locals.admin = req.session ? req.session.admin : null;
+    res.locals.advisor = req.session ? req.session.advisor : null;
+    res.locals.currentPath = req.path;
 // Rendre l'utilisateur connecté accessible dans toutes les vues EJS
 app.use((req, res, next) => {
     res.locals.user = req.session ? req.session.user : null;
@@ -45,19 +48,11 @@ app.get("/", (req, res) => {
     res.render("home", { title: "HosBank | Une banque radicalement différente" });
 });
 
-// Routes d'authentification
 app.use("/", authRoutes);
-
-// Routes Client
 app.use("/client", clientRoutes);
-
-// Routes Chargé Client
 app.use("/advisor", advisorRoutes);
-
-// Routes Administration
 app.use("/admin", adminRoutes);
 
-// Gestion des routes inexistantes
 app.use((req, res) => {
     res.status(404).send("Page non trouvée");
 });

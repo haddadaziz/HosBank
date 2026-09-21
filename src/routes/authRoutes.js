@@ -11,6 +11,10 @@ router.get("/register", isGuest, authController.getRegister);
 router.post("/login", authController.postLogin);
 router.post("/register", authController.postRegister);
 
+router.get("/verify-email", authController.getVerifyEmail);
+
+router.get("/logout", authController.logout);
+router.post("/logout", authController.logout);
 // Vérification de l'adresse email par lien
 router.get("/verify-email", authController.getVerifyEmail);
 
