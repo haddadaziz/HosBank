@@ -20,27 +20,26 @@
         <main class="admin-content">
             <div class="page-header">
                 <div>
-                    <h1 class="page-title">Gestion des Clients</h1>
-                    <p class="page-subtitle">Consultez, modifiez et gérez l'ensemble des comptes et accès clients HosBank</p>
+                    <h1 class="page-title">Gestion des Utilisateurs</h1>
+                    <p class="page-subtitle">Consultez, créez, modifiez et activez/désactivez l'ensemble des comptes utilisateurs HosBank</p>
                 </div>
                 <button class="btn-primary" data-open-modal="modalAddClient">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
-                    Nouveau Client
+                    Nouvel Utilisateur
                 </button>
             </div>
 
-            <!-- Carte et Tableau des Clients -->
             <div class="card">
                 <div class="card-header">
                     <div style="display: flex; align-items: center; gap: 14px;">
-                        <span class="card-title">Portefeuille Clients</span>
+                        <span class="card-title">Annuaire des Utilisateurs</span>
                         <span class="badge purple"><%= clients.length %> enregistrés</span>
                     </div>
 
                     <form action="/admin/clients" method="GET" style="display: flex; gap: 10px;">
-                        <input type="text" name="q" value="<%= searchQuery %>" placeholder="Recherche rapide..." class="form-input" style="padding: 6px 12px; font-size: 0.85rem; width: 220px; border: 1px solid var(--primary-border); border-radius: var(--radius-sm); background: #FFFFFF;">
+                        <input type="text" name="q" value="<%= searchQuery %>" placeholder="Rechercher par nom, email, ID..." class="form-input" style="padding: 6px 12px; font-size: 0.85rem; width: 240px; border: 1px solid var(--primary-border); border-radius: var(--radius-sm); background: #FFFFFF;">
                         <% if (searchQuery) { %>
                             <a href="/admin/clients" class="btn-sm btn-secondary">Effacer</a>
                         <% } %>
@@ -52,13 +51,13 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Identifiant</th>
-                                <th>Client / Titulaire</th>
+                                <th>ID</th>
+                                <th>Utilisateur</th>
+                                <th>Rôle</th>
                                 <th>Contact & Ville</th>
-                                <th>Date d'inscription</th>
-                                <th>Comptes & Avoirs</th>
-                                <th>Conformité KYC</th>
-                                <th>Statut Compte</th>
+                                <th>Date de création</th>
+                                <th>Comptes</th>
+                                <th>Statut</th>
                                 <th style="text-align: right;">Actions</th>
                             </tr>
                         </thead>
@@ -66,58 +65,76 @@
                             <% clients.forEach(client => { %>
                                 <tr>
                                     <td>
-                                        <span style="font-family: monospace; font-weight: 700; color: var(--primary);"><%= client.id %></span>
+                                        <span style="font-family: monospace; font-weight: 700; color: var(--primary);">#<%= client.id %></span>
                                     </td>
                                     <td>
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-light); color: var(--primary); font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 0.82rem;">
-                                                <%= client.firstName[0] %><%= client.lastName[0] %>
+                                                <%= (client.prenom ? client.prenom[0] : (client.firstName ? client.firstName[0] : 'U')) %><%= (client.nom ? client.nom[0] : (client.lastName ? client.lastName[0] : '')) %>
                                             </div>
                                             <div>
                                                 <div style="font-weight: 600; color: var(--text-main);">
-                                                    <%= client.gender === 'M' ? 'M.' : 'Mme' %> <%= client.firstName %> <%= client.lastName %>
+                                                    <%= client.civilite || 'M.' %> <%= client.prenom || client.firstName %> <%= client.nom || client.lastName %>
                                                 </div>
                                                 <div style="font-size: 0.78rem; color: var(--text-muted);"><%= client.email %></div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div><%= client.phone %></div>
-                                        <div style="font-size: 0.78rem; color: var(--text-muted);"><%= client.city %></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-size: 0.85rem;"><%= client.joinedDate %></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 700; color: var(--text-main);"><%= client.totalBalance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><%= client.accountsCount %> compte(s) actif(s)</div>
-                                    </td>
-                                    <td>
-                                        <% if (client.kycStatus === 'Vérifié') { %>
-                                            <span class="badge success"><span class="badge-dot"></span> Vérifié</span>
-                                        <% } else if (client.kycStatus === 'En cours') { %>
-                                            <span class="badge warning"><span class="badge-dot"></span> En cours</span>
+                                        <% if (client.role === 'ADMINISTRATEUR') { %>
+                                            <span class="badge purple"><span class="badge-dot"></span> Admin</span>
+                                        <% } else if (client.role === 'CHARGE_CLIENT') { %>
+                                            <span class="badge warning"><span class="badge-dot"></span> Conseiller</span>
                                         <% } else { %>
-                                            <span class="badge danger"><span class="badge-dot"></span> Non conforme</span>
+                                            <span class="badge info"><span class="badge-dot"></span> Client</span>
                                         <% } %>
                                     </td>
                                     <td>
-                                        <% if (client.status === 'Actif') { %>
-                                            <span class="badge success"><span class="badge-dot"></span> Actif</span>
-                                        <% } else if (client.status === 'Suspendu') { %>
-                                            <span class="badge danger"><span class="badge-dot"></span> Suspendu</span>
+                                        <div><%= client.telephone || client.phone || '-' %></div>
+                                        <div style="font-size: 0.78rem; color: var(--text-muted);"><%= client.adressePostale || client.city || '-' %></div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 0.85rem;"><%= client.dateCreation || client.joinedDate || '-' %></div>
+                                    </td>
+                                    <td>
+                                        <% if (client.role === 'CLIENT') { %>
+                                            <div style="font-weight: 700; color: var(--text-main);"><%= (client.totalSolde || client.totalBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);"><%= client.comptesCount || client.accountsCount || 0 %> compte(s)</div>
                                         <% } else { %>
-                                            <span class="badge warning"><span class="badge-dot"></span> En attente</span>
+                                            <span style="color: var(--text-muted); font-size: 0.85rem;">N/A</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <% if (client.compteVerrouille || client.status === 'Suspendu') { %>
+                                            <span class="badge danger"><span class="badge-dot"></span> Désactivé</span>
+                                        <% } else { %>
+                                            <span class="badge success"><span class="badge-dot"></span> Actif</span>
                                         <% } %>
                                     </td>
                                     <td style="text-align: right;">
-                                        <form action="/admin/clients/<%= client.id %>/toggle-status" method="POST" style="display: inline-block;">
-                                            <% if (client.status === 'Actif') { %>
-                                                <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous suspendre l'accès de ce client ?">Suspendre</button>
-                                            <% } else { %>
-                                                <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Activer</button>
-                                            <% } %>
-                                        </form>
+                                        <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                            <button 
+                                                type="button" 
+                                                class="btn-sm btn-secondary btn-edit-user"
+                                                data-id="<%= client.id %>"
+                                                data-gender="<%= client.civilite || 'M.' %>"
+                                                data-firstname="<%= client.prenom || client.firstName %>"
+                                                data-lastname="<%= client.nom || client.lastName %>"
+                                                data-email="<%= client.email %>"
+                                                data-role="<%= client.role || 'CLIENT' %>"
+                                                data-phone="<%= client.telephone || client.phone || '' %>"
+                                                data-city="<%= client.adressePostale || client.city || '' %>">
+                                                Modifier
+                                            </button>
+
+                                            <form action="/admin/clients/<%= client.id %>/toggle-status" method="POST" style="display: inline-block;">
+                                                <% if (client.compteVerrouille || client.status === 'Suspendu') { %>
+                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Activer</button>
+                                                <% } else { %>
+                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous désactiver l'accès de cet utilisateur ?">Désactiver</button>
+                                                <% } %>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             <% }) %>
@@ -129,18 +146,18 @@
     </div>
 </div>
 
-<!-- Modal Ajout Client -->
+<!-- Modal Ajout Utilisateur -->
 <div class="modal-overlay" id="modalAddClient">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Créer un Nouveau Compte Client</div>
+            <div class="modal-title">Créer un Nouvel Utilisateur</div>
             <button class="modal-close" data-close-modal>&times;</button>
         </div>
         <form action="/admin/clients/new" method="POST">
             <div class="modal-body">
                 <div class="form-group" style="display: flex; gap: 20px; margin-bottom: 15px;">
                     <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <input type="radio" name="gender" value="M" checked style="accent-color: var(--primary);"> M.
+                        <input type="radio" name="gender" value="M." checked style="accent-color: var(--primary);"> M.
                     </label>
                     <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
                         <input type="radio" name="gender" value="Mme" style="accent-color: var(--primary);"> Mme
@@ -149,36 +166,146 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
                         <label for="firstName">Prénom</label>
-                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder="Ex: Lucas" required>
+                        <input type="text" id="firstName" name="firstName" class="form-input" placeholder="Ex: Alexandre" required>
                     </div>
                     <div class="form-group">
                         <label for="lastName">Nom</label>
-                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Ex: Martin" required>
+                        <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Ex: Moreau" required>
                     </div>
                 </div>
                 <div class="form-group">
                     <label for="email">Adresse E-mail</label>
-                    <input type="email" id="email" name="email" class="form-input" placeholder="lucas.martin@email.com" required>
+                    <input type="email" id="email" name="email" class="form-input" placeholder="utilisateur@hosbank.fr" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="role">Rôle utilisateur</label>
+                        <select id="role" name="role" class="form-input">
+                            <option value="CLIENT" selected>Client Particulier</option>
+                            <option value="CHARGE_CLIENT">Chargé de Clientèle</option>
+                            <option value="ADMINISTRATEUR">Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Mot de passe</label>
+                        <input type="password" id="password" name="password" class="form-input" placeholder="Défaut: Password123!">
+                    </div>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div class="form-group">
                         <label for="phone">Téléphone</label>
-                        <input type="text" id="phone" name="phone" class="form-input" placeholder="+33 6 ...">
+                        <input type="text" id="phone" name="phone" class="form-input" placeholder="+33 6 12 34 56 78">
                     </div>
                     <div class="form-group">
-                        <label for="city">Ville de résidence</label>
-                        <input type="text" id="city" name="city" class="form-input" placeholder="Strasbourg, Nice...">
+                        <label for="city">Adresse / Ville</label>
+                        <input type="text" id="city" name="city" class="form-input" placeholder="Paris, Lyon...">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-sm btn-secondary" data-close-modal>Annuler</button>
-                <button type="submit" class="btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Créer le client</button>
+                <button type="submit" class="btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Créer l'utilisateur</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Modification Utilisateur -->
+<div class="modal-overlay" id="modalEditUser">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">Modifier l'Utilisateur</div>
+            <button class="modal-close" data-close-modal>&times;</button>
+        </div>
+        <form id="formEditUser" method="POST" action="">
+            <div class="modal-body">
+                <div class="form-group" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gender" id="editGenderM" value="M." style="accent-color: var(--primary);"> M.
+                    </label>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gender" id="editGenderMme" value="Mme" style="accent-color: var(--primary);"> Mme
+                    </label>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="editFirstName">Prénom</label>
+                        <input type="text" id="editFirstName" name="firstName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editLastName">Nom</label>
+                        <input type="text" id="editLastName" name="lastName" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Adresse E-mail</label>
+                    <input type="email" id="editEmail" name="email" class="form-input" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label for="editRole">Rôle utilisateur</label>
+                        <select id="editRole" name="role" class="form-input">
+                            <option value="CLIENT">Client Particulier</option>
+                            <option value="CHARGE_CLIENT">Chargé de Clientèle</option>
+                            <option value="ADMINISTRATEUR">Administrateur</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPhone">Téléphone</label>
+                        <input type="text" id="editPhone" name="phone" class="form-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editCity">Adresse / Ville</label>
+                    <input type="text" id="editCity" name="city" class="form-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sm btn-secondary" data-close-modal>Annuler</button>
+                <button type="submit" class="btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Enregistrer les modifications</button>
             </div>
         </form>
     </div>
 </div>
 
 <script src="/js/admin.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const editButtons = document.querySelectorAll(".btn-edit-user");
+        const editModal = document.getElementById("modalEditUser");
+        const editForm = document.getElementById("formEditUser");
+
+        editButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-id");
+                const gender = btn.getAttribute("data-gender");
+                const firstName = btn.getAttribute("data-firstname");
+                const lastName = btn.getAttribute("data-lastname");
+                const email = btn.getAttribute("data-email");
+                const role = btn.getAttribute("data-role");
+                const phone = btn.getAttribute("data-phone");
+                const city = btn.getAttribute("data-city");
+
+                editForm.action = `/admin/clients/${id}/edit`;
+                document.getElementById("editFirstName").value = firstName || "";
+                document.getElementById("editLastName").value = lastName || "";
+                document.getElementById("editEmail").value = email || "";
+                document.getElementById("editRole").value = role || "CLIENT";
+                document.getElementById("editPhone").value = phone || "";
+                document.getElementById("editCity").value = city || "";
+
+                if (gender === "Mme") {
+                    document.getElementById("editGenderMme").checked = true;
+                } else {
+                    document.getElementById("editGenderMM" || "editGenderM").checked = true;
+                }
+
+                if (editModal) {
+                    editModal.classList.add("active");
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>

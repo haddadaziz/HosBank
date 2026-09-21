@@ -1,43 +1,80 @@
 const db = require("../config/db");
 
-class AccountRepository {
+const accountRepository = {
     async findAll() {
         const query = `
             SELECT 
-                a.id, a.iban, a.account_type AS "type", a.client_id AS "clientId",
-                a.balance::float, a.currency, a.status,
-                (c.first_name || ' ' || c.last_name) AS "clientName",
-                COALESCE((SELECT card_type FROM cards WHERE account_id = a.id LIMIT 1), '-') AS "cardType",
-                COALESCE((SELECT status FROM cards WHERE account_id = a.id LIMIT 1), '-') AS "cardStatus",
-                (SELECT COUNT(*)::int FROM cards WHERE account_id = a.id) AS "cardsCount"
-            FROM accounts a
-            JOIN clients c ON a.client_id = c.id
-            ORDER BY a.created_at DESC
+                cb.id,
+                cb.numero_compte AS "numeroCompte",
+                cb.iban,
+                cb.bic,
+                CASE 
+                    WHEN cb.type_compte = 'COURANT' THEN 'Compte Courant'
+                    WHEN cb.type_compte = 'EPARGNE' THEN 'Compte Épargne'
+                    ELSE cb.type_compte::text
+                END AS "type",
+                cb.solde::float AS "balance",
+                cb.devise AS "currency",
+                CASE 
+                    WHEN cb.statut = 'ACTIF' THEN 'Actif'
+                    WHEN cb.statut = 'BLOQUE' THEN 'Bloqué'
+                    WHEN cb.statut = 'CLOTURE' THEN 'Clôturé'
+                    ELSE cb.statut::text
+                END AS "status",
+                ('CLI-' || cb.utilisateur_id) AS "clientId",
+                (u.prenom || ' ' || u.nom) AS "clientName",
+                u.email AS "clientEmail",
+                COALESCE((
+                    SELECT card.type_carte || ' (' || card.pan_masque || ')'
+                    FROM cartes_bancaires card 
+                    WHERE card.compte_id = cb.id 
+                    ORDER BY card.id DESC LIMIT 1
+                ), '-') AS "cardType",
+                COALESCE((
+                    SELECT CASE 
+                        WHEN card.statut = 'ACTIVE' THEN 'Active'
+                        ELSE 'Bloquée'
+                    END
+                    FROM cartes_bancaires card 
+                    WHERE card.compte_id = cb.id 
+                    ORDER BY card.id DESC LIMIT 1
+                ), '-') AS "cardStatus",
+                (SELECT COUNT(*)::int FROM cartes_bancaires card WHERE card.compte_id = cb.id) AS "cardsCount"
+            FROM comptes_bancaires cb
+            JOIN utilisateurs u ON cb.utilisateur_id = u.id
+            ORDER BY cb.id ASC
         `;
         const result = await db.query(query);
         return result.rows;
-    }
+    },
 
-    async createAccount({ id, iban, accountType, clientId, balance = 0.00, currency = 'EUR' }) {
+    async findById(id) {
+        const query = `SELECT * FROM comptes_bancaires WHERE id = $1`;
+        const result = await db.query(query, [id]);
+        return result.rows[0] || null;
+    },
+
+    async toggleAccountStatus(accountId) {
         const query = `
-            INSERT INTO accounts (id, iban, account_type, client_id, balance, currency, status)
-            VALUES ($1, $2, $3, $4, $5, $6, 'Actif')
+            UPDATE comptes_bancaires
+            SET statut = CASE WHEN statut = 'ACTIF' THEN 'BLOQUE'::statut_compte ELSE 'ACTIF'::statut_compte END
+            WHERE id = $1
             RETURNING *
         `;
-        const result = await db.query(query, [id, iban, accountType, clientId, balance, currency]);
-        return result.rows[0];
-    }
+        const result = await db.query(query, [accountId]);
+        return result.rows[0] || null;
+    },
 
     async toggleCardStatus(accountId) {
         const query = `
-            UPDATE cards 
-            SET status = CASE WHEN status = 'Active' THEN 'Bloquée' ELSE 'Active' END
-            WHERE account_id = $1
+            UPDATE cartes_bancaires
+            SET statut = CASE WHEN statut = 'ACTIVE' THEN 'BLOQUEE_TEMPORAIREMENT'::statut_carte ELSE 'ACTIVE'::statut_carte END
+            WHERE compte_id = $1
             RETURNING *
         `;
         const result = await db.query(query, [accountId]);
         return result.rows[0] || null;
     }
-}
+};
 
-module.exports = new AccountRepository();
+module.exports = accountRepository;

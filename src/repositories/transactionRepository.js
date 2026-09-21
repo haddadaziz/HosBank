@@ -1,53 +1,72 @@
 const db = require("../config/db");
 
-class TransactionRepository {
+const transactionRepository = {
     async findAll(limit = 100) {
         const query = `
             SELECT 
-                id, reference, sender_account_id AS "senderAccountId",
-                sender_name AS "sender", sender_iban AS "senderIban",
-                recipient_name AS "recipient", recipient_iban AS "recipientIban",
-                transaction_type AS "type", amount::float, currency,
-                status, flagged, flag_reason AS "flagReason",
-                TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI') AS "date"
-            FROM transactions
-            ORDER BY created_at DESC
+                v.id,
+                v.reference_sepa AS "reference",
+                TO_CHAR(v.date_execution, 'YYYY-MM-DD HH24:MI') AS "date",
+                (u.prenom || ' ' || u.nom) AS "sender",
+                c.iban AS "senderIban",
+                COALESCE(b.intitule, 'Bénéficiaire Externe') AS "recipient",
+                COALESCE(b.iban, '-') AS "recipientIban",
+                'Virement SEPA' AS "type",
+                (-v.montant::float) AS "amount",
+                v.motif,
+                CASE 
+                    WHEN v.statut = 'VALIDE' THEN 'Validé'
+                    WHEN v.statut = 'EN_ATTENTE' THEN 'En attente'
+                    ELSE 'Bloqué'
+                END AS "status",
+                CASE 
+                    WHEN v.montant >= 5000.00 THEN TRUE 
+                    ELSE FALSE 
+                END AS "flagged",
+                CASE 
+                    WHEN v.montant >= 5000.00 THEN 'Montant supérieur au seuil d''alerte (5 000 €)'
+                    ELSE ''
+                END AS "flagReason"
+            FROM virements v
+            JOIN comptes_bancaires c ON v.compte_emetteur_id = c.id
+            JOIN utilisateurs u ON c.utilisateur_id = u.id
+            LEFT JOIN beneficiaires b ON v.beneficiaire_id = b.id
+            ORDER BY v.date_execution DESC
             LIMIT $1
         `;
         const result = await db.query(query, [limit]);
         return result.rows;
-    }
+    },
 
     async updateStatus(id, status) {
+        const dbStatus = status === 'Validé' ? 'VALIDE' : (status === 'Rejeté' ? 'REJETE' : status);
         const query = `
-            UPDATE transactions 
-            SET status = $1, flagged = FALSE
+            UPDATE virements 
+            SET statut = $1
             WHERE id = $2
             RETURNING *
         `;
-        const result = await db.query(query, [status, id]);
+        const result = await db.query(query, [dbStatus, id]);
         return result.rows[0] || null;
-    }
+    },
 
     async getMetrics() {
-        const clientsCountQuery = `SELECT COUNT(*)::int as count FROM clients`;
-        const accountsCountQuery = `SELECT COUNT(*)::int as count FROM accounts WHERE status = 'Actif'`;
-        const totalDepositsQuery = `SELECT COALESCE(SUM(balance), 0)::float as total FROM accounts`;
+        const clientsQuery = `SELECT COUNT(*)::int as count FROM utilisateurs WHERE role = 'CLIENT'`;
+        const accountsQuery = `SELECT COUNT(*)::int as count FROM comptes_bancaires WHERE statut = 'ACTIF'`;
+        const depositsQuery = `SELECT COALESCE(SUM(solde), 0)::float as total FROM comptes_bancaires`;
         const todayVolumeQuery = `
-            SELECT COALESCE(SUM(ABS(amount)), 0)::float as volume 
-            FROM transactions 
-            WHERE created_at >= CURRENT_DATE
+            SELECT COALESCE(SUM(montant), 0)::float as volume 
+            FROM virements 
+            WHERE date_execution >= CURRENT_DATE
         `;
-        const pendingKycQuery = `SELECT COUNT(*)::int as count FROM kyc_documents WHERE status = 'En attente'`;
-        const flaggedTxQuery = `SELECT COUNT(*)::int as count FROM transactions WHERE flagged = TRUE`;
+        const flaggedQuery = `SELECT COUNT(*)::int as count FROM virements WHERE montant >= 5000.00`;
 
-        const [clients, accounts, deposits, todayVolume, kyc, flagged] = await Promise.all([
-            db.query(clientsCountQuery),
-            db.query(accountsCountQuery),
-            db.query(totalDepositsQuery),
+        const [clients, accounts, deposits, todayVolume, flagged] = await Promise.all([
+            db.query(clientsQuery),
+            db.query(accountsQuery),
+            db.query(depositsQuery),
             db.query(todayVolumeQuery),
-            db.query(pendingKycQuery),
-            db.query(flaggedTxQuery),
+            db.query(flaggedQuery)
         ]);
 
         return {
@@ -55,10 +74,10 @@ class TransactionRepository {
             activeAccounts: accounts.rows[0].count,
             totalDeposits: deposits.rows[0].total,
             todayTransactionsVolume: todayVolume.rows[0].volume,
-            pendingKycCount: kyc.rows[0].count,
+            pendingKycCount: 0,
             flaggedTransactionsCount: flagged.rows[0].count
         };
     }
-}
+};
 
-module.exports = new TransactionRepository();
+module.exports = transactionRepository;

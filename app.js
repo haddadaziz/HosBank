@@ -35,6 +35,12 @@ app.use(session({
     }
 }));
 
+// Rendre l'utilisateur connecté accessible dans toutes les vues EJS
+app.use((req, res, next) => {
+    res.locals.user = req.session ? req.session.user : null;
+    next();
+});
+
 app.get("/", (req, res) => {
     res.render("home", { title: "HosBank | Une banque radicalement différente" });
 });
