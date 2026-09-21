@@ -17,14 +17,13 @@ const userRepository = {
         const query = `
             SELECT * FROM utilisateurs 
             WHERE token_verification = $1 
-            AND expiration_token > CURRENT_TIMESTAMP
+            AND (expiration_token IS NULL OR expiration_token > CURRENT_TIMESTAMP)
         `;
-        const query = `SELECT * FROM utilisateurs WHERE token_verification = $1`;
         const result = await db.query(query, [token]);
         return result.rows[0] || null;
     },
 
-    async findAll(search = "") {
+    async findAll(search = "", role = "") {
         let query = `
             SELECT 
                 u.id,
@@ -44,16 +43,25 @@ const userRepository = {
             LEFT JOIN comptes_bancaires cb ON u.id = cb.utilisateur_id
         `;
         const params = [];
+        const conditions = [];
 
         if (search && search.trim()) {
-            query += `
-                WHERE 
-                    LOWER(u.nom) LIKE LOWER($1) OR 
-                    LOWER(u.prenom) LIKE LOWER($1) OR 
-                    LOWER(u.email) LIKE LOWER($1) OR 
-                    u.id::text LIKE $1
-            `;
             params.push(`%${search.trim()}%`);
+            conditions.push(`(
+                LOWER(u.nom) LIKE LOWER($${params.length}) OR 
+                LOWER(u.prenom) LIKE LOWER($${params.length}) OR 
+                LOWER(u.email) LIKE LOWER($${params.length}) OR 
+                u.id::text LIKE $${params.length}
+            )`);
+        }
+
+        if (role && role.trim()) {
+            params.push(role.trim());
+            conditions.push(`u.role = $${params.length}::role_utilisateur`);
+        }
+
+        if (conditions.length > 0) {
+            query += ` WHERE ` + conditions.join(" AND ");
         }
 
         query += `
@@ -63,6 +71,17 @@ const userRepository = {
 
         const result = await db.query(query, params);
         return result.rows;
+    },
+
+    async updateRole(id, role) {
+        const query = `
+            UPDATE utilisateurs 
+            SET role = $1::role_utilisateur 
+            WHERE id = $2
+            RETURNING *
+        `;
+        const result = await db.query(query, [role, id]);
+        return result.rows[0] || null;
     },
 
     async create({ civilite, nom, prenom, email, motDePasseHash, token }) {
@@ -75,9 +94,6 @@ const userRepository = {
                 $1, $2, $3, $4, $5, 
                 'CLIENT', FALSE, $6, CURRENT_TIMESTAMP + INTERVAL '24 HOURS'
             )
-                role, email_verifie, token_verification
-            )
-            VALUES ($1, $2, $3, $4, $5, 'CLIENT', FALSE, $6)
             RETURNING *
         `;
         const values = [civilite || 'M.', nom, prenom, email.trim().toLowerCase(), motDePasseHash, token];
@@ -100,7 +116,6 @@ const userRepository = {
             prenom,
             email.trim().toLowerCase(),
             motDePasseHash,
-            token
             role || 'CLIENT',
             telephone || null,
             adressePostale || null
@@ -145,7 +160,6 @@ const userRepository = {
         
         const query = `
             INSERT INTO comptes_bancaires (utilisateur_id, numero_compte, iban, bic, solde, type_compte, statut)
-            VALUES ($1, $2, $3, 'HOSBFR2P', 50.00, 'COURANT', 'ACTIF')
             VALUES ($1, $2, $3, 'HOSBFR2P', 100.00, 'COURANT', 'ACTIF')
             RETURNING *
         `;
@@ -157,7 +171,6 @@ const userRepository = {
         const query = `
             UPDATE utilisateurs 
             SET email_verifie = TRUE, token_verification = NULL, expiration_token = NULL 
-            SET email_verifie = TRUE, token_verification = NULL 
             WHERE id = $1
             RETURNING *
         `;

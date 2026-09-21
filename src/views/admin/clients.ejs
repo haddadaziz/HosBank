@@ -38,9 +38,15 @@
                         <span class="badge purple"><%= clients.length %> enregistrés</span>
                     </div>
 
-                    <form action="/admin/clients" method="GET" style="display: flex; gap: 10px;">
-                        <input type="text" name="q" value="<%= searchQuery %>" placeholder="Rechercher par nom, email, ID..." class="form-input" style="padding: 6px 12px; font-size: 0.85rem; width: 240px; border: 1px solid var(--primary-border); border-radius: var(--radius-sm); background: #FFFFFF;">
-                        <% if (searchQuery) { %>
+                    <form action="/admin/clients" method="GET" style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" name="q" value="<%= searchQuery %>" placeholder="Rechercher par nom, email, ID..." class="form-input" style="padding: 6px 12px; font-size: 0.85rem; width: 220px; border: 1px solid var(--primary-border); border-radius: var(--radius-sm); background: #FFFFFF;">
+                        <select name="role" class="form-input" style="padding: 6px 12px; font-size: 0.85rem; border: 1px solid var(--primary-border); border-radius: var(--radius-sm); background: #FFFFFF;" onchange="this.form.submit()">
+                            <option value="">Tous les rôles</option>
+                            <option value="CLIENT" <%= (typeof currentRole !== 'undefined' && currentRole === 'CLIENT') ? 'selected' : '' %>>Clients Particuliers</option>
+                            <option value="CHARGE_CLIENT" <%= (typeof currentRole !== 'undefined' && currentRole === 'CHARGE_CLIENT') ? 'selected' : '' %>>Chargés Client</option>
+                            <option value="ADMINISTRATEUR" <%= (typeof currentRole !== 'undefined' && currentRole === 'ADMINISTRATEUR') ? 'selected' : '' %>>Administrateurs</option>
+                        </select>
+                        <% if (searchQuery || (typeof currentRole !== 'undefined' && currentRole)) { %>
                             <a href="/admin/clients" class="btn-sm btn-secondary">Effacer</a>
                         <% } %>
                         <button type="submit" class="btn-sm btn-primary">Filtrer</button>
@@ -53,7 +59,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Utilisateur</th>
-                                <th>Rôle</th>
+                                <th>Attribution Rôle</th>
                                 <th>Contact & Ville</th>
                                 <th>Date de création</th>
                                 <th>Comptes</th>
@@ -81,13 +87,13 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <% if (client.role === 'ADMINISTRATEUR') { %>
-                                            <span class="badge purple"><span class="badge-dot"></span> Admin</span>
-                                        <% } else if (client.role === 'CHARGE_CLIENT') { %>
-                                            <span class="badge warning"><span class="badge-dot"></span> Conseiller</span>
-                                        <% } else { %>
-                                            <span class="badge info"><span class="badge-dot"></span> Client</span>
-                                        <% } %>
+                                        <form action="/admin/clients/<%= client.id %>/role" method="POST" style="display: inline-block;">
+                                            <select name="role" onchange="if(confirm('Confirmer le changement de rôle pour cet utilisateur ?')) { this.form.submit(); } else { this.value='<%= client.role %>'; }" style="padding: 4px 10px; font-size: 0.8rem; font-weight: 600; border-radius: 6px; cursor: pointer; border: 1px solid rgba(0,0,0,0.12); background: <%= client.role === 'ADMINISTRATEUR' ? '#F3E8FF' : (client.role === 'CHARGE_CLIENT' ? '#FEF3C7' : '#EFF6FF') %>; color: <%= client.role === 'ADMINISTRATEUR' ? '#7E22CE' : (client.role === 'CHARGE_CLIENT' ? '#B45309' : '#1D4ED8') %>;">
+                                                <option value="CLIENT" <%= client.role === 'CLIENT' ? 'selected' : '' %>>Client</option>
+                                                <option value="CHARGE_CLIENT" <%= client.role === 'CHARGE_CLIENT' ? 'selected' : '' %>>Conseiller</option>
+                                                <option value="ADMINISTRATEUR" <%= client.role === 'ADMINISTRATEUR' ? 'selected' : '' %>>Admin</option>
+                                            </select>
+                                        </form>
                                     </td>
                                     <td>
                                         <div><%= client.telephone || client.phone || '-' %></div>

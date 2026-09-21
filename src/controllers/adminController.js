@@ -48,13 +48,15 @@ const adminController = {
 
     getClients: async (req, res) => {
         const search = req.query.q || "";
-        const clients = await adminService.getClients(search);
+        const role = req.query.role || "";
+        const clients = await adminService.getClients(search, role);
         res.render("admin/clients", {
             currentPath: "/admin/clients",
             admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
             clients: clients,
             searchQuery: search,
-            title: "Gestion des Clients - Administration HosBank"
+            currentRole: role,
+            title: "Gestion des Utilisateurs - Administration HosBank"
         });
     },
 
@@ -82,6 +84,21 @@ const adminController = {
                 `Mise à jour de l'utilisateur #${id} (${firstName} ${lastName})`,
                 req.ip || "127.0.0.1",
                 "Info"
+            );
+        }
+        res.redirect("/admin/clients");
+    },
+
+    postUpdateUserRole: async (req, res) => {
+        const { id } = req.params;
+        const { role } = req.body;
+        if (role && ["CLIENT", "CHARGE_CLIENT", "ADMINISTRATEUR"].includes(role)) {
+            await adminService.updateUserRole(id, role);
+            await adminService.logAction(
+                req.session?.admin?.email || "Admin",
+                `Attribution du rôle ${role} à l'utilisateur #${id}`,
+                req.ip || "127.0.0.1",
+                "Avertissement"
             );
         }
         res.redirect("/admin/clients");

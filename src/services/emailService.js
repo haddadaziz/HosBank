@@ -4,10 +4,6 @@ const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.ethereal.email",
     port: parseInt(process.env.SMTP_PORT || "587", 10),
     secure: process.env.SMTP_SECURE === "true",
-// Configuration du transporteur d'emails
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.ethereal.email",
-    port: process.env.SMTP_PORT || 587,
     auth: {
         user: process.env.SMTP_USER || "",
         pass: process.env.SMTP_PASS || ""
@@ -33,7 +29,7 @@ const emailService = {
             to: email,
             subject: "HosBank - Activez votre compte bancaire",
             html: `
-                <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #F6EFE0; padding: 30px; border-radius: 12px; color: #282330;">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #F6EFE0; padding: 30px; border-radius: 12px; color: #282330;">
                     <div style="text-align: center; margin-bottom: 25px;">
                         <h1 style="color: #746B92; font-size: 26px; margin: 0;">HosBank</h1>
                         <p style="color: #9D937F; font-size: 13px; margin: 5px 0 0 0;">Une banque radicalement différente</p>
@@ -54,16 +50,6 @@ const emailService = {
                         <p style="font-size: 13px; color: #888; line-height: 1.5;">
                             Ce lien de sécurité est valable pendant <strong>24 heures</strong>. Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet e-mail en toute sécurité.
                         </p>
-                        
-                        <hr style="border: none; border-top: 1px solid #EEE; margin: 20px 0;" />
-                        
-                        <p style="font-size: 12px; color: #AAA; word-break: break-all;">
-                            Lien direct : <a href="${verifyUrl}" style="color: #746B92;">${verifyUrl}</a>
-                        </p>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #9D937F;">
-                        © 2026 HosBank. Tous droits réservés. Plateforme bancaire sécurisée.
                     </div>
                 </div>
             `
@@ -73,47 +59,11 @@ const emailService = {
             try {
                 await transporter.sendMail(mailOptions);
             } catch (err) {
-                console.warn(err.message);
+                console.warn("Erreur envoi email :", err.message);
             }
         }
 
         return verifyUrl;
-    // Envoyer l'email d'activation
-    async sendVerificationEmail(email, token, req) {
-        const baseUrl = `${req.protocol}://${req.get("host")}`;
-        const verifyLink = `${baseUrl}/verify-email?token=${token}`;
-
-        console.log("--------------------------------------------------");
-        console.log("📧 LIEN DE VÉRIFICATION EMAIL POUR :", email);
-        console.log("👉 Cliquez ici pour valider :", verifyLink);
-        console.log("--------------------------------------------------");
-
-        // Si des identifiants SMTP existent, on envoie le vrai email
-        if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-            try {
-                await transporter.sendMail({
-                    from: '"HosBank Sécurité" <no-reply@hosbank.fr>',
-                    to: email,
-                    subject: "HosBank - Vérification de votre adresse e-mail",
-                    html: `
-                        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #F6EFE0; color: #282330;">
-                            <h2 style="color: #746B92;">Bienvenue chez HosBank !</h2>
-                            <p>Merci pour votre inscription. Veuillez cliquer sur le bouton ci-dessous pour activer votre compte bancaire :</p>
-                            <p style="margin: 25px 0;">
-                                <a href="${verifyLink}" style="background-color: #746B92; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                                    Activer mon compte
-                                </a>
-                            </p>
-                            <p>Ou copiez ce lien dans votre navigateur :</p>
-                            <p><a href="${verifyLink}">${verifyLink}</a></p>
-                        </div>
-                    `
-                });
-            } catch (err) {
-                console.error("Erreur lors de l'envoi de l'email :", err.message);
-            }
-        }
-        return verifyLink;
     }
 };
 
