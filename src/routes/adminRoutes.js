@@ -2,15 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const adminController = require("../controllers/adminController");
-
-// Middleware de vérification de session admin
-const requireAdminAuth = (req, res, next) => {
-    if (!req.session || !req.session.admin) {
-        return res.redirect("/login");
-    }
-
-    next();
-};
+const { requireAdminAuth } = require("../middlewares/authMiddleware");
 
 // Redirections d'authentification vers le Login unifié
 router.get("/login", (req, res) => res.redirect("/login"));

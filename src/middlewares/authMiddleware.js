@@ -1,20 +1,26 @@
-exports.requireClientAuth = (req, res, next) => {
-    if (!req.session || !req.session.user) {
-        return res.redirect("/login");
-    }
-    next();
+const requireRole = (...allowedRoles) => {
+    return (req,res,next) =>{
+        const currentUser = req.session?.user || req.session?.advisor || req.session?.admin;
+
+        if(!currentUser){
+            return res.redirect("/login");
+        }
+
+        if(!allowedRoles.includes(currentUser.role)) {
+            return res.status(403).send("Accès refusé : vous n'avez pas les autorisations requises pour accéder à cette page.");
+        }
+        req.user = currentUser;
+        next();
+    };
 };
 
-exports.requireAdvisorAuth = (req, res, next) => {
-    if (!req.session || !req.session.advisor) {
-        return res.redirect("/login");
-    }
-    next();
-};
+const requireClientAuth = requireRole("CLIENT");
+const requireAdvisorAuth = requireRole("CHARGE_CLIENT");
+const requireAdminAuth = requireRole("ADMINISTRATEUR");
 
-exports.requireAdminAuth = (req, res, next) => {
-    if (!req.session || !req.session.admin) {
-        return res.redirect("/login");
-    }
-    next();
+module.exports = {
+    requireRole,
+    requireClientAuth,
+    requireAdvisorAuth,
+    requireAdminAuth
 };

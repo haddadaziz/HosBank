@@ -29,7 +29,7 @@ exports.postLogin = (req, res) => {
                 id: "ADM-001",
                 name: "Administrateur HosBank",
                 email: identifier,
-                role: "Super Admin",
+                role: "ADMINISTRATEUR",
                 avatar: "HB"
             };
         }
@@ -42,7 +42,7 @@ exports.postLogin = (req, res) => {
             req.session.advisor = {
                 id: "ADV-104",
                 name: "Karim Bennani",
-                role: "Chargé de Clientèle",
+                role: "CHARGE_CLIENT",
                 agency: "Agence Casablanca Finance City",
                 avatar: "KB"
             };
@@ -56,7 +56,7 @@ exports.postLogin = (req, res) => {
             id: 3,
             name: req.body.name || "Alexandre Moreau",
             email: identifier || "alexandre.moreau@email.fr",
-            role: "Client Particulier",
+            role: "CLIENT",
             avatar: "AM"
         };
     }
