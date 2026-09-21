@@ -20,6 +20,7 @@ router.get("/dashboard", requireAdminAuth, adminController.getDashboard);
 
 router.get("/clients", requireAdminAuth, adminController.getClients);
 router.post("/clients/new", requireAdminAuth, adminController.postAddClient);
+router.post("/clients/:id/edit", requireAdminAuth, adminController.postEditClient);
 router.post(
     "/clients/:id/toggle-status",
     requireAdminAuth,

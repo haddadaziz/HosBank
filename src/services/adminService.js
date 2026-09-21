@@ -1,6 +1,8 @@
 const clientRepo = require("../repositories/clientRepository");
+const userRepo = require("../repositories/userRepository");
 const accountRepo = require("../repositories/accountRepository");
 const cardRepo = require("../repositories/cardRepository");
+const bcrypt = require("bcrypt");
 const requestRepo = require("../repositories/requestRepository");
 const transactionRepo = require("../repositories/transactionRepository");
 const kycRepo = require("../repositories/kycRepository");
@@ -190,68 +192,51 @@ class AdminDataService {
 
     async getClients(query = "") {
         try {
-            return await clientRepo.findAll(query);
+            return await userRepo.findAll(query);
         } catch (err) {
-            if (!query) return this.fallbackClients;
-            const q = query.toLowerCase();
-            return this.fallbackClients.filter(c =>
-                c.firstName.toLowerCase().includes(q) ||
-                c.lastName.toLowerCase().includes(q) ||
-                c.email.toLowerCase().includes(q)
-            );
+            console.error(err);
+            return [];
         }
     }
 
     async addClient(data) {
-        const id = `CLI-${Math.floor(1000 + Math.random() * 9000)}`;
-        try {
-            const client = await clientRepo.create({
-                id,
-                gender: data.gender || "M",
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                phone: data.phone || "+33 6 00 00 00 00",
-                city: data.city || "Paris"
-            });
-            const iban = `FR76 3000 4012 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(100 + Math.random() * 900)}`;
-            await accountRepo.createAccount({
-                id: `ACC-${Math.floor(100 + Math.random() * 900)}`,
-                iban,
-                accountType: "Compte Courant",
-                clientId: id,
-                balance: 100.00
-            });
-            return client;
-        } catch (err) {
-            const fallback = {
-                id,
-                gender: data.gender || "M",
-                firstName: data.firstName,
-                lastName: data.lastName,
-                email: data.email,
-                phone: data.phone,
-                city: data.city,
-                joinedDate: new Date().toISOString().split("T")[0],
-                status: "Actif",
-                kycStatus: "En cours",
-                accountsCount: 1,
-                totalBalance: 100.00,
-                riskLevel: "Faible"
-            };
-            this.fallbackClients.unshift(fallback);
-            return fallback;
+        const motDePasse = data.password || "Password123!";
+        const motDePasseHash = await bcrypt.hash(motDePasse, 10);
+        const user = await userRepo.createUser({
+            civilite: data.gender || "M.",
+            nom: data.lastName,
+            prenom: data.firstName,
+            email: data.email,
+            motDePasseHash,
+            role: data.role || "CLIENT",
+            telephone: data.phone || null,
+            adressePostale: data.city || null
+        });
+
+        if (user.role === "CLIENT") {
+            try {
+                await userRepo.createDefaultAccount(user.id);
+            } catch (err) {
+                console.warn(err.message);
+            }
         }
+        return user;
+    }
+
+    async updateClient(id, data) {
+        return await userRepo.updateUser(id, {
+            civilite: data.gender || "M.",
+            nom: data.lastName,
+            prenom: data.firstName,
+            email: data.email,
+            role: data.role || "CLIENT",
+            telephone: data.phone || null,
+            adressePostale: data.city || null
+        });
     }
 
     async toggleClientStatus(id) {
-        try {
-            return await clientRepo.toggleStatus(id);
-        } catch (err) {
-            const c = this.fallbackClients.find(item => item.id === id);
-            if (c) c.status = c.status === "Actif" ? "Suspendu" : "Actif";
-            return c;
-        }
+        return await userRepo.toggleLock(id);
     }
 
     async getAccounts() {

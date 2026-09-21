@@ -59,12 +59,27 @@ const adminController = {
     },
 
     postAddClient: async (req, res) => {
-        const { gender, firstName, lastName, email, phone, city } = req.body;
+        const { gender, firstName, lastName, email, phone, city, role, password } = req.body;
         if (firstName && lastName && email) {
-            await adminService.addClient({ gender, firstName, lastName, email, phone, city });
+            await adminService.addClient({ gender, firstName, lastName, email, phone, city, role, password });
             await adminService.logAction(
                 req.session?.admin?.email || "Admin",
-                `Création du client ${firstName} ${lastName} (${email})`,
+                `Création de l'utilisateur ${firstName} ${lastName} (${email})`,
+                req.ip || "127.0.0.1",
+                "Info"
+            );
+        }
+        res.redirect("/admin/clients");
+    },
+
+    postEditClient: async (req, res) => {
+        const { id } = req.params;
+        const { gender, firstName, lastName, email, phone, city, role } = req.body;
+        if (firstName && lastName && email) {
+            await adminService.updateClient(id, { gender, firstName, lastName, email, phone, city, role });
+            await adminService.logAction(
+                req.session?.admin?.email || "Admin",
+                `Mise à jour de l'utilisateur #${id} (${firstName} ${lastName})`,
                 req.ip || "127.0.0.1",
                 "Info"
             );
@@ -77,7 +92,7 @@ const adminController = {
         await adminService.toggleClientStatus(id);
         await adminService.logAction(
             req.session?.admin?.email || "Admin",
-            `Modification du statut du client ${id}`,
+            `Changement de statut (verrouillage/activation) de l'utilisateur #${id}`,
             req.ip || "127.0.0.1",
             "Avertissement"
         );
