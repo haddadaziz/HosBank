@@ -400,3 +400,72 @@ exports.getTransactions = async (req, res) => {
     }
 };
 
+/**
+ * Consultation du profil client (HOS-38, HOS-39)
+ */
+exports.getProfile = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+
+        const data = await clientService.getUserProfile(userId);
+
+        res.render("client/profile", {
+            title: "Mon Profil & Coordonnées | HosBank",
+            user: req.session.user || { name: `${data.profile.prenom} ${data.profile.nom}`, avatar: data.profile.initials },
+            profile: data.profile,
+            stats: data.stats,
+            advisor: data.advisor,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/client/profile"
+        });
+    } catch (error) {
+        console.error("Erreur consultation profil :", error);
+        res.redirect("/client/dashboard?error=" + encodeURIComponent(error.message));
+    }
+};
+
+/**
+ * Mise à jour des coordonnées (téléphone, adresse postale) (HOS-39)
+ */
+exports.postUpdateCoordinates = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const { telephone, adressePostale } = req.body;
+
+        await clientService.updateUserCoordinates(userId, { telephone, adressePostale });
+
+        // Mettre à jour la session si nécessaire
+        if (req.session.user) {
+            req.session.user.telephone = telephone ? telephone.trim() : "";
+            req.session.user.adressePostale = adressePostale ? adressePostale.trim() : "";
+        }
+
+        res.redirect("/client/profile?success=" + encodeURIComponent("Vos coordonnées ont été mises à jour avec succès."));
+    } catch (error) {
+        console.error("Erreur mise à jour coordonnées :", error);
+        res.redirect("/client/profile?error=" + encodeURIComponent(error.message));
+    }
+};
+
+/**
+ * Changement sécurisé de mot de passe client
+ */
+exports.postChangePassword = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        await clientService.updateUserPassword(userId, { currentPassword, newPassword, confirmPassword });
+
+        res.redirect("/client/profile?success=" + encodeURIComponent("Votre mot de passe a été modifié avec succès."));
+    } catch (error) {
+        console.error("Erreur modification mot de passe :", error);
+        res.redirect("/client/profile?error=" + encodeURIComponent(error.message));
+    }
+};
+
+

@@ -23,4 +23,9 @@ router.post("/documents/savings", requireClientAuth, clientController.postCreate
 router.post("/documents/reclamations", requireClientAuth, clientController.postCreateReclamation);
 router.get("/transactions", requireClientAuth, clientController.getTransactions);
 
+// Routes Profil & Informations personnelles (HOS-38, HOS-39)
+router.get("/profile", requireClientAuth, clientController.getProfile);
+router.post("/profile", requireClientAuth, clientController.postUpdateCoordinates);
+router.post("/profile/password", requireClientAuth, clientController.postChangePassword);
+
 module.exports = router;
