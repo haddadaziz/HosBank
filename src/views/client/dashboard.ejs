@@ -61,22 +61,30 @@
                     </div>
                 </header>
 
-                <% const currentAccounts=accounts.filter(a=> a.type === 'COURANT');
-                    const currentBalance = currentAccounts.reduce((sum, a) => sum + a.balance, 0);
-                    %>
-
                     <!-- Hero Solde Cumulé (Revolut / Wise Style) -->
                     <div
                         class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm flex flex-wrap justify-between items-center gap-6 mb-8">
                         <div>
                             <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">
-                                Solde total disponible
+                                Solde total combiné
                             </div>
                             <div
                                 class="text-4xl lg:text-5xl font-extrabold text-hos-dark tracking-tight flex items-baseline">
-                                <%= Number(currentBalance).toLocaleString('fr-FR', { minimumFractionDigits: 2,
+                                <%= Number(totalBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
                                     maximumFractionDigits: 2 }) %>
                                     <span class="text-2xl font-bold text-hos-primary ml-1.5">€</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mt-3">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700">
+                                    <span class="w-2 h-2 rounded-full bg-hos-primary"></span>
+                                    Courant : <strong><%= Number(currentBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</strong>
+                                </span>
+                                <% if (hasSavingsAccount) { %>
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/50">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        Épargne (3%) : <strong><%= Number(savingsBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</strong>
+                                    </span>
+                                <% } %>
                             </div>
                         </div>
 
@@ -121,17 +129,40 @@
                             <div>
                                 <h2 class="text-lg font-bold text-hos-dark mb-4">Mes Comptes Bancaires</h2>
 
-                                <!-- Compte Courant Actif -->
-                                <% currentAccounts.forEach(account=> { %>
+                                <!-- Liste de tous les comptes (Courant & Épargne) HOS-18 -->
+                                <% accounts.forEach(account => { %>
                                     <div
                                         class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all mb-4">
-                                        <div class="flex items-center justify-between mb-4">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                             <div class="flex items-center gap-3">
-                                                <span class="font-bold text-hos-dark text-base">Compte Courant</span>
-                                                <span
-                                                    class="text-xs bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md font-semibold">
-                                                    Découvert: <%= Number(account.overdraft).toFixed(0) %>€
-                                                </span>
+                                                <div class="w-10 h-10 rounded-xl flex items-center justify-center <%= account.type === 'EPARGNE' ? 'bg-amber-50 text-amber-600' : 'bg-hos-cream text-hos-dark' %>">
+                                                    <% if (account.type === 'EPARGNE') { %>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    <% } else { %>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                    <% } %>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-bold text-hos-dark text-base">
+                                                            <%= account.type === 'EPARGNE' ? "Livret d'Épargne HosBank" : "Compte Courant" %>
+                                                        </span>
+                                                        <% if (account.type === 'EPARGNE') { %>
+                                                            <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-md font-semibold">
+                                                                Taux <%= Number(account.interestRate || 3).toFixed(2) %>% / an
+                                                            </span>
+                                                        <% } else { %>
+                                                            <span class="text-xs bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md font-semibold">
+                                                                Découvert: <%= Number(account.overdraft || 0).toFixed(0) %>€
+                                                            </span>
+                                                        <% } %>
+                                                    </div>
+                                                    <div class="text-xs text-gray-400 mt-0.5 font-mono">N° <%= account.accountNumber %></div>
+                                                </div>
                                             </div>
                                             <div class="text-xl lg:text-2xl font-extrabold text-hos-dark">
                                                 <%= Number(account.balance).toLocaleString('fr-FR', {
@@ -139,8 +170,8 @@
                                             </div>
                                         </div>
 
-                                        <!-- IBAN avec copie en 1 clic -->
-                                        <div>
+                                        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                                            <!-- IBAN avec copie en 1 clic -->
                                             <span
                                                 class="inline-flex items-center gap-2 font-mono text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-transparent hover:border-hos-primary cursor-pointer transition-all"
                                                 onclick="navigator.clipboard.writeText('<%= account.iban %>'); this.classList.add('border-emerald-500', 'text-emerald-700'); setTimeout(() => this.classList.remove('border-emerald-500', 'text-emerald-700'), 1500);"
@@ -153,38 +184,50 @@
                                                 </svg>
                                                 <%= account.iban %>
                                             </span>
+
+                                            <!-- Lien vers consultation détaillée (HOS-19) -->
+                                            <a href="/client/accounts/<%= account.id %>"
+                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-hos-primary hover:text-hos-dark bg-[#F6EFE0]/60 hover:bg-[#F6EFE0] px-3.5 py-1.5 rounded-lg transition-all">
+                                                <span>Détails & Relevé</span>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </a>
                                         </div>
                                     </div>
-                                    <% }) %>
+                                <% }) %>
 
-                                        <!-- CTA Demande d'ouverture de Livret Épargne (HOS-35) -->
-                                        <div
-                                            class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/40 to-white border-2 border-dashed border-hos-primary/30 hover:border-hos-primary rounded-2xl p-6 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
-                                            <div class="max-w-md">
-                                                <span
-                                                    class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 mb-2.5">
-                                                    Taux rémunéré à 3,00% / an
-                                                </span>
-                                                <h3 class="text-base font-extrabold text-hos-dark mb-1">Livret d'Épargne
-                                                    HosBank</h3>
-                                                <p class="text-xs text-gray-600 leading-relaxed">
-                                                    Faites fructifier vos liquidités en toute sécurité. 0€ de frais de
-                                                    gestion, retraits libres et capital garanti par le FGDR.
-                                                </p>
-                                            </div>
-                                            <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
-                                                <button type="button"
-                                                    onclick="document.getElementById('savingsModal').classList.remove('hidden')"
-                                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                                                    Demander l'ouverture
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                <% if (!hasSavingsAccount) { %>
+                                    <!-- CTA Demande d'ouverture de Livret Épargne (HOS-35) -->
+                                    <div
+                                        class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/40 to-white border-2 border-dashed border-hos-primary/30 hover:border-hos-primary rounded-2xl p-6 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+                                        <div class="max-w-md">
+                                            <span
+                                                class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 mb-2.5">
+                                                Taux rémunéré à 3,00% / an
+                                            </span>
+                                            <h3 class="text-base font-extrabold text-hos-dark mb-1">Livret d'Épargne
+                                                HosBank</h3>
+                                            <p class="text-xs text-gray-600 leading-relaxed">
+                                                Faites fructifier vos liquidités en toute sécurité. 0€ de frais de
+                                                gestion, retraits libres et capital garanti par le FGDR.
+                                            </p>
                                         </div>
+                                        <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
+                                            <button type="button"
+                                                onclick="document.getElementById('savingsModal').classList.remove('hidden')"
+                                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                                                Demander l'ouverture
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
                             </div>
 
                             <!-- Dernières Opérations (Revolut Feed) -->

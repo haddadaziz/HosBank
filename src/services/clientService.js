@@ -493,8 +493,103 @@ class ClientService {
         }
 
         const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+        const currentBalance = accounts.filter(a => a.type === 'COURANT').reduce((sum, a) => sum + a.balance, 0);
+        const savingsBalance = accounts.filter(a => a.type === 'EPARGNE').reduce((sum, a) => sum + a.balance, 0);
+        const hasSavingsAccount = accounts.some(a => a.type === 'EPARGNE');
 
-        return { accounts, cards, transactions, totalBalance };
+        return { 
+            accounts, 
+            cards, 
+            transactions, 
+            totalBalance, 
+            currentBalance, 
+            savingsBalance, 
+            hasSavingsAccount 
+        };
+    }
+
+    /**
+     * Consultation détaillée d'un compte bancaire (HOS-19)
+     */
+    async getAccountDetail(userId, accountId) {
+        // 1. Récupération du compte avec vérification de propriété
+        const accQuery = `
+            SELECT 
+                cb.id,
+                cb.numero_compte AS "accountNumber",
+                cb.iban,
+                cb.bic,
+                cb.devise AS "currency",
+                cb.type_compte AS "type",
+                cb.solde::float AS "balance",
+                cb.decouvert_autorise::float AS "overdraft",
+                cb.taux_interet::float AS "interestRate",
+                cb.statut AS "status",
+                TO_CHAR(cb.date_ouverture, 'DD/MM/YYYY') AS "openingDate",
+                u.civilite,
+                u.nom AS "userLastName",
+                u.prenom AS "userFirstName",
+                u.email AS "userEmail"
+            FROM comptes_bancaires cb
+            JOIN utilisateurs u ON cb.utilisateur_id = u.id
+            WHERE cb.id = $1 AND cb.utilisateur_id = $2
+        `;
+        const accRes = await db.query(accQuery, [accountId, userId]);
+        if (accRes.rows.length === 0) {
+            throw new Error("Compte bancaire introuvable ou non rattaché à votre profil.");
+        }
+        const account = accRes.rows[0];
+
+        // 2. Formatage IBAN
+        const cleanIban = (account.iban || '').replace(/\s+/g, '').toUpperCase();
+        account.cleanIban = cleanIban;
+        account.formattedIban = cleanIban.replace(/(.{4})/g, '$1 ').trim();
+
+        // 3. Cartes bancaires rattachées à ce compte
+        const cardsQuery = `
+            SELECT 
+                id, pan_masque AS "maskedPan", type_carte AS "type", statut AS "status",
+                TO_CHAR(date_expiration, 'MM/YY') AS "expiry",
+                plafond_paiement_mensuel::float AS "monthlyLimit",
+                plafond_retrait_hebdo::float AS "weeklyLimit"
+            FROM cartes_bancaires
+            WHERE compte_id = $1
+            ORDER BY date_creation DESC
+        `;
+        const { rows: cards } = await db.query(cardsQuery, [accountId]);
+
+        // 4. Statistiques du mois en cours sur ce compte
+        const statsQuery = `
+            SELECT 
+                COALESCE(SUM(CASE WHEN sens = 'CREDIT' THEN montant ELSE 0 END), 0)::float AS "monthCredits",
+                COALESCE(SUM(CASE WHEN sens = 'DEBIT' THEN montant ELSE 0 END), 0)::float AS "monthDebits",
+                COUNT(*)::int AS "totalOperationsCount"
+            FROM operations
+            WHERE compte_id = $1 AND date_operation >= date_trunc('month', CURRENT_DATE)
+        `;
+        const statsRes = await db.query(statsQuery, [accountId]);
+        const stats = statsRes.rows[0] || { monthCredits: 0, monthDebits: 0, totalOperationsCount: 0 };
+
+        // 5. Dernières opérations sur ce compte (10 dernières)
+        const opsQuery = `
+            SELECT 
+                id, reference_unique AS "reference", sens AS "direction",
+                montant::float AS "amount", solde_apres_operation::float AS "balanceAfter",
+                motif_libelle AS "label", categorie AS "category",
+                TO_CHAR(date_operation, 'DD/MM/YYYY HH24:MI') AS "dateFormatted"
+            FROM operations
+            WHERE compte_id = $1
+            ORDER BY date_operation DESC, id DESC
+            LIMIT 10
+        `;
+        const { rows: recentOperations } = await db.query(opsQuery, [accountId]);
+
+        return {
+            account,
+            cards,
+            stats,
+            recentOperations
+        };
     }
 
     /**

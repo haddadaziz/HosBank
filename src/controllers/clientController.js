@@ -9,16 +9,49 @@ exports.getDashboard = async (req, res) => {
 
         res.render("client/dashboard", {
             title: "Tableau de bord | HosBank",
-            user: req.session.user,
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
             accounts: data.accounts,
             cards: data.cards,
             transactions: data.transactions,
             totalBalance: data.totalBalance,
+            currentBalance: data.currentBalance,
+            savingsBalance: data.savingsBalance,
+            hasSavingsAccount: data.hasSavingsAccount,
             currentPath: "/client/dashboard"
         });
     } catch (error) {
         console.error("Erreur Dashboard Client :", error);
         res.status(500).send("Erreur lors du chargement du tableau de bord.");
+    }
+};
+
+/**
+ * Consultation détaillée d'un compte bancaire (HOS-19)
+ */
+exports.getAccountDetail = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const accountId = parseInt(req.params.id, 10);
+
+        if (isNaN(accountId)) {
+            return res.redirect("/client/dashboard");
+        }
+
+        const accountData = await clientService.getAccountDetail(userId, accountId);
+
+        res.render("client/account-detail", {
+            title: `${accountData.account.accountNumber} - Détails du compte | HosBank`,
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            account: accountData.account,
+            cards: accountData.cards,
+            stats: accountData.stats,
+            recentOperations: accountData.recentOperations,
+            currentPath: "/client/dashboard"
+        });
+    } catch (error) {
+        console.error("Erreur consultation détaillée compte :", error);
+        res.redirect("/client/dashboard?error=" + encodeURIComponent(error.message));
     }
 };
 
