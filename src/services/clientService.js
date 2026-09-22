@@ -177,6 +177,118 @@ class ClientService {
     }
 
     /**
+     * Récupération paginée et filtrée de l'historique des opérations bancaires (HOS-26, HOS-27, HOS-28)
+     */
+    async getPaginatedTransactions(userId, { accountId, direction, period, search, page = 1, limit = 10 } = {}) {
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.max(1, parseInt(limit, 10) || 10);
+        const offset = (pageNum - 1) * limitNum;
+
+        // Conditions dynamiques sécurisées pour l'utilisateur connecté
+        const conditions = ["cb.utilisateur_id = $1"];
+        const params = [userId];
+        let paramIndex = 2;
+
+        // 1. Filtre par compte bancaire
+        if (accountId && !isNaN(parseInt(accountId, 10))) {
+            conditions.push(`cb.id = $${paramIndex}`);
+            params.push(parseInt(accountId, 10));
+            paramIndex++;
+        }
+
+        // 2. Filtre par sens (DEBIT ou CREDIT)
+        if (direction && ['DEBIT', 'CREDIT'].includes(direction.toUpperCase())) {
+            conditions.push(`o.sens = $${paramIndex}`);
+            params.push(direction.toUpperCase());
+            paramIndex++;
+        }
+
+        // 3. Filtre par période temporelle
+        if (period === 'month') {
+            conditions.push(`o.date_operation >= date_trunc('month', CURRENT_DATE)`);
+        } else if (period === '3months') {
+            conditions.push(`o.date_operation >= CURRENT_DATE - INTERVAL '3 months'`);
+        } else if (period === 'year') {
+            conditions.push(`o.date_operation >= date_trunc('year', CURRENT_DATE)`);
+        }
+
+        // 4. Filtre par recherche textuelle (libellé, catégorie, référence, numéro compte)
+        if (search && search.trim() !== '') {
+            const searchPattern = `%${search.trim()}%`;
+            conditions.push(`(
+                o.motif_libelle ILIKE $${paramIndex} OR 
+                o.categorie ILIKE $${paramIndex} OR 
+                o.reference_unique::text ILIKE $${paramIndex} OR
+                cb.numero_compte ILIKE $${paramIndex}
+            )`);
+            params.push(searchPattern);
+            paramIndex++;
+        }
+
+        const whereClause = conditions.join(" AND ");
+
+        // Requête de comptage et de métriques globales pour la sélection
+        const countQuery = `
+            SELECT 
+                COUNT(*)::int AS "totalCount",
+                COALESCE(SUM(CASE WHEN o.sens = 'DEBIT' THEN o.montant ELSE 0 END), 0)::float AS "totalDebits",
+                COALESCE(SUM(CASE WHEN o.sens = 'CREDIT' THEN o.montant ELSE 0 END), 0)::float AS "totalCredits"
+            FROM operations o
+            JOIN comptes_bancaires cb ON o.compte_id = cb.id
+            WHERE ${whereClause}
+        `;
+        const countRes = await db.query(countQuery, params);
+        const totalCount = countRes.rows[0]?.totalCount || 0;
+        const totalDebits = countRes.rows[0]?.totalDebits || 0;
+        const totalCredits = countRes.rows[0]?.totalCredits || 0;
+        const totalPages = Math.max(1, Math.ceil(totalCount / limitNum));
+
+        // Requête des lignes paginées
+        const dataQuery = `
+            SELECT 
+                o.id,
+                o.compte_id AS "accountId",
+                o.reference_unique AS "reference",
+                o.sens AS "direction",
+                o.montant::float AS "amount",
+                o.solde_apres_operation::float AS "balanceAfter",
+                o.motif_libelle AS "label",
+                o.categorie AS "category",
+                o.date_operation AS "dateOperation",
+                TO_CHAR(o.date_operation, 'DD/MM/YYYY HH24:MI') AS "dateFormatted",
+                TO_CHAR(o.date_operation, 'DD/MM/YYYY') AS "dateOnly",
+                cb.numero_compte AS "accountNumber",
+                cb.type_compte AS "accountType"
+            FROM operations o
+            JOIN comptes_bancaires cb ON o.compte_id = cb.id
+            WHERE ${whereClause}
+            ORDER BY o.date_operation DESC, o.id DESC
+            LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
+        const dataParams = [...params, limitNum, offset];
+        const { rows: transactions } = await db.query(dataQuery, dataParams);
+
+        return {
+            transactions,
+            pagination: {
+                currentPage: pageNum,
+                limit: limitNum,
+                totalCount,
+                totalPages,
+                hasPrev: pageNum > 1,
+                hasNext: pageNum < totalPages,
+                from: totalCount === 0 ? 0 : offset + 1,
+                to: Math.min(offset + limitNum, totalCount)
+            },
+            stats: {
+                totalDebits,
+                totalCredits,
+                netFlow: totalCredits - totalDebits
+            }
+        };
+    }
+
+    /**
      * Récupère toutes les cartes bancaires d'un utilisateur
      */
     async getCards(userId) {

@@ -187,10 +187,87 @@ exports.getDocuments = (req, res) => {
     });
 };
 
-exports.getTransactions = (req, res) => {
-    res.render("client/transactions", {
-        title: "Historique des opérations | HosBank",
-        user: req.session.user,
-        currentPath: "/client/transactions"
-    });
+/**
+ * Consultation de l'historique des opérations bancaires avec filtres et pagination (HOS-26, HOS-27, HOS-28)
+ */
+exports.getTransactions = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+
+        const {
+            page = 1,
+            limit = 10,
+            accountId = '',
+            direction = 'ALL',
+            period = 'all',
+            search = '',
+            export: exportFormat = ''
+        } = req.query;
+
+        // Récupérer les comptes pour le filtre de sélection
+        const accounts = await clientService.getUserAccounts(userId);
+
+        // Si export CSV demandé, récupérer toutes les écritures filtrées (jusqu'à 1000 max)
+        const isExport = exportFormat === 'csv';
+        const effectiveLimit = isExport ? 1000 : Math.max(1, parseInt(limit, 10) || 10);
+        const effectivePage = isExport ? 1 : Math.max(1, parseInt(page, 10) || 1);
+
+        const data = await clientService.getPaginatedTransactions(userId, {
+            accountId,
+            direction,
+            period,
+            search,
+            page: effectivePage,
+            limit: effectiveLimit
+        });
+
+        // Traitement de l'export CSV
+        if (isExport) {
+            const csvRows = [
+                ["Date", "Reference", "Compte", "Type de Compte", "Sens", "Categorie", "Libelle", "Montant (EUR)", "Solde Apres (EUR)"]
+            ];
+
+            data.transactions.forEach(tx => {
+                csvRows.push([
+                    `"${tx.dateFormatted}"`,
+                    `"${tx.reference}"`,
+                    `"${tx.accountNumber}"`,
+                    `"${tx.accountType}"`,
+                    `"${tx.direction}"`,
+                    `"${(tx.category || '').replace(/"/g, '""')}"`,
+                    `"${(tx.label || '').replace(/"/g, '""')}"`,
+                    `"${(tx.direction === 'CREDIT' ? '+' : '-') + tx.amount.toFixed(2)}"`,
+                    `"${tx.balanceAfter.toFixed(2)}"`
+                ]);
+            });
+
+            const csvContent = "\uFEFF" + csvRows.map(r => r.join(";")).join("\r\n");
+            const filename = `operations_hosbank_${new Date().toISOString().slice(0, 10)}.csv`;
+
+            res.setHeader("Content-Type", "text/csv; charset=utf-8");
+            res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+            return res.send(csvContent);
+        }
+
+        // Rendu de la vue EJS avec filtres et pagination
+        res.render("client/transactions", {
+            title: "Historique des opérations | HosBank",
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            accounts,
+            transactions: data.transactions,
+            pagination: data.pagination,
+            stats: data.stats,
+            filters: {
+                accountId,
+                direction,
+                period,
+                search: search.trim()
+            },
+            currentPath: "/client/transactions"
+        });
+    } catch (error) {
+        console.error("Erreur historique des opérations :", error);
+        res.status(500).send("Erreur lors du chargement de l'historique des opérations.");
+    }
 };
+
