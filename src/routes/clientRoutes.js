@@ -16,6 +16,9 @@ router.post("/cards/opposition", requireClientAuth, clientController.postOpposeC
 router.post("/cards/virtual", requireClientAuth, clientController.postCreateVirtualCard);
 router.post("/cards/pin", requireClientAuth, clientController.postRequestPin);
 router.get("/documents", requireClientAuth, clientController.getDocuments);
+router.get("/documents/rib/print", requireClientAuth, clientController.getPrintRib);
+router.post("/documents/savings", requireClientAuth, clientController.postCreateSavingsDemand);
+router.post("/documents/reclamations", requireClientAuth, clientController.postCreateReclamation);
 router.get("/transactions", requireClientAuth, clientController.getTransactions);
 
 module.exports = router;

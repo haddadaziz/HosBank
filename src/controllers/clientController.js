@@ -179,12 +179,108 @@ exports.postRequestPin = async (req, res) => {
     }
 };
 
-exports.getDocuments = (req, res) => {
-    res.render("client/documents", {
-        title: "RIB & Démarches | HosBank",
-        user: req.session.user,
-        currentPath: "/client/documents"
-    });
+/**
+ * Consultation de la page des documents & démarches (HOS-34, HOS-37)
+ */
+exports.getDocuments = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const selectedAccountId = req.query.accountId ? parseInt(req.query.accountId, 10) : null;
+
+        const [accounts, ribData, demandes, reclamations] = await Promise.all([
+            clientService.getUserAccounts(userId),
+            clientService.getAccountRibData(userId, selectedAccountId),
+            clientService.getUserDemandes(userId),
+            clientService.getUserReclamations(userId)
+        ]);
+
+        res.render("client/documents", {
+            title: "RIB & Démarches | HosBank",
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            accounts,
+            selectedAccountId: ribData.account.id,
+            rib: ribData,
+            demandes,
+            reclamations,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/client/documents"
+        });
+    } catch (error) {
+        console.error("Erreur page documents :", error);
+        res.status(500).send("Erreur lors du chargement des documents et démarches.");
+    }
+};
+
+/**
+ * Vue imprimable du RIB officiel (HOS-34)
+ */
+exports.getPrintRib = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const selectedAccountId = req.query.accountId ? parseInt(req.query.accountId, 10) : null;
+        const ribData = await clientService.getAccountRibData(userId, selectedAccountId);
+
+        res.render("client/rib-print", {
+            title: `RIB Officiel - ${ribData.account.number} | HosBank`,
+            user: req.session.user || { name: "Alexandre Moreau" },
+            rib: ribData,
+            autoprint: req.query.autoprint === "1"
+        });
+    } catch (error) {
+        console.error("Erreur impression RIB :", error);
+        res.status(500).send("Erreur lors de la génération du RIB imprimable.");
+    }
+};
+
+/**
+ * Traitement de la demande d'ouverture d'un compte épargne (HOS-35)
+ */
+exports.postCreateSavingsDemand = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const { initialDeposit, sourceAccountId, notes } = req.body;
+
+        if (!sourceAccountId || !initialDeposit) {
+            return res.redirect("/client/documents?error=" + encodeURIComponent("Veuillez sélectionner un compte source et renseigner un versement initial."));
+        }
+
+        const demand = await clientService.createSavingsAccountDemand(userId, {
+            initialDeposit,
+            sourceAccountId: parseInt(sourceAccountId, 10),
+            notes
+        });
+
+        res.redirect("/client/documents?success=" + encodeURIComponent(`Votre demande d'ouverture de livret d'épargne (${demand.reference}) a été transmise à votre conseiller.`));
+    } catch (error) {
+        console.error("Erreur demande livret d'épargne :", error);
+        res.redirect("/client/documents?error=" + encodeURIComponent(error.message));
+    }
+};
+
+/**
+ * Traitement du dépôt de réclamation client (HOS-36)
+ */
+exports.postCreateReclamation = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const { sujet, description, priorite } = req.body;
+
+        if (!sujet || !description) {
+            return res.redirect("/client/documents?error=" + encodeURIComponent("Le sujet et la description détaillée sont obligatoires."));
+        }
+
+        const rec = await clientService.createReclamation(userId, {
+            sujet,
+            description,
+            priorite
+        });
+
+        res.redirect("/client/documents?success=" + encodeURIComponent(`Votre réclamation (${rec.reference}) a été enregistrée avec succès. Elle sera traitée sous 24h ouvrées.`));
+    } catch (error) {
+        console.error("Erreur dépôt réclamation :", error);
+        res.redirect("/client/documents?error=" + encodeURIComponent(error.message));
+    }
 };
 
 /**

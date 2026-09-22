@@ -496,6 +496,209 @@ class ClientService {
 
         return { accounts, cards, transactions, totalBalance };
     }
+
+    /**
+     * Récupère toutes les demandes bancaires d'un client (HOS-37)
+     */
+    async getUserDemandes(userId) {
+        const query = `
+            SELECT 
+                d.id,
+                d.reference,
+                d.type_demande AS "type",
+                d.statut AS "status",
+                d.payload_json AS "payloadJson",
+                d.motif_rejet AS "rejectionReason",
+                d.reponse_conseiller AS "advisorResponse",
+                d.date_demande AS "dateDemande",
+                TO_CHAR(d.date_demande, 'DD/MM/YYYY') AS "dateFormatted",
+                TO_CHAR(d.date_traitement, 'DD/MM/YYYY') AS "dateProcessed"
+            FROM demandes d
+            WHERE d.utilisateur_id = $1
+            ORDER BY d.date_demande DESC
+        `;
+        const { rows } = await db.query(query, [userId]);
+        return rows.map(r => {
+            let details = {};
+            try {
+                details = r.payloadJson ? JSON.parse(r.payloadJson) : {};
+            } catch (e) {
+                details = {};
+            }
+            return {
+                ...r,
+                details
+            };
+        });
+    }
+
+    /**
+     * Récupère toutes les réclamations d'un client (HOS-37)
+     */
+    async getUserReclamations(userId) {
+        const query = `
+            SELECT 
+                r.id,
+                r.reference,
+                r.sujet AS "subject",
+                r.description,
+                r.priorite AS "priority",
+                r.statut AS "status",
+                r.reponse_conseiller AS "advisorResponse",
+                r.date_depot AS "dateFiled",
+                TO_CHAR(r.date_depot, 'DD/MM/YYYY') AS "dateFormatted",
+                TO_CHAR(r.date_cloture, 'DD/MM/YYYY') AS "dateClosed"
+            FROM reclamations r
+            WHERE r.utilisateur_id = $1
+            ORDER BY r.date_depot DESC
+        `;
+        const { rows } = await db.query(query, [userId]);
+        return rows;
+    }
+
+    /**
+     * Demande d'ouverture d'un livret d'épargne (HOS-35)
+     */
+    async createSavingsAccountDemand(userId, { initialDeposit, sourceAccountId, notes = "" }) {
+        const deposit = parseFloat(initialDeposit);
+        if (isNaN(deposit) || deposit < 10) {
+            throw new Error("Le versement initial pour l'ouverture d'un livret d'épargne doit être d'au moins 10,00 €.");
+        }
+
+        const accountRes = await db.query(
+            "SELECT id, numero_compte, solde FROM comptes_bancaires WHERE id = $1 AND utilisateur_id = $2 AND statut = 'ACTIF'",
+            [sourceAccountId, userId]
+        );
+        if (accountRes.rows.length === 0) {
+            throw new Error("Compte de prélèvement invalide ou inactif.");
+        }
+
+        const sourceAccount = accountRes.rows[0];
+        if (parseFloat(sourceAccount.solde) < deposit) {
+            throw new Error("Solde insuffisant sur le compte source pour effectuer le versement initial.");
+        }
+
+        const reference = `DEM-EPA-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+        const payload = JSON.stringify({
+            type_livret: "Livret HosBank Épargne +",
+            versement_initial: deposit,
+            compte_source_id: sourceAccount.id,
+            compte_source_numero: sourceAccount.numero_compte,
+            notes: notes ? notes.trim() : ""
+        });
+
+        const query = `
+            INSERT INTO demandes (utilisateur_id, reference, type_demande, statut, payload_json)
+            VALUES ($1, $2, 'OUVERTURE_EPARGNE', 'EN_ATTENTE', $3)
+            RETURNING id, reference, type_demande, statut, date_demande
+        `;
+        const { rows } = await db.query(query, [userId, reference, payload]);
+        return rows[0];
+    }
+
+    /**
+     * Dépôt d'une réclamation client (HOS-36)
+     */
+    async createReclamation(userId, { sujet, description, priorite = "MOYENNE" }) {
+        if (!sujet || !sujet.trim()) {
+            throw new Error("Le sujet de la réclamation est obligatoire.");
+        }
+        if (!description || !description.trim()) {
+            throw new Error("La description détaillée est obligatoire.");
+        }
+
+        const validPriorities = ["FAIBLE", "MOYENNE", "HAUTE", "URGENTE"];
+        const cleanPriority = validPriorities.includes(priorite?.toUpperCase()) ? priorite.toUpperCase() : "MOYENNE";
+
+        const reference = `REC-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
+        const query = `
+            INSERT INTO reclamations (utilisateur_id, reference, sujet, description, priorite, statut)
+            VALUES ($1, $2, $3, $4, $5, 'OUVERTE')
+            RETURNING id, reference, sujet, priorite, statut, date_depot
+        `;
+        const { rows } = await db.query(query, [
+            userId,
+            reference,
+            sujet.trim(),
+            description.trim(),
+            cleanPriority
+        ]);
+        return rows[0];
+    }
+
+    /**
+     * Récupère les données complètes du RIB d'un compte (HOS-34)
+     */
+    async getAccountRibData(userId, accountId = null) {
+        // Récupérer l'utilisateur
+        const userRes = await db.query(`
+            SELECT u.id, u.civilite, u.nom, u.prenom, u.adresse_postale AS "address",
+                   a.prenom AS "advisorPrenom", a.nom AS "advisorNom"
+            FROM utilisateurs u
+            LEFT JOIN utilisateurs a ON u.conseiller_id = a.id
+            WHERE u.id = $1
+        `, [userId]);
+
+        if (userRes.rows.length === 0) {
+            throw new Error("Utilisateur introuvable.");
+        }
+        const user = userRes.rows[0];
+
+        // Récupérer le compte sélectionné ou le premier compte actif
+        let accountQuery = `
+            SELECT id, numero_compte AS "accountNumber", iban, bic, type_compte AS "type", devise AS "currency"
+            FROM comptes_bancaires
+            WHERE utilisateur_id = $1 AND statut = 'ACTIF'
+        `;
+        const params = [userId];
+
+        if (accountId && !isNaN(parseInt(accountId, 10))) {
+            accountQuery += " AND id = $2";
+            params.push(parseInt(accountId, 10));
+        } else {
+            accountQuery += " ORDER BY type_compte ASC LIMIT 1";
+        }
+
+        const accRes = await db.query(accountQuery, params);
+        if (accRes.rows.length === 0) {
+            throw new Error("Compte bancaire actif introuvable.");
+        }
+        const account = accRes.rows[0];
+
+        // Découpage du RIB national français
+        const cleanIban = (account.iban || '').replace(/\s+/g, '').toUpperCase();
+        const codeBanque = cleanIban.length >= 9 ? cleanIban.slice(4, 9) : "30004";
+        const codeGuichet = cleanIban.length >= 14 ? cleanIban.slice(9, 14) : "01234";
+        const numCompte = cleanIban.length >= 25 ? cleanIban.slice(14, 25) : account.accountNumber;
+        const cleRib = cleanIban.length >= 27 ? cleanIban.slice(25, 27) : "67";
+
+        // IBAN espacé par groupes de 4
+        const formattedIban = cleanIban.replace(/(.{4})/g, '$1 ').trim();
+
+        return {
+            user: {
+                fullName: `${user.civilite || ''} ${user.prenom} ${user.nom}`.trim(),
+                address: user.address || "14 Rue de la République, 75001 Paris",
+                advisorName: user.advisorPrenom ? `${user.advisorPrenom} ${user.advisorNom}` : "Aziz Haddad"
+            },
+            account: {
+                id: account.id,
+                number: account.accountNumber,
+                type: account.type,
+                iban: formattedIban,
+                cleanIban,
+                bic: account.bic || "HOSBFR2P",
+                currency: account.currency || "EUR",
+                codeBanque,
+                codeGuichet,
+                numCompte,
+                cleRib,
+                bankName: "HosBank S.A.",
+                agencyName: "HosBank Agence Centrale • Paris Opéra"
+            }
+        };
+    }
 }
 
 module.exports = new ClientService();
