@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#F8F9FA]">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        hos: {
+                            dark: '#29223A',
+                            hover: '#3C3352',
+                            primary: '#746B92',
+                            cream: '#F6EFE0',
+                            surface: '#FFFFFF',
+                            bg: '#F8F9FA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Conseiller HosBank -->
+        <%- include('../partials/sidebar', { role: 'advisor', currentPath: '/advisor/dashboard', user: advisor }) %>
+
+        <!-- Contenu Principal -->
+        <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+
+            <!-- Fil d'ariane & En-tête -->
+            <header class="mb-8">
+                <nav class="flex items-center gap-2 text-xs font-semibold text-gray-400 mb-3">
+                    <a href="/advisor/dashboard" class="hover:text-hos-primary transition-colors">Portefeuille Conseiller</a>
+                    <span>/</span>
+                    <a href="/advisor/dashboard#clients" class="hover:text-hos-primary transition-colors">Clients Affectés</a>
+                    <span>/</span>
+                    <span class="text-hos-dark">Fiche 360° Client</span>
+                </nav>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
+                            Fiche 360° Client : <%= client.civilite ? client.civilite + ' ' : '' %><%= client.prenom %> <%= client.nom %>
+                        </h1>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Vue consolidée des avoirs, comptes bancaires, moyens de paiement, demandes et réclamations.
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <a href="/advisor/dashboard"
+                            class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all">
+                            <span>←</span> Retour au portefeuille
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Hero Profil 360° -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm mb-8 relative overflow-hidden">
+                <div class="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-hos-primary/10 via-hos-cream/30 to-transparent rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                    <div class="flex items-start sm:items-center gap-5">
+                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#746B92] to-[#29223A] text-white flex items-center justify-center font-extrabold text-2xl shadow-md border-2 border-white shrink-0">
+                            <%= client.initials %>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <h2 class="text-xl lg:text-2xl font-extrabold text-hos-dark">
+                                    <%= client.civilite ? client.civilite + ' ' : '' %><%= client.prenom %> <%= client.nom %>
+                                </h2>
+                                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                    Client Actif
+                                </span>
+                                <% if (client.emailVerifie) { %>
+                                    <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        Email vérifié
+                                    </span>
+                                <% } %>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-y-1 gap-x-6 text-xs text-gray-500 mt-2">
+                                <div>Identifiant : <strong class="text-hos-dark font-mono"><%= client.clientId %></strong></div>
+                                <div>Email : <strong class="text-hos-dark font-mono"><%= client.email %></strong></div>
+                                <div>Téléphone : <strong class="text-hos-dark"><%= client.telephone || 'Non renseigné' %></strong></div>
+                                <div class="sm:col-span-2">Adresse : <strong class="text-hos-dark"><%= client.adressePostale || 'Non renseignée' %></strong></div>
+                                <div>Client depuis le : <strong class="text-hos-dark"><%= client.dateCreation %></strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Encart Solde Global Consolidé -->
+                    <div class="bg-hos-cream/50 border border-hos-primary/20 rounded-2xl p-5 text-right shrink-0 min-w-[220px]">
+                        <span class="text-[11px] uppercase tracking-wider text-gray-500 font-bold block mb-1">
+                            Avoirs Globaux Consolidés
+                        </span>
+                        <div class="text-3xl font-extrabold text-hos-dark">
+                            <%= Number(totalAssets).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
+                        </div>
+                        <span class="text-[11px] text-gray-500 mt-1 block">
+                            <%= accounts.length %> compte<%= accounts.length > 1 ? 's' : '' %> • <%= cards.length %> carte<%= cards.length > 1 ? 's' : '' %>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grille Comptes & Cartes -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                
+                <!-- Colonne Gauche : Comptes Bancaires (7 colonnes) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-hos-dark">Comptes Bancaires (<%= accounts.length %>)</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <% if (accounts.length > 0) { %>
+                            <% accounts.forEach(acc => { %>
+                                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center <%= acc.type === 'EPARGNE' ? 'bg-amber-50 text-amber-600' : 'bg-hos-cream text-hos-dark' %> font-bold">
+                                                <%= acc.type === 'EPARGNE' ? 'É' : 'C' %>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-hos-dark text-sm">
+                                                    <%= acc.type === 'EPARGNE' ? "Livret d'Épargne HosBank" : "Compte Courant Principal" %>
+                                                </div>
+                                                <div class="text-xs text-gray-400 font-mono">N° <%= acc.accountNumber %></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-right">
+                                            <div class="text-xl font-extrabold text-hos-dark">
+                                                <%= Number(acc.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                            </div>
+                                            <% if (acc.type === 'EPARGNE') { %>
+                                                <span class="text-[11px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded">Taux 3,00%</span>
+                                            <% } else { %>
+                                                <span class="text-[11px] text-gray-500">Découvert : <%= Number(acc.overdraft).toFixed(0) %>€</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-mono text-gray-500">
+                                        <span>IBAN : <strong class="text-hos-dark"><%= acc.formattedIban %></strong></span>
+                                        <span>BIC : <strong class="text-hos-dark"><%= acc.bic %></strong></span>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="bg-white p-6 rounded-2xl text-center text-sm text-gray-400 border border-gray-100">
+                                Aucun compte bancaire rattaché.
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Colonne Droite : Cartes Bancaires (5 colonnes) -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-hos-dark">Cartes Bancaires (<%= cards.length %>)</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <% if (cards.length > 0) { %>
+                            <% cards.forEach(card => { %>
+                                <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl bg-purple-50 text-hos-primary flex items-center justify-center font-bold text-sm">
+                                                💳
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-hos-dark text-sm">
+                                                    <%= card.type === 'VIRTUELLE' ? 'Carte Virtuelle e-Shopping' : 'Carte Visa Internationale' %>
+                                                </div>
+                                                <div class="text-xs text-gray-400 font-mono"><%= card.maskedPan %></div>
+                                            </div>
+                                        </div>
+
+                                        <span class="text-xs px-2.5 py-0.5 rounded-full font-bold <%= card.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : (card.status === 'OPPOSEE' ? 'bg-rose-100 text-rose-800' : 'bg-gray-100 text-gray-700') %>">
+                                            <%= card.status === 'ACTIVE' ? 'Active' : (card.status === 'OPPOSEE' ? 'Opposée' : card.status) %>
+                                        </span>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2 text-[11px] text-gray-500 pt-3 border-t border-gray-100">
+                                        <div>Plafond mensuel : <strong class="text-hos-dark"><%= Number(card.monthlyLimit).toLocaleString('fr-FR') %> €</strong></div>
+                                        <div>Expire fin : <strong class="text-hos-dark"><%= card.expiry %></strong></div>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="bg-white p-6 rounded-2xl text-center text-sm text-gray-400 border border-gray-100">
+                                Aucune carte bancaire rattachée.
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Dernières Opérations Financières du Client -->
+            <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm mb-8">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-hos-dark">Mouvements & Opérations Récentes</h2>
+                        <p class="text-xs text-gray-500 mt-0.5">Historique des écritures comptables enregistrées sur les comptes du client.</p>
+                    </div>
+                    <span class="text-xs text-gray-400 font-semibold"><%= operations.length %> écriture<%= operations.length > 1 ? 's' : '' %></span>
+                </div>
+
+                <% if (operations && operations.length > 0) { %>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="text-[11px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-100 pb-3">
+                                    <th class="pb-3">Date</th>
+                                    <th class="pb-3">Compte</th>
+                                    <th class="pb-3">Libellé & Catégorie</th>
+                                    <th class="pb-3 text-right">Montant</th>
+                                    <th class="pb-3 text-right">Solde après</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                <% operations.forEach(op => { %>
+                                    <tr class="hover:bg-gray-50/70 transition-colors">
+                                        <td class="py-3 text-xs text-gray-500 font-mono"><%= op.dateFormatted %></td>
+                                        <td class="py-3 text-xs font-mono text-gray-600"><%= op.accountNumber %></td>
+                                        <td class="py-3">
+                                            <div class="font-bold text-hos-dark text-xs"><%= op.label %></div>
+                                            <div class="text-[10px] text-gray-400"><%= op.category || 'Opération' %></div>
+                                        </td>
+                                        <td class="py-3 text-right font-extrabold text-xs <%= op.direction === 'CREDIT' ? 'text-emerald-600' : 'text-hos-dark' %>">
+                                            <%= op.direction === 'CREDIT' ? '+' : '-' %><%= Number(op.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                        </td>
+                                        <td class="py-3 text-right font-mono text-xs text-gray-500">
+                                            <%= Number(op.balanceAfter).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } else { %>
+                    <div class="py-8 text-center text-sm text-gray-400">
+                        Aucune transaction récente sur les comptes de ce client.
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Demandes & Réclamations du Client (HOS-43 & HOS-47) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Demandes Bancaires -->
+                <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <h3 class="text-base font-bold text-hos-dark mb-4 flex items-center justify-between">
+                        <span>Demandes Bancaires (<%= demands.length %>)</span>
+                        <a href="/advisor/dashboard#demandes" class="text-xs text-hos-primary hover:underline font-semibold">Toutes les demandes →</a>
+                    </h3>
+
+                    <% if (demands && demands.length > 0) { %>
+                        <div class="space-y-3">
+                            <% demands.forEach(d => { %>
+                                <div class="p-4 rounded-2xl bg-gray-50/70 border border-gray-100 flex items-center justify-between gap-4">
+                                    <div>
+                                        <div class="font-bold text-xs text-hos-dark"><%= d.reference %> • <%= d.type_demande %></div>
+                                        <div class="text-[11px] text-gray-400 mt-0.5"><%= d.dateFormatted %></div>
+                                        <% if (d.reponse_conseiller) { %>
+                                            <div class="text-[11px] text-hos-primary mt-1 italic font-medium">Réponse : <%= d.reponse_conseiller %></div>
+                                        <% } %>
+                                    </div>
+                                    <span class="text-xs px-2.5 py-0.5 rounded-full font-bold shrink-0 <%= d.statut === 'APPROUVEE' ? 'bg-emerald-100 text-emerald-800' : (d.statut === 'REJETEE' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800') %>">
+                                        <%= d.statut %>
+                                    </span>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <div class="py-6 text-center text-sm text-gray-400">Aucune demande bancaire enregistrée.</div>
+                    <% } %>
+                </div>
+
+                <!-- Réclamations Déposées -->
+                <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                    <h3 class="text-base font-bold text-hos-dark mb-4 flex items-center justify-between">
+                        <span>Réclamations (<%= claims.length %>)</span>
+                        <a href="/advisor/dashboard#reclamations" class="text-xs text-hos-primary hover:underline font-semibold">Toutes les réclamations →</a>
+                    </h3>
+
+                    <% if (claims && claims.length > 0) { %>
+                        <div class="space-y-3">
+                            <% claims.forEach(c => { %>
+                                <div class="p-4 rounded-2xl bg-gray-50/70 border border-gray-100">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <span class="font-bold text-xs text-hos-dark"><%= c.reference %> • <%= c.sujet %></span>
+                                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold <%= c.statut === 'RESOLUE' ? 'bg-emerald-100 text-emerald-800' : (c.statut === 'REJETEE' ? 'bg-rose-100 text-rose-800' : 'bg-purple-100 text-purple-800') %>">
+                                            <%= c.statut %>
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-600 line-clamp-2"><%= c.description %></p>
+                                    <div class="text-[10px] text-gray-400 mt-2">Déposée le <%= c.dateFormatted %></div>
+                                    <% if (c.reponse_conseiller) { %>
+                                        <div class="text-[11px] text-hos-primary mt-1.5 italic font-medium">Réponse : <%= c.reponse_conseiller %></div>
+                                    <% } %>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <div class="py-6 text-center text-sm text-gray-400">Aucune réclamation déposée.</div>
+                    <% } %>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

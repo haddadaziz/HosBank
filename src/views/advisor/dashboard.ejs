@@ -359,15 +359,25 @@
                                 </div>
                             </div>
 
-                            <div class="pt-3 border-t border-[#D8CEBB] flex items-center justify-between">
+                            <div class="pt-3 border-t border-[#D8CEBB] flex items-center justify-between gap-2">
                                 <span class="text-[10px] text-[#9D937F]">Client depuis <%= cli.joinedDate %></span>
-                                <button 
-                                    onclick='openClientDetailModal(<%= JSON.stringify(cli) %>)'
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                                >
-                                    <span>Consulter Dossier</span>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <a 
+                                        href="/advisor/clients/<%= cli.id %>"
+                                        class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#FAF5ED] hover:bg-[#746B92] text-[#746B92] hover:text-white border border-[#D8CEBB] shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                                        title="Voir la Fiche 360° complète"
+                                    >
+                                        <span>Fiche 360°</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </a>
+                                    <button 
+                                        type="button"
+                                        onclick='openClientDetailModal(<%= JSON.stringify(cli) %>)'
+                                        class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                    >
+                                        <span>Aperçu</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     <% }) %>
