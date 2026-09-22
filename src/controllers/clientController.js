@@ -22,12 +22,75 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-exports.getTransfers = (req, res) => {
-    res.render("client/transfers", {
-        title: "Virements bancaires | HosBank",
-        user: req.session.user,
-        currentPath: "/client/transfers"
-    });
+/**
+ * Consultation de la page des virements (HOS-24)
+ */
+exports.getTransfers = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const [accounts, beneficiaries] = await Promise.all([
+            clientService.getUserAccounts(userId),
+            clientService.getBeneficiaries(userId)
+        ]);
+
+        res.render("client/transfers", {
+            title: "Virements bancaires | HosBank",
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            accounts,
+            beneficiaries,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            ref: req.query.ref || null,
+            amount: req.query.amount || null,
+            dest: req.query.dest || null,
+            currentPath: "/client/transfers"
+        });
+    } catch (error) {
+        console.error("Erreur page virements :", error);
+        res.status(500).send("Erreur lors du chargement de la page des virements.");
+    }
+};
+
+/**
+ * Traitement d'un virement bancaire (HOS-25)
+ */
+exports.postTransfer = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const { sourceAccountId, beneficiaryId, amount, motif } = req.body;
+
+        if (!sourceAccountId || !beneficiaryId || !amount) {
+            return res.redirect("/client/transfers?error=" + encodeURIComponent("Veuillez sélectionner un compte émetteur, un destinataire et renseigner un montant valide."));
+        }
+
+        const result = await clientService.executeTransfer(userId, {
+            sourceAccountId: parseInt(sourceAccountId, 10),
+            beneficiaryId: parseInt(beneficiaryId, 10),
+            amount,
+            motif
+        });
+
+        res.redirect(`/client/transfers?success=transfer_completed&ref=${encodeURIComponent(result.reference)}&amount=${encodeURIComponent(result.amount.toFixed(2))}&dest=${encodeURIComponent(result.beneficiaryName)}`);
+    } catch (error) {
+        console.error("Erreur exécution virement :", error);
+        res.redirect("/client/transfers?error=" + encodeURIComponent(error.message));
+    }
+};
+
+/**
+ * Enregistrement d'un nouveau bénéficiaire (HOS-24)
+ */
+exports.postAddBeneficiary = async (req, res) => {
+    try {
+        const userId = req.session?.user?.id || 3;
+        const { intitule, iban, bic } = req.body;
+
+        await clientService.addBeneficiary(userId, { intitule, iban, bic });
+        res.redirect("/client/transfers?success=beneficiary_added");
+    } catch (error) {
+        console.error("Erreur ajout bénéficiaire :", error);
+        res.redirect("/client/transfers?error=" + encodeURIComponent(error.message));
+    }
 };
 
 /**

@@ -9,6 +9,8 @@ router.get("/", (req, res) => res.redirect("/client/dashboard"));
 // Routes GET de consultation (Vues de l'espace Client)
 router.get("/dashboard", requireClientAuth, clientController.getDashboard);
 router.get("/transfers", requireClientAuth, clientController.getTransfers);
+router.post("/transfers", requireClientAuth, clientController.postTransfer);
+router.post("/beneficiaries", requireClientAuth, clientController.postAddBeneficiary);
 router.get("/cards", requireClientAuth, clientController.getCards);
 router.post("/cards/opposition", requireClientAuth, clientController.postOpposeCard);
 router.post("/cards/virtual", requireClientAuth, clientController.postCreateVirtualCard);

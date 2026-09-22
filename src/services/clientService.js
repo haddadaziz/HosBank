@@ -4,13 +4,14 @@ const crypto = require("crypto");
 class ClientService {
 
     /**
-     * Récupère la liste des comptes actifs d'un utilisateur
+     * Récupère la liste des comptes actifs d'un utilisateur avec solde et IBAN
      */
     async getUserAccounts(userId) {
         const query = `
             SELECT 
-                id, numero_compte AS "accountNumber", 
+                id, numero_compte AS "accountNumber", iban, bic,
                 type_compte AS "type", solde::float AS "balance", 
+                decouvert_autorise::float AS "overdraft",
                 devise AS "currency"
             FROM comptes_bancaires
             WHERE utilisateur_id = $1 AND statut = 'ACTIF'
@@ -18,6 +19,161 @@ class ClientService {
         `;
         const { rows } = await db.query(query, [userId]);
         return rows;
+    }
+
+    /**
+     * Récupère la liste des bénéficiaires enregistrés pour les virements (HOS-24)
+     */
+    async getBeneficiaries(userId) {
+        const query = `
+            SELECT 
+                id, intitule, iban, bic, 
+                TO_CHAR(date_ajout, 'DD/MM/YYYY') AS "dateAdded"
+            FROM beneficiaires
+            WHERE utilisateur_id = $1
+            ORDER BY date_ajout DESC
+        `;
+        const { rows } = await db.query(query, [userId]);
+        return rows;
+    }
+
+    /**
+     * Ajout d'un nouveau bénéficiaire (HOS-24)
+     */
+    async addBeneficiary(userId, { intitule, iban, bic }) {
+        if (!intitule || !iban) {
+            throw new Error("Le nom du bénéficiaire et l'IBAN sont obligatoires.");
+        }
+
+        const cleanIban = iban.replace(/\s+/g, '').toUpperCase();
+        if (cleanIban.length < 15 || cleanIban.length > 34) {
+            throw new Error("Le format de l'IBAN est invalide.");
+        }
+
+        const query = `
+            INSERT INTO beneficiaires (utilisateur_id, intitule, iban, bic)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, intitule, iban, bic
+        `;
+        const { rows } = await db.query(query, [
+            userId, 
+            intitule.trim(), 
+            cleanIban, 
+            (bic || 'HOSBFR2P').trim().toUpperCase()
+        ]);
+        return rows[0];
+    }
+
+    /**
+     * Traitement transactionnel ACID d'un virement bancaire (HOS-25)
+     */
+    async executeTransfer(userId, { sourceAccountId, beneficiaryId, amount, motif }) {
+        const parsedAmount = parseFloat(amount);
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            throw new Error("Le montant du virement doit être un nombre positif supérieur à zéro.");
+        }
+
+        if (parsedAmount > 5000) {
+            throw new Error("Plafond instantané dépassé (maximum 5 000,00 € par virement).");
+        }
+
+        // Connexion dédiée au pool pour transaction ACID
+        const client = await db.pool.connect();
+
+        try {
+            await client.query("BEGIN");
+
+            // 1. Verrouiller et vérifier le compte émetteur (FOR UPDATE)
+            const sourceRes = await client.query(`
+                SELECT id, numero_compte AS "accountNumber", solde::float AS "balance",
+                       decouvert_autorise::float AS "overdraft", statut AS "status"
+                FROM comptes_bancaires
+                WHERE id = $1 AND utilisateur_id = $2
+                FOR UPDATE
+            `, [sourceAccountId, userId]);
+
+            if (sourceRes.rows.length === 0) {
+                throw new Error("Compte émetteur introuvable ou non rattaché à votre profil.");
+            }
+
+            const sourceAcc = sourceRes.rows[0];
+            if (sourceAcc.status !== 'ACTIF') {
+                throw new Error("Le compte émetteur est inactif ou verrouillé.");
+            }
+
+            const maxAvailable = sourceAcc.balance + (sourceAcc.overdraft || 0);
+            if (parsedAmount > maxAvailable) {
+                throw new Error(`Solde insuffisant pour ce virement. Solde disponible : ${maxAvailable.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €.`);
+            }
+
+            // 2. Vérifier le bénéficiaire destinataire
+            const benRes = await client.query(`
+                SELECT id, intitule, iban, bic
+                FROM beneficiaires
+                WHERE id = $1 AND utilisateur_id = $2
+            `, [beneficiaryId, userId]);
+
+            if (benRes.rows.length === 0) {
+                throw new Error("Bénéficiaire destinataire introuvable.");
+            }
+            const beneficiary = benRes.rows[0];
+
+            // 3. Débiter le compte émetteur
+            const newSourceBalance = sourceAcc.balance - parsedAmount;
+            await client.query(
+                "UPDATE comptes_bancaires SET solde = $1 WHERE id = $2",
+                [newSourceBalance, sourceAccountId]
+            );
+
+            // 4. Générer la référence SEPA et insérer dans la table virements
+            const sepaRef = `VIR-SEPA-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+            const label = (motif || `Virement vers ${beneficiary.intitule}`).trim();
+
+            await client.query(`
+                INSERT INTO virements (compte_emetteur_id, beneficiaire_id, reference_sepa, montant, motif, statut)
+                VALUES ($1, $2, $3, $4, $5, 'VALIDE')
+            `, [sourceAccountId, beneficiaryId, sepaRef, parsedAmount, label]);
+
+            // 5. Enregistrer le débit dans la table operations
+            await client.query(`
+                INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie)
+                VALUES ($1, 'DEBIT', $2, $3, $4, 'Virement émis')
+            `, [sourceAccountId, parsedAmount, newSourceBalance, `Virement SEPA à ${beneficiary.intitule} : ${label}`]);
+
+            // 6. Si l'IBAN du destinataire est un compte HosBank interne, le créditer instantanément !
+            const destAccRes = await client.query(`
+                SELECT id, solde::float AS "balance", numero_compte AS "accountNumber"
+                FROM comptes_bancaires
+                WHERE REPLACE(REPLACE(iban, ' ', ''), '-', '') = REPLACE(REPLACE($1, ' ', ''), '-', '') AND statut = 'ACTIF'
+                FOR UPDATE
+            `, [beneficiary.iban]);
+
+            if (destAccRes.rows.length > 0) {
+                const destAcc = destAccRes.rows[0];
+                const newDestBalance = destAcc.balance + parsedAmount;
+                await client.query(
+                    "UPDATE comptes_bancaires SET solde = $1 WHERE id = $2",
+                    [newDestBalance, destAcc.id]
+                );
+                await client.query(`
+                    INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie)
+                    VALUES ($1, 'CREDIT', $2, $3, $4, 'Virement reçu')
+                `, [destAcc.id, parsedAmount, newDestBalance, `Virement reçu de ${sourceAcc.accountNumber} : ${label}`]);
+            }
+
+            await client.query("COMMIT");
+            return {
+                reference: sepaRef,
+                amount: parsedAmount,
+                beneficiaryName: beneficiary.intitule,
+                newBalance: newSourceBalance
+            };
+        } catch (err) {
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
     }
 
     /**
@@ -65,13 +221,11 @@ class ClientService {
             throw new Error("Cette carte est déjà mise en opposition.");
         }
 
-        // Mettre à jour le statut en base
         await db.query(
             "UPDATE cartes_bancaires SET statut = 'OPPOSEE' WHERE id = $1",
             [cardId]
         );
 
-        // Enregistrer la demande d'opposition
         const reference = "DEM-OPP-" + Date.now().toString().slice(-6);
         const payload = JSON.stringify({
             carte_id: cardId,
@@ -92,7 +246,6 @@ class ClientService {
      * Création instantanée d'une carte virtuelle (HOS-30)
      */
     async createVirtualCard(userId, accountId, monthlyLimit = 1000) {
-        // Vérifier le compte cible
         const accountRes = await db.query(
             "SELECT id FROM comptes_bancaires WHERE id = $1 AND utilisateur_id = $2 AND statut = 'ACTIF'",
             [accountId, userId]
