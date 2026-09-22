@@ -10,6 +10,9 @@ router.get("/", (req, res) => res.redirect("/client/dashboard"));
 router.get("/dashboard", requireClientAuth, clientController.getDashboard);
 router.get("/transfers", requireClientAuth, clientController.getTransfers);
 router.get("/cards", requireClientAuth, clientController.getCards);
+router.post("/cards/opposition", requireClientAuth, clientController.postOpposeCard);
+router.post("/cards/virtual", requireClientAuth, clientController.postCreateVirtualCard);
+router.post("/cards/pin", requireClientAuth, clientController.postRequestPin);
 router.get("/documents", requireClientAuth, clientController.getDocuments);
 router.get("/transactions", requireClientAuth, clientController.getTransactions);
 

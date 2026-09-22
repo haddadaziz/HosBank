@@ -44,6 +44,38 @@
     <!-- Zone principale -->
     <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
         
+        <!-- Messages de Notification (Feedback Utilisateur) -->
+        <% if (success === 'opposition') { %>
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center gap-3 shadow-sm transition-all">
+                <span class="text-xl">🚨</span>
+                <div>
+                    <span class="block">Opposition confirmée avec succès !</span>
+                    <span class="text-xs font-normal text-emerald-700">Votre carte bancaire a été définitivement verrouillée pour votre sécurité.</span>
+                </div>
+            </div>
+        <% } else if (success === 'virtual_created') { %>
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center gap-3 shadow-sm transition-all">
+                <span class="text-xl">✨</span>
+                <div>
+                    <span class="block">Carte virtuelle créée avec succès !</span>
+                    <span class="text-xs font-normal text-emerald-700">Votre nouvelle carte est active et prête pour vos paiements en ligne.</span>
+                </div>
+            </div>
+        <% } else if (success === 'pin_requested') { %>
+            <div class="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-sm font-bold flex items-center gap-3 shadow-sm transition-all">
+                <span class="text-xl">🔒</span>
+                <div>
+                    <span class="block">Demande de renouvellement PIN transmise !</span>
+                    <span class="text-xs font-normal text-blue-700">Votre conseiller bancaire a été notifié pour le traitement sécurisé.</span>
+                </div>
+            </div>
+        <% } else if (error) { %>
+            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-bold flex items-center gap-3 shadow-sm transition-all">
+                <span class="text-xl">⚠️</span>
+                <span><%= error %></span>
+            </div>
+        <% } %>
+
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -62,144 +94,171 @@
             </div>
         </header>
 
-        <!-- Grille des Cartes (Physique & Virtuelle) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        <!-- Barre de Filtres Rapides (Évite de casser le design avec beaucoup de cartes) -->
+        <% if (cards && cards.length > 0) { %>
+        <div class="flex items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-2 bg-gray-100/80 p-1 rounded-xl">
+                <button type="button" onclick="filterCards('ALL')" id="filterALL" class="filter-pill bg-white text-hos-dark shadow-sm px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">
+                    Toutes (<%= cards.length %>)
+                </button>
+                <button type="button" onclick="filterCards('PHYSIQUE')" id="filterPHYSIQUE" class="filter-pill text-gray-500 hover:text-hos-dark px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">
+                    Physiques
+                </button>
+                <button type="button" onclick="filterCards('VIRTUELLE')" id="filterVIRTUELLE" class="filter-pill text-gray-500 hover:text-hos-dark px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">
+                    Virtuelles
+                </button>
+            </div>
+            <div class="text-xs text-gray-500 font-medium hidden sm:block">
+                <%= cards.filter(c => c.status === 'ACTIVE').length %> carte(s) active(s)
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Grille Responsive des Cartes (Auto-adaptative 1, 2 ou 3 colonnes) -->
+        <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
             
-            <!-- Carte 1 : Carte Physique Black Titanium -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-7 shadow-sm space-y-6">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2.5">
-                        <h3 class="font-extrabold text-sm text-hos-dark">Carte Physique Débit</h3>
-                    </div>
-                    <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md border border-emerald-200/50">Active</span>
-                </div>
+            <% if (cards && cards.length > 0) { %>
+                <% cards.forEach(card => { %>
+                    <% const isOpposed = (card.status === 'OPPOSEE'); %>
+                    <% const isVirtual = (card.type === 'VIRTUELLE'); %>
 
-                <!-- Visuel Carte Physique -->
-                <div class="bg-gradient-to-br from-[#2D253D] to-[#171320] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                    <div class="absolute -top-16 -right-16 w-48 h-48 bg-hos-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+                    <!-- Carte Item -->
+                    <div class="card-item bg-white border border-gray-100 rounded-3xl p-6 shadow-sm space-y-6 flex flex-col justify-between transition-all hover:shadow-md <%= isOpposed ? 'opacity-70 grayscale-[30%]' : '' %>" data-type="<%= card.type %>">
+                        
+                        <div class="space-y-6">
+                            <!-- En-tête de carte -->
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full <%= isOpposed ? 'bg-red-500' : 'bg-emerald-500' %>"></span>
+                                    <h3 class="font-extrabold text-sm text-hos-dark">
+                                        <%= isVirtual ? 'Carte Virtuelle' : 'Carte Physique Débit' %>
+                                    </h3>
+                                </div>
+                                <% if (isOpposed) { %>
+                                    <span class="text-xs bg-red-50 text-red-700 font-extrabold px-2.5 py-1 rounded-md border border-red-200">Opposée</span>
+                                <% } else { %>
+                                    <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md border border-emerald-200/50">Active</span>
+                                <% } %>
+                            </div>
 
-                    <div class="flex justify-between items-center mb-8">
-                        <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner"></div>
-                        <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
-                    </div>
+                            <!-- Visuel Carte Bancaire (Design Titanium ou Neon selon le type) -->
+                            <div class="rounded-2xl p-6 text-white shadow-xl relative overflow-hidden <%= isVirtual ? 'bg-gradient-to-br from-[#746B92] via-[#5C537B] to-[#3C3352]' : 'bg-gradient-to-br from-[#2D253D] to-[#171320]' %>">
+                                <div class="absolute -top-16 -right-16 w-48 h-48 <%= isVirtual ? 'bg-[#F6EFE0]/20' : 'bg-hos-primary/20' %> rounded-full blur-2xl pointer-events-none"></div>
 
-                    <div class="font-mono text-lg tracking-widest mb-6 drop-shadow">
-                        •••• •••• •••• 4289
-                    </div>
+                                <div class="flex justify-between items-center mb-7">
+                                    <% if (isVirtual) { %>
+                                        <span class="text-[10px] font-bold tracking-widest bg-white/20 px-2.5 py-1 rounded-md uppercase">Virtuelle</span>
+                                    <% } else { %>
+                                        <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner"></div>
+                                    <% } %>
+                                    <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
+                                </div>
 
-                    <div class="flex justify-between items-end text-xs">
-                        <div>
-                            <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Titulaire</span>
-                            <span class="font-bold text-white text-sm"><%= user ? user.name : 'Alexandre Moreau' %></span>
+                                <!-- Numéro masqué ou dévoilable avec icône œil toggle -->
+                                <div class="font-mono text-base sm:text-lg tracking-widest mb-6 drop-shadow flex items-center justify-between">
+                                    <span id="pan-display-<%= card.id %>"><%= card.maskedPan %></span>
+                                    <% if (!isOpposed) { %>
+                                    <button type="button" 
+                                            onclick="toggleRevealPan(<%= card.id %>, '<%= card.maskedPan %>')" 
+                                            title="Afficher / Masquer les numéros"
+                                            class="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none">
+                                        <!-- Œil Ouvert (Actuellement masqué -> cliquer pour révéler) -->
+                                        <svg id="eye-open-<%= card.id %>" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        <!-- Œil Barré (Actuellement visible -> cliquer pour masquer) -->
+                                        <svg id="eye-closed-<%= card.id %>" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                        </svg>
+                                    </button>
+                                    <% } %>
+                                </div>
+
+                                <div class="flex justify-between items-end text-xs">
+                                    <div>
+                                        <span class="text-gray-300 uppercase tracking-wider block text-[9px]">Titulaire</span>
+                                        <span class="font-bold text-white text-xs"><%= user ? (user.name || user.prenom + ' ' + user.nom) : 'Alexandre Moreau' %></span>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-gray-300 uppercase tracking-wider block text-[9px]">Expire fin</span>
+                                        <span class="font-semibold text-gray-100 text-xs"><%= card.expiry || '12/28' %></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Plafonds & Compte rattaché -->
+                            <div class="space-y-3 pt-1">
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-gray-500 font-medium">Plafond de paiement</span>
+                                        <span class="font-bold text-hos-dark"><%= (card.monthlyLimit || 1000).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> € / mois</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                        <div class="<%= isVirtual ? 'bg-hos-primary' : 'bg-hos-dark' %> h-full rounded-full" style="width: 35%;"></div>
+                                    </div>
+                                </div>
+
+                                <% if (!isVirtual) { %>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-gray-500 font-medium">Plafond de retrait</span>
+                                        <span class="font-bold text-hos-dark"><%= (card.weeklyLimit || 500).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> € / sem</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                        <div class="bg-hos-primary h-full rounded-full" style="width: 20%;"></div>
+                                    </div>
+                                </div>
+                                <% } %>
+
+                                <% if (card.accountNumber) { %>
+                                <div class="pt-1 text-[11px] text-gray-400 flex items-center justify-between">
+                                    <span>Compte rattaché :</span>
+                                    <span class="font-semibold text-gray-600 font-mono"><%= card.accountNumber %></span>
+                                </div>
+                                <% } %>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Expire fin</span>
-                            <span class="font-semibold text-gray-200 text-xs">08/27</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Plafonds -->
-                <div class="space-y-4 pt-2">
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-gray-500 font-medium">Paiements ce mois-ci</span>
-                            <span class="font-bold text-hos-dark">1 240,00 € / 3 000,00 €</span>
+                        <!-- Actions pour cette carte -->
+                        <div class="pt-4 border-t border-gray-100 flex items-center gap-2">
+                            <% if (isOpposed) { %>
+                                <div class="w-full text-center py-2.5 px-3 rounded-xl bg-gray-50 text-gray-400 text-xs font-bold border border-gray-200/60">
+                                    🔒 Carte verrouillée définitivement
+                                </div>
+                            <% } else { %>
+                                <button type="button" onclick="openPinModal(<%= card.id %>, '<%= card.maskedPan %>')" class="flex-1 text-center py-2 px-3 rounded-xl border border-gray-200 hover:border-hos-primary text-xs font-bold text-hos-dark transition-all">
+                                    Code PIN
+                                </button>
+                                <button type="button" onclick="openOppositionModal(<%= card.id %>, '<%= card.maskedPan %>')" class="flex-1 text-center py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all">
+                                    Opposition
+                                </button>
+                            <% } %>
                         </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-hos-dark h-full rounded-full" style="width: 41%;"></div>
-                        </div>
-                    </div>
 
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-gray-500 font-medium">Retraits cette semaine</span>
-                            <span class="font-bold text-hos-dark">150,00 € / 1 000,00 €</span>
-                        </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-hos-primary h-full rounded-full" style="width: 15%;"></div>
-                        </div>
                     </div>
-                </div>
-
-                <!-- Actions Rapides pour cette carte -->
-                <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
-                    <button type="button" onclick="document.getElementById('pinModal').classList.remove('hidden')" class="flex-1 text-center py-2.5 px-3 rounded-xl border border-gray-200 hover:border-hos-primary text-xs font-bold text-hos-dark transition-all">
-                        Recalculer le code PIN
+                <% }) %>
+            <% } else { %>
+                <!-- État vide si aucune carte -->
+                <div class="col-span-full py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
+                    <div class="w-16 h-16 bg-hos-cream rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                        💳
+                    </div>
+                    <h3 class="text-base font-bold text-hos-dark mb-1">Aucune carte bancaire trouvée</h3>
+                    <p class="text-xs text-gray-500 max-w-md mx-auto mb-6">Vous ne possédez pas encore de carte bancaire sur votre espace. Commandez une carte virtuelle en 1 clic pour vos achats en ligne.</p>
+                    <button type="button" onclick="document.getElementById('newCardModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all">
+                        Commander une carte virtuelle
                     </button>
-                    <button type="button" onclick="document.getElementById('oppositionModal').classList.remove('hidden')" class="flex-1 text-center py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all">
-                        Faire opposition
-                    </button>
                 </div>
-            </div>
-
-            <!-- Carte 2 : Carte Virtuelle E-Commerce -->
-            <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-7 shadow-sm space-y-6">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2.5">
-                        <h3 class="font-extrabold text-sm text-hos-dark">Carte Virtuelle</h3>
-                    </div>
-                    <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2.5 py-1 rounded-md border border-emerald-200/50">Active</span>
-                </div>
-
-                <!-- Visuel Carte Virtuelle Neon -->
-                <div class="bg-gradient-to-br from-[#746B92] via-[#5C537B] to-[#3C3352] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                    <div class="absolute -top-16 -right-16 w-48 h-48 bg-[#F6EFE0]/25 rounded-full blur-2xl pointer-events-none"></div>
-
-                    <div class="flex justify-between items-center mb-8">
-                        <span class="text-[10px] font-bold tracking-widest bg-white/20 px-2.5 py-1 rounded-md uppercase">Virtuelle</span>
-                        <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
-                    </div>
-
-                    <div class="font-mono text-lg tracking-widest mb-6 drop-shadow">
-                        •••• •••• •••• 8841
-                    </div>
-
-                    <div class="flex justify-between items-end text-xs">
-                        <div>
-                            <span class="text-purple-200 uppercase tracking-wider block text-[10px]">Titulaire</span>
-                            <span class="font-bold text-white text-sm"><%= user ? user.name : 'Alexandre Moreau' %></span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-purple-200 uppercase tracking-wider block text-[10px]">Expire fin</span>
-                            <span class="font-semibold text-white text-xs">11/26</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Plafonds -->
-                <div class="space-y-4 pt-2">
-                    <div>
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-gray-500 font-medium">Paiements e-commerce ce mois-ci</span>
-                            <span class="font-bold text-hos-dark">340,00 € / 1 500,00 €</span>
-                        </div>
-                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                            <div class="bg-hos-primary h-full rounded-full" style="width: 23%;"></div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Actions Rapides -->
-                <div class="flex items-center gap-3 pt-3 border-t border-gray-100">
-                    <button type="button" onclick="alert('Numéro complet dévoilé temporairement : 4970 8219 0318 8841 (CVV: 492)');" class="flex-1 text-center py-2.5 px-3 rounded-xl border border-gray-200 hover:border-hos-primary text-xs font-bold text-hos-dark transition-all">
-                        Voir les numéros
-                    </button>
-                    <button type="button" onclick="document.getElementById('oppositionModal').classList.remove('hidden')" class="flex-1 text-center py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-all">
-                        Bloquer la carte
-                    </button>
-                </div>
-            </div>
+            <% } %>
 
         </div>
 
         <!-- Paramètres & Sécurité des Cartes (Toggles) -->
         <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
-            <h3 class="text-base font-extrabold text-hos-dark mb-6">Préférences & Sécurité</h3>
+            <h3 class="text-base font-extrabold text-hos-dark mb-6">Préférences & Sécurité Globale</h3>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                
                 <!-- Toggle 1 : Sans Contact -->
                 <div class="p-4 rounded-2xl border border-gray-100 flex items-center justify-between">
                     <div>
@@ -235,7 +294,6 @@
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-hos-dark"></div>
                     </label>
                 </div>
-
             </div>
         </div>
 
@@ -252,14 +310,20 @@
             <button onclick="document.getElementById('oppositionModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
-        <p class="text-xs text-gray-600 mb-6 leading-relaxed">
-            Cette action bloquera <strong>immédiatement et définitivement</strong> votre carte bancaire pour prévenir toute utilisation frauduleuse.
+        <p class="text-xs text-gray-600 mb-4 leading-relaxed">
+            Carte ciblée : <strong id="oppositionCardDisplay" class="font-mono text-hos-dark">•••• •••• •••• ----</strong>
         </p>
 
-        <form onsubmit="event.preventDefault(); document.getElementById('oppositionModal').classList.add('hidden'); alert('Demande d\'opposition enregistrée. Votre carte a été verrouillée.');">
+        <p class="text-xs text-red-700 bg-red-50 p-3 rounded-xl border border-red-100 mb-6 leading-relaxed">
+            ⚠️ Cette action bloquera <strong>immédiatement et définitivement</strong> votre carte bancaire pour prévenir toute utilisation frauduleuse.
+        </p>
+
+        <form action="/client/cards/opposition" method="POST">
+            <input type="hidden" name="cardId" id="oppositionCardId">
+
             <div class="mb-4">
                 <label class="block text-xs font-bold text-hos-dark mb-1.5">Motif de l'opposition</label>
-                <select required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                <select name="reason" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
                     <option value="VOL">Vol de la carte</option>
                     <option value="PERTE">Perte de la carte</option>
                     <option value="FRAUDE">Utilisation frauduleuse suspectée</option>
@@ -271,7 +335,7 @@
                     Annuler
                 </button>
                 <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm transition-colors">
-                    Confirmer l'opposition
+                    Confirmer l'opposition définitive
                 </button>
             </div>
         </form>
@@ -286,13 +350,19 @@
             <button onclick="document.getElementById('pinModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
-        <p class="text-xs text-gray-500 mb-6 leading-relaxed">
-            Vous avez oublié votre code PIN ou suspectez qu'il a été compromis ? Vous pouvez demander son recalcul sécurisé.
+        <p class="text-xs text-gray-600 mb-4">
+            Carte concernée : <strong id="pinCardDisplay" class="font-mono text-hos-dark">•••• •••• •••• ----</strong>
         </p>
 
-        <form onsubmit="event.preventDefault(); document.getElementById('pinModal').classList.add('hidden'); alert('Demande de code PIN transmise à votre conseiller Karim Bennani.');">
-            <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-600 mb-5">
-                🔒 Votre nouveau code secret vous sera transmis sous pli confidentiel et validé par votre conseiller.
+        <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Vous avez oublié votre code secret ou suspectez qu'il a été compromis ? Vous pouvez en demander le recalcul sécurisé.
+        </p>
+
+        <form action="/client/cards/pin" method="POST">
+            <input type="hidden" name="cardId" id="pinCardId">
+
+            <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-600 mb-6">
+                🔒 Votre nouveau code secret vous sera envoyé sous pli confidentiel et confirmé par votre conseiller.
             </div>
 
             <div class="flex items-center justify-end gap-3">
@@ -300,7 +370,7 @@
                     Annuler
                 </button>
                 <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
-                    Demander le code PIN
+                    Confirmer la demande
                 </button>
             </div>
         </form>
@@ -311,18 +381,38 @@
 <div id="newCardModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-extrabold text-hos-dark">Créer une carte virtuelle</h3>
+            <h3 class="text-lg font-extrabold text-hos-dark flex items-center gap-2">
+                <span>✨</span> Nouvelle Carte Virtuelle
+            </h3>
             <button onclick="document.getElementById('newCardModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
-        <p class="text-xs text-gray-500 mb-6">
-            Définissez un plafond mensuel pour vos achats en ligne avec cette nouvelle carte.
+        <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Générez instantanément une carte bancaire virtuelle dédiée à vos achats sécurisés sur Internet.
         </p>
 
-        <form onsubmit="event.preventDefault(); document.getElementById('newCardModal').classList.add('hidden'); alert('Nouvelle carte virtuelle générée avec succès !');">
+        <form action="/client/cards/virtual" method="POST">
+            <!-- Choix du compte de rattachement -->
             <div class="mb-4">
-                <label class="block text-xs font-bold text-hos-dark mb-1.5">Plafond mensuel souhaité (€)</label>
-                <input type="number" min="50" max="3000" value="1000" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                <label class="block text-xs font-bold text-hos-dark mb-1.5">Compte bancaire de rattachement</label>
+                <select name="accountId" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold">
+                    <% if (accounts && accounts.length > 0) { %>
+                        <% accounts.forEach(acc => { %>
+                            <option value="<%= acc.id %>">
+                                <%= acc.type === 'COURANT' ? 'Compte Courant' : 'Compte Épargne' %> (<%= acc.accountNumber %>) - Solde : <%= (acc.balance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> <%= acc.currency || 'EUR' %>
+                            </option>
+                        <% }) %>
+                    <% } else { %>
+                        <option value="">Aucun compte disponible</option>
+                    <% } %>
+                </select>
+            </div>
+
+            <!-- Plafond mensuel -->
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-hos-dark mb-1.5">Plafond de paiement mensuel (€)</label>
+                <input type="number" name="monthlyLimit" min="50" max="3000" step="50" value="1000" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                <span class="text-[11px] text-gray-400 mt-1 block">Modifiable à tout moment entre 50 € et 3 000 €.</span>
             </div>
 
             <div class="flex items-center justify-end gap-3 mt-6">
@@ -330,12 +420,82 @@
                     Annuler
                 </button>
                 <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
-                    Générer la carte
+                    Générer instantanément
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<!-- Scripts interactifs pour les cartes -->
+<script>
+    // 1. Filtrage fluide sans rechargement
+    function filterCards(type) {
+        const items = document.querySelectorAll('.card-item');
+        const pills = document.querySelectorAll('.filter-pill');
+
+        pills.forEach(p => {
+            p.classList.remove('bg-white', 'text-hos-dark', 'shadow-sm');
+            p.classList.add('text-gray-500');
+        });
+
+        const activeBtn = document.getElementById('filter' + type);
+        if (activeBtn) {
+            activeBtn.classList.remove('text-gray-500');
+            activeBtn.classList.add('bg-white', 'text-hos-dark', 'shadow-sm');
+        }
+
+        items.forEach(item => {
+            if (type === 'ALL' || item.dataset.type === type) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // 2. Ouverture modal opposition avec passage du cardId
+    function openOppositionModal(cardId, maskedPan) {
+        document.getElementById('oppositionCardId').value = cardId;
+        document.getElementById('oppositionCardDisplay').textContent = maskedPan;
+        document.getElementById('oppositionModal').classList.remove('hidden');
+    }
+
+    // 3. Ouverture modal PIN avec passage du cardId
+    function openPinModal(cardId, maskedPan) {
+        document.getElementById('pinCardId').value = cardId;
+        document.getElementById('pinCardDisplay').textContent = maskedPan;
+        document.getElementById('pinModal').classList.remove('hidden');
+    }
+
+    // 4. Révélation / Masquage du numéro avec bascule d'icône œil ouvert / œil barré
+    const revealedState = {};
+    function toggleRevealPan(cardId, originalMasked) {
+        const el = document.getElementById('pan-display-' + cardId);
+        const eyeOpen = document.getElementById('eye-open-' + cardId);
+        const eyeClosed = document.getElementById('eye-closed-' + cardId);
+        if (!el) return;
+
+        if (!revealedState[cardId]) {
+            // Révéler le numéro complet (numéro généré pour l'affichage de démo avec le last4)
+            const last4 = originalMasked.slice(-4);
+            el.textContent = '4970 8219 0318 ' + last4;
+            
+            // Basculer vers l'icône œil barré
+            if (eyeOpen) eyeOpen.classList.add('hidden');
+            if (eyeClosed) eyeClosed.classList.remove('hidden');
+            revealedState[cardId] = true;
+        } else {
+            // Re-masquer le numéro
+            el.textContent = originalMasked;
+
+            // Revenir à l'icône œil ouvert
+            if (eyeOpen) eyeOpen.classList.remove('hidden');
+            if (eyeClosed) eyeClosed.classList.add('hidden');
+            revealedState[cardId] = false;
+        }
+    }
+</script>
 
 </body>
 </html>
