@@ -266,47 +266,121 @@
                         <!-- Colonne Droite : Carte & Conseiller (4 colonnes) -->
                         <div class="lg:col-span-4 space-y-8">
 
-                            <!-- Widget Carte Bancaire -->
+                            <!-- Widget Carte Bancaire Réaliste 3D (Design HosBank Officiel) -->
                             <div>
                                 <div class="flex items-center justify-between mb-4">
                                     <h2 class="text-lg font-bold text-hos-dark">Carte Principale</h2>
-                                    <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer →</a>
+                                    <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer mes cartes →</a>
                                 </div>
 
-                                <% const primaryCard=(cards && cards.length> 0) ? cards[0] : null; %>
-                                    <!-- Visuel Carte Noire Titanium HosBank -->
-                                    <div class="bg-gradient-to-br from-[#2D253D] to-[#171320] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                                        <!-- Reflet violet subtil -->
-                                        <div class="absolute -top-16 -right-16 w-48 h-48 bg-hos-primary/20 rounded-full blur-2xl pointer-events-none">
+                                <% 
+                                    const primaryCard = (cards && cards.length > 0) ? cards[0] : null;
+                                    const cardStatus = primaryCard ? (primaryCard.status || primaryCard.statut || 'ACTIVE') : 'ACTIVE';
+                                    const cardType = primaryCard ? (primaryCard.type || primaryCard.typeCarte || 'PHYSIQUE') : 'PHYSIQUE';
+                                    const cardPan = primaryCard ? (primaryCard.maskedPan || primaryCard.panMasque || '•••• •••• •••• 4289') : '•••• •••• •••• 4289';
+                                    const cardExpiry = primaryCard ? (primaryCard.expiry || primaryCard.dateExpiration || '12/28') : '12/28';
+                                    const cardMonthlyLimit = primaryCard ? (primaryCard.monthlyLimit ?? primaryCard.plafondPaiement ?? 3000) : 3000;
+                                    const cardWeeklyLimit = primaryCard ? (primaryCard.weeklyLimit ?? primaryCard.plafondRetrait ?? 1000) : 1000;
+
+                                    let themeClass = 'card-theme-premier';
+                                    if (cardStatus === 'OPPOSEE') {
+                                        themeClass = 'card-theme-opposed';
+                                    } else if (cardStatus !== 'ACTIVE') {
+                                        themeClass = 'card-theme-blocked';
+                                    } else if (cardType === 'VIRTUELLE') {
+                                        themeClass = 'card-theme-virtual';
+                                    }
+
+                                    const linkedAccount = (primaryCard && accounts) ? accounts.find(a => a.id === primaryCard.accountId) : (accounts && accounts[0] ? accounts[0] : null);
+                                    const linkedAccountNumber = linkedAccount ? linkedAccount.accountNumber : 'FR76 3000 4000 1234 5678 901';
+                                    const cardHolderName = (user && user.name) ? user.name : 'Alexandre Moreau';
+                                %>
+
+                                <div class="realistic-card-wrapper">
+                                    <!-- Objet Carte Physique -->
+                                    <div class="physical-credit-card <%= themeClass %>">
+                                        <!-- Statut Flottant sur la Carte -->
+                                        <div class="card-floating-badge">
+                                            <% if (cardStatus === 'ACTIVE') { %>
+                                                <span class="badge success" style="background: rgba(16, 185, 129, 0.25); color: #A7F3D0; border: 1px solid rgba(16, 185, 129, 0.5); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot"></span> Active
+                                                </span>
+                                            <% } else if (cardStatus === 'OPPOSEE') { %>
+                                                <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                                </span>
+                                            <% } %>
                                         </div>
 
-                                        <div class="flex justify-between items-center mb-8">
-                                            <!-- Puce EMV dorée -->
-                                            <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner">
+                                        <!-- En-tête de carte avec le Logo Officiel HosBank -->
+                                        <div class="card-top-row">
+                                            <div class="card-logo-container">
+                                                <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
                                             </div>
-                                            <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
                                         </div>
 
-                                        <div class="font-mono text-lg tracking-widest mb-6 drop-shadow">
-                                            <%= primaryCard ? primaryCard.maskedPan : '•••• •••• •••• 4289' %>
+                                        <!-- Puce EMV & Sans-Contact -->
+                                        <div class="card-chip-row">
+                                            <div class="emv-chip"></div>
+                                            <div class="nfc-icon">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                    <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                                    <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                                    <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                                </svg>
+                                            </div>
                                         </div>
 
-                                        <div class="flex justify-between items-end text-xs">
+                                        <!-- Numéro PAN embossé -->
+                                        <div class="card-pan-number">
+                                            <%= cardPan %>
+                                        </div>
+
+                                        <!-- Bas de carte : Titulaire & Expiration -->
+                                        <div class="card-bottom-row">
                                             <div>
-                                                <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Titulaire</span>
-                                                <span class="font-bold text-white text-sm">
-                                                    <%= (user && user.name) ? user.name : 'Alexandre Moreau' %>
-                                                </span>
+                                                <div class="card-holder-label">Titulaire de la carte</div>
+                                                <div class="card-holder-name"><%= cardHolderName %></div>
                                             </div>
-                                            <div class="text-right">
-                                                <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Expire
-                                                    fin</span>
-                                                <span class="font-semibold text-gray-200 text-xs">
-                                                    <%= primaryCard ? primaryCard.expiry : '08/27' %>
-                                                </span>
+                                            <div class="card-expiry-box">
+                                                <div class="card-holder-label">Expire Fin</div>
+                                                <div class="card-expiry-val"><%= cardExpiry %></div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Panneau de Contrôle & Plafonds sous la carte -->
+                                    <div class="card-controls-panel">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+                                            <span style="color: var(--text-muted);">Compte rattaché :</span>
+                                            <strong style="color: var(--text-main); font-family: monospace;"><%= linkedAccountNumber %></strong>
+                                        </div>
+
+                                        <!-- Plafonds de la carte -->
+                                        <div class="card-limits-strip">
+                                            <div>
+                                                <div class="limit-item-title">Plafond Paiement</div>
+                                                <div class="limit-item-val"><%= Number(cardMonthlyLimit).toLocaleString('fr-FR') %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ mois</span></div>
+                                            </div>
+                                            <div>
+                                                <div class="limit-item-title">Plafond Retrait</div>
+                                                <div class="limit-item-val"><%= Number(cardWeeklyLimit).toLocaleString('fr-FR') %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ sem.</span></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Lien rapide de gestion -->
+                                        <div class="card-actions-toolbar" style="margin-top: 2px;">
+                                            <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2 px-3 rounded-xl transition-all border border-gray-200 shadow-sm">
+                                                <svg class="w-3.5 h-3.5 text-hos-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                Gérer ma carte & plafonds
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Widget Mon Conseiller Dédié -->
