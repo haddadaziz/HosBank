@@ -58,7 +58,7 @@ const authService = {
         // 8. Envoyer l'email de confirmation
         await emailService.sendVerificationEmail(email, token, req);
 
-        return newUser;
+        return { ...newUser, token };
     },
 
     // Connexion utilisateur

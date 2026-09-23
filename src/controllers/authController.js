@@ -8,7 +8,8 @@ const authController = {
             initialMode: "login",
             error: req.query.error || null,
             message: req.query.message || null,
-            email: req.query.email || ""
+            email: req.query.email || "",
+            devToken: req.query.devToken || null
         });
     },
 
@@ -19,15 +20,20 @@ const authController = {
             initialMode: "register",
             error: req.query.error || null,
             message: req.query.message || null,
-            email: req.query.email || ""
+            email: req.query.email || "",
+            devToken: null
         });
     },
 
     // Traitement de l'inscription
     postRegister: async (req, res) => {
         try {
-            await authService.register(req.body, req);
-            res.redirect("/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé."));
+            const user = await authService.register(req.body, req);
+            let redirectUrl = "/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé.");
+            if (user && user.token) {
+                redirectUrl += "&devToken=" + encodeURIComponent(user.token);
+            }
+            res.redirect(redirectUrl);
         } catch (err) {
             res.redirect("/register?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(req.body.email || ""));
         }
