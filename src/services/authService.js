@@ -29,7 +29,6 @@ const authService = {
         const nom = parts.slice(1).join(" ") || parts[0];
 
         const motDePasseHash = await bcrypt.hash(password, 10);
-
         const token = crypto.randomBytes(24).toString("hex");
 
         const newUser = await userRepository.create({
@@ -79,7 +78,7 @@ const authService = {
             throw new Error("Identifiant ou mot de passe incorrect.");
         }
 
-        if (!user.email_verifie) {
+        if (user.role === "CLIENT" && !user.email_verifie) {
             throw new Error("Votre adresse e-mail n'est pas encore vérifiée. Veuillez cliquer sur le lien envoyé par email.");
         }
 
@@ -93,7 +92,7 @@ const authService = {
 
         const user = await userRepository.findByToken(token);
         if (!user) {
-            throw new Error("Ce lien de vérification est invalide ou a déjà été utilisé.");
+            throw new Error("Ce lien de vérification est invalide ou a expiré.");
         }
 
         await userRepository.verifyEmail(user.id);

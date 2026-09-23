@@ -1,7 +1,7 @@
 const authService = require("../services/authService");
 
 const authController = {
-    getLogin: (req, res) => {
+    getLogin(req, res) {
         res.render("auth/auth", {
             title: "Connexion | HosBank",
             initialMode: "login",
@@ -12,7 +12,7 @@ const authController = {
         });
     },
 
-    getRegister: (req, res) => {
+    getRegister(req, res) {
         res.render("auth/auth", {
             title: "Inscription | HosBank",
             initialMode: "register",
@@ -23,7 +23,7 @@ const authController = {
         });
     },
 
-    postRegister: async (req, res) => {
+    async postRegister(req, res) {
         try {
             const user = await authService.register(req.body, req);
             let redirectUrl = "/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé.");
@@ -36,9 +36,9 @@ const authController = {
         }
     },
 
-    postLogin: async (req, res) => {
+    async postLogin(req, res) {
         try {
-            const identifier = req.body.name || req.body.email;
+            const identifier = (req.body.email || req.body.name || "").trim();
             const password = req.body.password;
 
             const user = await authService.login(identifier, password);
@@ -56,7 +56,8 @@ const authController = {
                     id: user.id,
                     name: `${user.prenom} ${user.nom}`,
                     email: user.email,
-                    role: "Super Admin"
+                    role: "Super Admin",
+                    avatar: "HB"
                 };
                 return res.redirect("/admin/dashboard");
             }
@@ -66,35 +67,42 @@ const authController = {
                     id: user.id,
                     name: `${user.prenom} ${user.nom}`,
                     email: user.email,
-                    role: "Chargé de Clientèle"
+                    role: "Chargé de Clientèle",
+                    avatar: "KB"
                 };
                 return res.redirect("/advisor/dashboard");
             }
-            return res.redirect("/client/dashboard");
 
+            return res.redirect("/client/dashboard");
         } catch (err) {
-            const emailInput = req.body.name || req.body.email || "";
+            const emailInput = req.body.email || req.body.name || "";
             res.redirect("/login?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(emailInput));
         }
     },
 
-    getVerifyEmail: async (req, res) => {
+    async getVerifyEmail(req, res) {
         try {
             const token = req.query.token;
             await authService.verifyEmail(token);
-            res.redirect("/login?message=" + encodeURIComponent("Votre adresse e-mail a été vérifiée avec succès ! Vous pouvez vous connecter."));
+            res.redirect("/login?message=" + encodeURIComponent("Votre adresse e-mail a été vérifiée avec succès ! Vous pouvez maintenant vous connecter."));
         } catch (err) {
             res.redirect("/login?error=" + encodeURIComponent(err.message));
         }
     },
-    getLogout: (req, res) => {
+
+    logout(req, res) {
         if (req.session) {
             req.session.destroy(() => {
-                res.redirect("/login");
+                res.clearCookie("hosbank_session");
+                res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
             });
         } else {
             res.redirect("/login");
         }
+    },
+
+    getLogout(req, res) {
+        return this.logout(req, res);
     }
 };
 

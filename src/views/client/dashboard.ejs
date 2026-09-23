@@ -13,8 +13,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Tailwind CDN avec configuration des couleurs HosBank -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -27,10 +26,10 @@
                     },
                     colors: {
                         hos: {
-                            dark: '#29223A',      // Violet profond (sidebar, boutons, titres)
-                            hover: '#3C3352',     // Hover boutons sombres
-                            primary: '#746B92',   // Prune signature HosBank
-                            cream: '#F6EFE0',     // Teinte crème douce
+                            dark: '#29223A', // Violet profond (sidebar, boutons, titres)
+                            hover: '#3C3352', // Hover boutons sombres
+                            primary: '#746B92', // Prune signature HosBank
+                            cream: '#F6EFE0', // Teinte crème douce
                             surface: '#FFFFFF',
                             bg: '#F8F9FA'
                         }
@@ -54,25 +53,23 @@
                 <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
-                            Bonjour, <%= (user && user.name) ? user.name.split(' ')[0] : ' Alexandre' %>
+                            Bonjour,
+                            <%= (user && user.name) ? user.name.split(' ')[0] : ' Alexandre' %>
                         </h1>
-                        <p class="text-sm text-gray-500 mt-1">Voici l'état actuel de vos avoirs et vos mouvements
-                            récents.</p>
+                        <p class="text-sm text-gray-500 mt-1">Voici l'état actuel de vos avoirs et vos mouvements récents.
+                        </p>
                     </div>
                 </header>
 
                     <!-- Hero Solde Cumulé (Revolut / Wise Style) -->
-                    <div
-                        class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm flex flex-wrap justify-between items-center gap-6 mb-8">
+                    <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm flex flex-wrap justify-between items-center gap-6 mb-8">
                         <div>
                             <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">
                                 Solde total combiné
                             </div>
-                            <div
-                                class="text-4xl lg:text-5xl font-extrabold text-hos-dark tracking-tight flex items-baseline">
-                                <%= Number(totalBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2 }) %>
-                                    <span class="text-2xl font-bold text-hos-primary ml-1.5">€</span>
+                            <div class="text-4xl lg:text-5xl font-extrabold text-hos-dark tracking-tight flex items-baseline">
+                                <%= Number(totalBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                <span class="text-2xl font-bold text-hos-primary ml-1.5">€</span>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 mt-3">
                                 <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700">
@@ -90,31 +87,23 @@
 
                         <!-- Actions rapides -->
                         <div class="flex flex-wrap items-center gap-3">
-                            <a href="/client/transfers"
-                                class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-3 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                            <a href="/client/transfers" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-3 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                </svg>
-                                Faire un virement
+                                </svg> Faire un virement
                             </a>
-                            <a href="/client/documents"
-                                class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-sm">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                            <a href="/client/documents" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-sm">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                Télécharger RIB
+                                </svg> Télécharger RIB
                             </a>
-                            <a href="/client/cards"
-                                class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-sm">
-                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                            <a href="/client/cards" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-sm">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                </svg>
-                                Mes Cartes
+                                </svg> Mes Cartes
                             </a>
                         </div>
                     </div>
@@ -234,21 +223,17 @@
                             <div>
                                 <div class="flex items-center justify-between mb-4">
                                     <h2 class="text-lg font-bold text-hos-dark">Dernières Opérations</h2>
-                                    <a href="/client/transactions"
-                                        class="text-xs font-bold text-hos-primary hover:underline">
+                                    <a href="/client/transactions" class="text-xs font-bold text-hos-primary hover:underline">
                                         Voir tout l'historique →
                                     </a>
                                 </div>
 
-                                <div
-                                    class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
+                                <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
                                     <% if (transactions && transactions.length> 0) { %>
                                         <% transactions.forEach(tx=> { %>
-                                            <div
-                                                class="flex items-center justify-between p-4 sm:p-5 hover:bg-gray-50/70 transition-colors">
+                                            <div class="flex items-center justify-between p-4 sm:p-5 hover:bg-gray-50/70 transition-colors">
                                                 <div class="flex items-center gap-3.5">
-                                                    <div
-                                                        class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 <%= tx.direction === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-700' %>">
+                                                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 <%= tx.direction === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-700' %>">
                                                         <%= tx.direction==='CREDIT' ? '↓' : '↑' %>
                                                     </div>
                                                     <div>
@@ -256,12 +241,12 @@
                                                             <%= tx.label %>
                                                         </div>
                                                         <div class="text-xs text-gray-400 mt-0.5">
-                                                            <%= tx.dateFormatted %> • <%= tx.category || 'Virement' %>
+                                                            <%= tx.dateFormatted %> •
+                                                                <%= tx.category || 'Virement' %>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div
-                                                    class="text-right font-extrabold text-sm sm:text-base <%= tx.direction === 'CREDIT' ? 'text-emerald-600' : 'text-hos-dark' %>">
+                                                <div class="text-right font-extrabold text-sm sm:text-base <%= tx.direction === 'CREDIT' ? 'text-emerald-600' : 'text-hos-dark' %>">
                                                     <%= tx.direction==='CREDIT' ? '+' : '-' %>
                                                         <%= Number(tx.amount).toLocaleString('fr-FR', {
                                                             minimumFractionDigits: 2 }) %> €
@@ -285,23 +270,19 @@
                             <div>
                                 <div class="flex items-center justify-between mb-4">
                                     <h2 class="text-lg font-bold text-hos-dark">Carte Principale</h2>
-                                    <a href="/client/cards"
-                                        class="text-xs font-bold text-hos-primary hover:underline">Gérer →</a>
+                                    <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer →</a>
                                 </div>
 
                                 <% const primaryCard=(cards && cards.length> 0) ? cards[0] : null; %>
                                     <!-- Visuel Carte Noire Titanium HosBank -->
-                                    <div
-                                        class="bg-gradient-to-br from-[#2D253D] to-[#171320] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+                                    <div class="bg-gradient-to-br from-[#2D253D] to-[#171320] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
                                         <!-- Reflet violet subtil -->
-                                        <div
-                                            class="absolute -top-16 -right-16 w-48 h-48 bg-hos-primary/20 rounded-full blur-2xl pointer-events-none">
+                                        <div class="absolute -top-16 -right-16 w-48 h-48 bg-hos-primary/20 rounded-full blur-2xl pointer-events-none">
                                         </div>
 
                                         <div class="flex justify-between items-center mb-8">
                                             <!-- Puce EMV dorée -->
-                                            <div
-                                                class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner">
+                                            <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner">
                                             </div>
                                             <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
                                         </div>
@@ -312,15 +293,13 @@
 
                                         <div class="flex justify-between items-end text-xs">
                                             <div>
-                                                <span
-                                                    class="text-gray-400 uppercase tracking-wider block text-[10px]">Titulaire</span>
+                                                <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Titulaire</span>
                                                 <span class="font-bold text-white text-sm">
                                                     <%= (user && user.name) ? user.name : 'Alexandre Moreau' %>
                                                 </span>
                                             </div>
                                             <div class="text-right">
-                                                <span
-                                                    class="text-gray-400 uppercase tracking-wider block text-[10px]">Expire
+                                                <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Expire
                                                     fin</span>
                                                 <span class="font-semibold text-gray-200 text-xs">
                                                     <%= primaryCard ? primaryCard.expiry : '08/27' %>
@@ -341,41 +320,46 @@
                                                 <%= advisor.avatar || 'KB' %>
                                             </div>
                                             <div>
-                                                <h3 class="font-bold text-sm text-hos-dark"><%= advisor.name %></h3>
+                                                <h3 class="font-bold text-sm text-hos-dark">
+                                                    <%= advisor.name %>
+                                                </h3>
                                                 <p class="text-xs text-gray-400">Chargé de Clientèle HosBank</p>
                                             </div>
                                         </div>
 
                                         <div class="text-xs text-gray-500 space-y-1.5 mb-5 pb-5 border-b border-gray-100">
-                                            <div>📍 <%= advisor.agency || 'Agence Centrale HosBank Paris' %></div>
-                                            <div>✉️ <%= advisor.email || 'conseiller@hosbank.fr' %></div>
+                                            <div>📍
+                                                <%= advisor.agency || 'Agence Centrale HosBank Paris' %>
+                                            </div>
+                                            <div>✉️
+                                                <%= advisor.email || 'conseiller@hosbank.fr' %>
+                                            </div>
                                         </div>
 
-                                        <a href="mailto:<%= advisor.email || 'conseiller@hosbank.fr' %>"
-                                            class="w-full inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-hos-dark font-semibold text-xs py-2.5 px-4 rounded-xl transition-colors border border-gray-200">
+                                        <a href="mailto:<%= advisor.email || 'conseiller@hosbank.fr' %>" class="w-full inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-hos-dark font-semibold text-xs py-2.5 px-4 rounded-xl transition-colors border border-gray-200">
                                             Contacter mon conseiller
                                         </a>
                                     </div>
-                                <% } else { %>
-                                    <!-- État initial : Aucun conseiller attitré -->
-                                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-                                        <div class="flex items-center gap-3.5 mb-4">
-                                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl shrink-0 border border-amber-200/50">
-                                                ⏳
-                                            </div>
-                                            <div>
-                                                <h3 class="font-bold text-sm text-hos-dark">Aucun conseiller attitré</h3>
-                                                <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 mt-0.5">
+                                    <% } else { %>
+                                        <!-- État initial : Aucun conseiller attitré -->
+                                        <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                            <div class="flex items-center gap-3.5 mb-4">
+                                                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl shrink-0 border border-amber-200/50">
+                                                    ⏳
+                                                </div>
+                                                <div>
+                                                    <h3 class="font-bold text-sm text-hos-dark">Aucun conseiller attitré</h3>
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 mt-0.5">
                                                     En cours d'attribution
                                                 </span>
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <p class="text-xs text-gray-500 leading-relaxed mb-5 pb-5 border-b border-gray-100">
-                                            Votre compte est actif. Un chargé de clientèle dédié vous sera affecté par l'administration dans les prochaines 24h.
-                                        </p>
-                                    </div>
-                                <% } %>
+                                            <p class="text-xs text-gray-500 leading-relaxed mb-5 pb-5 border-b border-gray-100">
+                                                Votre compte est actif. Un chargé de clientèle dédié vous sera affecté par l'administration dans les prochaines 24h.
+                                            </p>
+                                        </div>
+                                        <% } %>
                             </div>
 
                         </div>
@@ -386,39 +370,32 @@
     </div>
 
     <!-- Modale Interactive de Demande de Livret Épargne (HOS-35) -->
-    <div id="savingsModal"
-        class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-extrabold text-hos-dark">Ouvrir un Livret Épargne</h3>
-                <button onclick="document.getElementById('savingsModal').classList.add('hidden')"
-                    class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+                <button onclick="document.getElementById('savingsModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
             </div>
 
             <p class="text-xs text-gray-500 mb-6 leading-relaxed">
-                Votre demande sera directement instruite et validée par votre conseiller <strong>Karim Bennani</strong>
-                sous 24h ouvrées.
+                Votre demande sera directement instruite et validée par votre conseiller <strong>Karim Bennani</strong> sous 24h ouvrées.
             </p>
 
-            <form
-                onsubmit="event.preventDefault(); document.getElementById('savingsSuccess').classList.remove('hidden'); document.getElementById('savingsFormBody').classList.add('hidden');">
+            <form onsubmit="event.preventDefault(); document.getElementById('savingsSuccess').classList.remove('hidden'); document.getElementById('savingsFormBody').classList.add('hidden');">
                 <div id="savingsFormBody">
                     <div class="mb-4">
                         <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité
                             (€)</label>
-                        <input type="number" min="10" value="500" required
-                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
+                        <input type="number" min="10" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
                         <span class="text-[11px] text-gray-400 mt-1 block">Débité immédiatement depuis votre Compte
                             Courant.</span>
                     </div>
 
                     <div class="flex items-center justify-end gap-3 mt-6">
-                        <button type="button" onclick="document.getElementById('savingsModal').classList.add('hidden')"
-                            class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                        <button type="button" onclick="document.getElementById('savingsModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                             Annuler
                         </button>
-                        <button type="submit"
-                            class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                        <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
                             Envoyer ma demande
                         </button>
                     </div>
@@ -429,12 +406,9 @@
                     <div class="text-4xl mb-3">🎉</div>
                     <h4 class="text-base font-bold text-emerald-600 mb-1">Demande transmise avec succès !</h4>
                     <p class="text-xs text-gray-500 mb-5 leading-relaxed">
-                        Référence : <strong>DEM-2026-003</strong>. Votre conseiller Karim Bennani a reçu votre requête
-                        et vous notifiera dès son activation.
+                        Référence : <strong>DEM-2026-003</strong>. Votre conseiller Karim Bennani a reçu votre requête et vous notifiera dès son activation.
                     </p>
-                    <button type="button"
-                        onclick="document.getElementById('savingsModal').classList.add('hidden'); document.getElementById('savingsSuccess').classList.add('hidden'); document.getElementById('savingsFormBody').classList.remove('hidden');"
-                        class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
+                    <button type="button" onclick="document.getElementById('savingsModal').classList.add('hidden'); document.getElementById('savingsSuccess').classList.add('hidden'); document.getElementById('savingsFormBody').classList.remove('hidden');" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
                         Fermer
                     </button>
                 </div>
