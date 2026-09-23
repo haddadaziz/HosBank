@@ -22,10 +22,11 @@
                     fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
                     colors: {
                         hos: {
-                            dark: '#29223A',
-                            hover: '#3C3352',
-                            primary: '#746B92',
-                            cream: '#F6EFE0',
+                            dark: '#282138',
+                            hover: '#3E3455',
+                            primary: '#685E86',
+                            coral: '#E97A7A',
+                            cream: '#F7F4EE',
                             surface: '#FFFFFF',
                             bg: '#F8F9FA'
                         }
@@ -45,14 +46,41 @@
     <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
         
         <!-- En-tête -->
-        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
                     Virements Bancaires
                 </h1>
-                <p class="text-sm text-gray-500 mt-1">Transférez des fonds instantanément et en toute sécurité (Zone SEPA).</p>
+                <p class="text-sm text-gray-500 mt-1">Transférez des fonds instantanément et gérez vos bénéficiaires certifiés SEPA.</p>
+            </div>
+            <div>
+                <button type="button" onclick="openBeneficiaryModal()" class="px-5 py-2.5 rounded-xl bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Ajouter un bénéficiaire
+                </button>
             </div>
         </header>
+
+        <!-- Messages Flash / Feedback -->
+        <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <span><%= successMessage %></span>
+                </div>
+                <a href="/client/transfers" class="text-emerald-700 hover:text-emerald-900 text-xs font-bold">&times;</a>
+            </div>
+        <% } %>
+
+        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span><%= errorMessage %></span>
+                </div>
+                <a href="/client/transfers" class="text-rose-700 hover:text-rose-900 text-xs font-bold">&times;</a>
+            </div>
+        <% } %>
 
         <!-- Grille 2 Colonnes -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -67,31 +95,43 @@
                         <!-- 1. Compte à débiter -->
                         <div class="mb-5">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Compte émetteur</label>
-                            <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/60 flex items-center justify-between">
-                                <div>
-                                    <div class="font-bold text-sm text-hos-dark">Compte Courant Principal</div>
-                                    <div class="font-mono text-xs text-gray-400 mt-0.5">FR76 3000 4012 3456 7890 1234 567</div>
+                            <% if (typeof accounts !== 'undefined' && accounts && accounts.length > 0) { 
+                                const defaultAcc = accounts[0];
+                            %>
+                                <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/60 flex items-center justify-between">
+                                    <div>
+                                        <div class="font-bold text-sm text-hos-dark"><%= defaultAcc.type === 'COURANT' ? 'Compte Courant Principal' : 'Compte Épargne' %></div>
+                                        <div class="font-mono text-xs text-gray-400 mt-0.5"><%= defaultAcc.iban %></div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-400">Solde disponible</div>
+                                        <div class="font-extrabold text-sm text-hos-dark"><%= defaultAcc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</div>
+                                    </div>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-gray-400">Solde disponible</div>
-                                    <div class="font-extrabold text-sm text-hos-dark">14 850,75 €</div>
+                            <% } else { %>
+                                <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/60 text-sm text-gray-500">
+                                    Aucun compte actif trouvé.
                                 </div>
-                            </div>
+                            <% } %>
                         </div>
 
                         <!-- 2. Bénéficiaire -->
                         <div class="mb-5">
                             <div class="flex justify-between items-center mb-2">
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider">Bénéficiaire destinataire</label>
-                                <button type="button" onclick="document.getElementById('addBeneficiaryModal').classList.remove('hidden')" class="text-xs font-bold text-hos-primary hover:underline">
+                                <button type="button" onclick="openBeneficiaryModal()" class="text-xs font-bold text-hos-primary hover:underline">
                                     + Nouveau bénéficiaire
                                 </button>
                             </div>
                             
-                            <select name="beneficiaryId" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold bg-white">
-                                <option value="1">Cabinet Dr. Vallet (FR76 3000 1234 5678 ... 789)</option>
-                                <option value="2">Acme Real Estate - Loyer (FR76 3000 9876 5432 ... 334)</option>
-                                <option value="3">Sophie Martin (FR76 3000 4455 6677 ... 990)</option>
+                            <select name="beneficiaryId" id="selectBeneficiary" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold bg-white cursor-pointer">
+                                <% if (typeof beneficiaries !== 'undefined' && beneficiaries && beneficiaries.length > 0) { %>
+                                    <% beneficiaries.forEach(b => { %>
+                                        <option value="<%= b.id %>"><%= b.intitule %> (<%= b.iban %>)</option>
+                                    <% }) %>
+                                <% } else { %>
+                                    <option value="" disabled selected>Aucun bénéficiaire enregistré — Cliquez sur "+ Nouveau bénéficiaire"</option>
+                                <% } %>
                             </select>
                         </div>
 
@@ -99,7 +139,7 @@
                         <div class="mb-5">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Montant du virement (€)</label>
                             <div class="relative">
-                                <input type="number" step="0.01" min="0.50" max="14850" placeholder="0,00" required 
+                                <input type="number" step="0.01" min="0.50" max="15000" placeholder="0,00" required 
                                        class="w-full pl-5 pr-12 py-3.5 rounded-xl border border-gray-200 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-2xl font-extrabold text-hos-dark placeholder-gray-300">
                                 <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">€</span>
                             </div>
@@ -149,55 +189,78 @@
             </div>
 
             <!-- Colonne Droite : Bénéficiaires récents & Sécurité (5 colonnes) -->
-            <div class="lg:col-span-5 space-y-8">
+            <div class="lg:col-span-5 space-y-6">
                 
                 <!-- Carte Bénéficiaires -->
                 <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-sm text-hos-dark">Bénéficiaires enregistrés</h3>
-                        <span class="text-xs text-gray-400">3 actifs</span>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-bold text-sm text-hos-dark">Bénéficiaires enregistrés</h3>
+                            <span class="text-xs bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded-full">
+                                <%= (typeof beneficiaries !== 'undefined' && beneficiaries) ? beneficiaries.length : 0 %>
+                            </span>
+                        </div>
+                        <button type="button" onclick="openBeneficiaryModal()" class="text-xs font-bold text-hos-primary hover:underline">
+                            + Ajouter
+                        </button>
                     </div>
 
-                    <div class="space-y-3">
-                        <div class="p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 flex items-center justify-between transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-[#EDEBF2] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0">
-                                    DV
+                    <div class="space-y-3" id="beneficiariesList">
+                        <% if (typeof beneficiaries !== 'undefined' && beneficiaries && beneficiaries.length > 0) { %>
+                            <% beneficiaries.forEach(b => { 
+                                const words = b.intitule.trim().split(/\s+/);
+                                const initials = words.length > 1 ? (words[0][0] + words[1][0]).toUpperCase() : b.intitule.slice(0, 2).toUpperCase();
+                            %>
+                                <div class="p-3.5 rounded-2xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50/70 flex items-center justify-between transition-all group">
+                                    <div class="flex items-center gap-3 overflow-hidden">
+                                        <div class="w-10 h-10 rounded-full bg-[#EFEBFA] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0 border border-purple-100">
+                                            <%= initials %>
+                                        </div>
+                                        <div class="truncate">
+                                            <div class="font-bold text-xs text-hos-dark truncate"><%= b.intitule %></div>
+                                            <div class="font-mono text-[11px] text-gray-400"><%= b.iban %></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <% if (b.bic) { %>
+                                            <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-mono font-bold"><%= b.bic %></span>
+                                        <% } %>
+                                        <form action="/client/beneficiaries/<%= b.id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('Supprimer ce bénéficiaire ?');">
+                                            <button type="submit" class="text-gray-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 transition-colors" title="Supprimer">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div class="font-bold text-xs text-hos-dark">Cabinet Dr. Vallet</div>
-                                    <div class="font-mono text-[11px] text-gray-400">FR76 •••• 3456 789</div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="text-center py-8 px-4 border border-dashed border-gray-200 rounded-2xl text-xs text-gray-400">
+                                <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 </div>
+                                Aucun bénéficiaire enregistré.<br>
+                                <button type="button" onclick="openBeneficiaryModal()" class="mt-2 text-hos-primary font-bold hover:underline">
+                                    + Enregistrer votre premier bénéficiaire
+                                </button>
                             </div>
-                            <span class="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold">Santé</span>
-                        </div>
+                        <% } %>
+                    </div>
+                </div>
 
-                        <div class="p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 flex items-center justify-between transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-[#EDEBF2] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0">
-                                    AR
-                                </div>
-                                <div>
-                                    <div class="font-bold text-xs text-hos-dark">Acme Real Estate</div>
-                                    <div class="font-mono text-[11px] text-gray-400">FR76 •••• 1122 334</div>
-                                </div>
-                            </div>
-                            <span class="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold">Loyer</span>
+                <!-- Carte Sécurité & Normes SEPA -->
+                <div class="p-5 rounded-3xl bg-white border border-gray-100 shadow-sm space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                         </div>
-
-                        <div class="p-3.5 rounded-xl border border-gray-100 hover:bg-gray-50 flex items-center justify-between transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-[#EDEBF2] text-hos-dark font-bold text-xs flex items-center justify-center shrink-0">
-                                    SM
-                                </div>
-                                <div>
-                                    <div class="font-bold text-xs text-hos-dark">Sophie Martin</div>
-                                    <div class="font-mono text-[11px] text-gray-400">FR76 •••• 6677 990</div>
-                                </div>
-                            </div>
-                            <span class="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md font-semibold">Proche</span>
+                        <div>
+                            <div class="font-bold text-xs text-hos-dark">Contrôle Bancaire SEPA</div>
+                            <div class="text-[11px] text-gray-400">Algorithme officiel ISO 13616 / Modulo 97</div>
                         </div>
                     </div>
+                    <p class="text-[11px] text-gray-500 leading-relaxed">
+                        Chaque bénéficiaire ajouté fait l'objet d'une vérification mathématique de sa clé de contrôle pour garantir l'acheminement sans erreur de vos virements.
+                    </p>
                 </div>
 
             </div>
@@ -207,45 +270,230 @@
     </main>
 </div>
 
-<!-- Modal Ajout Bénéficiaire -->
+<!-- ==========================================================
+     MODAL AJOUT BÉNÉFICIAIRE AVEC VALIDATION STRICTE IBAN/RIB
+     ========================================================== -->
 <div id="addBeneficiaryModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
-        <div class="flex justify-between items-center mb-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl transition-all">
+        
+        <div class="flex justify-between items-center mb-2">
             <h3 class="text-lg font-extrabold text-hos-dark">Ajouter un bénéficiaire</h3>
-            <button onclick="document.getElementById('addBeneficiaryModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            <button type="button" onclick="closeBeneficiaryModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
         <p class="text-xs text-gray-500 mb-6">
-            Renseignez les coordonnées bancaires du nouveau destinataire pour vos virements.
+            Renseignez l'intitulé et le numéro IBAN (RIB). La validité bancaire est vérifiée en temps réel.
         </p>
 
-        <form onsubmit="event.preventDefault(); document.getElementById('addBeneficiaryModal').classList.add('hidden'); alert('Bénéficiaire ajouté avec succès !');">
+        <form id="formAddBeneficiary" action="/client/beneficiaries" method="POST" novalidate>
             <div class="space-y-4">
+                
+                <!-- 1. Nom / Intitulé du bénéficiaire -->
                 <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1">Nom / Intitulé du compte</label>
-                    <input type="text" placeholder="Ex: Julien Dupont" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm">
+                    <label for="inputIntitule" class="block text-xs font-bold text-hos-dark mb-1">
+                        Nom / Intitulé du compte <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" id="inputIntitule" name="intitule" placeholder="Ex: Cabinet Médical, Sophie Martin..." required minlength="2" maxlength="100"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold transition-all">
+                    <span id="intituleHelp" class="text-[11px] text-gray-400 mt-1 block">Au moins 2 caractères (nom du particulier ou de l'organisme).</span>
                 </div>
+
+                <!-- 2. IBAN / RIB avec Validation Temps Réel -->
                 <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1">IBAN (FR...)</label>
-                    <input type="text" placeholder="FR76 3000 ..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none font-mono text-sm uppercase">
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="inputIban" class="block text-xs font-bold text-hos-dark">
+                            IBAN / RIB <span class="text-rose-500">*</span>
+                        </label>
+                        <span id="ibanValidationBadge" class="text-[11px] font-bold text-gray-400">En attente</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="inputIban" name="iban" placeholder="FR76 3000 4012 3456 7890 1234 567" required maxlength="42"
+                               class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none font-mono text-sm uppercase tracking-wider transition-all">
+                        <div id="ibanCheckIcon" class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01"/></svg>
+                        </div>
+                    </div>
+                    <div id="ibanHelpText" class="text-[11px] text-gray-400 mt-1">
+                        Format SEPA (27 caractères pour la France). Clé de contrôle Modulo 97 vérifiée en direct.
+                    </div>
                 </div>
+
+                <!-- 3. BIC / SWIFT (Optionnel) -->
                 <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1">Code BIC / SWIFT (optionnel)</label>
-                    <input type="text" placeholder="HOSBFR2P" class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none font-mono text-sm uppercase">
+                    <label for="inputBic" class="block text-xs font-bold text-hos-dark mb-1">
+                        Code BIC / SWIFT <span class="text-gray-400 font-normal">(optionnel)</span>
+                    </label>
+                    <input type="text" id="inputBic" name="bic" placeholder="Ex: HOSBFR2P" maxlength="11"
+                           class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none font-mono text-sm uppercase transition-all">
+                    <span class="text-[11px] text-gray-400 mt-1 block">8 ou 11 caractères alphanumériques.</span>
                 </div>
             </div>
 
+            <!-- Boîte d'erreur du formulaire modal -->
+            <div id="modalErrorAlert" class="hidden mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold"></div>
+
+            <!-- Actions du Modal -->
             <div class="flex items-center justify-end gap-3 mt-6">
-                <button type="button" onclick="document.getElementById('addBeneficiaryModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                <button type="button" onclick="closeBeneficiaryModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                     Annuler
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
-                    Enregistrer le bénéficiaire
+                <button type="submit" id="btnSubmitBeneficiary" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                    <span>Enregistrer le bénéficiaire</span>
                 </button>
             </div>
         </form>
     </div>
 </div>
 
+<script>
+    // ==========================================================
+    // Validation IBAN - Algorithme International Modulo 97 (ISO 7064)
+    // ==========================================================
+    function isValidIban(iban) {
+        if (!iban || typeof iban !== 'string') return false;
+        const clean = iban.replace(/\s+/g, '').toUpperCase();
+        
+        // Regex de base SEPA
+        const generalRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/;
+        if (!generalRegex.test(clean)) return false;
+
+        // Longueur exacte pour la France (27 caractères)
+        if (clean.startsWith('FR') && clean.length !== 27) return false;
+
+        // Déplacement des 4 premiers caractères à la fin
+        const rearranged = clean.slice(4) + clean.slice(0, 4);
+
+        // Conversion lettres en chiffres (A=10 ... Z=35)
+        let numericString = '';
+        for (let i = 0; i < rearranged.length; i++) {
+            const code = rearranged.charCodeAt(i);
+            if (code >= 65 && code <= 90) {
+                numericString += (code - 55).toString();
+            } else {
+                numericString += rearranged[i];
+            }
+        }
+
+        // Modulo 97 avec BigInt
+        try {
+            return BigInt(numericString) % 97n === 1n;
+        } catch {
+            return false;
+        }
+    }
+
+    // Formatage avec espacement par blocs de 4
+    function formatIbanInput(value) {
+        const clean = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        return clean.replace(/(.{4})/g, '$1 ').trim();
+    }
+
+    // Modal Control
+    function openBeneficiaryModal() {
+        document.getElementById('addBeneficiaryModal').classList.remove('hidden');
+        document.getElementById('inputIntitule').focus();
+    }
+
+    function closeBeneficiaryModal() {
+        document.getElementById('addBeneficiaryModal').classList.add('hidden');
+        document.getElementById('modalErrorAlert').classList.add('hidden');
+    }
+
+    // Fermeture avec touche Échap
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeBeneficiaryModal();
+    });
+
+    // ==========================================================
+    // Écouteurs de Validation en Temps Réel
+    // ==========================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        const ibanInput = document.getElementById('inputIban');
+        const ibanBadge = document.getElementById('ibanValidationBadge');
+        const ibanIcon = document.getElementById('ibanCheckIcon');
+        const ibanHelp = document.getElementById('ibanHelpText');
+        const intituleInput = document.getElementById('inputIntitule');
+        const intituleHelp = document.getElementById('intituleHelp');
+        const form = document.getElementById('formAddBeneficiary');
+        const errorAlert = document.getElementById('modalErrorAlert');
+
+        // Validation & formatage en direct de l'IBAN
+        ibanInput.addEventListener('input', () => {
+            const cursorPos = ibanInput.selectionStart;
+            const prevLen = ibanInput.value.length;
+            ibanInput.value = formatIbanInput(ibanInput.value);
+
+            const rawVal = ibanInput.value.replace(/\s+/g, '').toUpperCase();
+
+            if (rawVal.length === 0) {
+                ibanInput.className = "w-full pl-4 pr-10 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none font-mono text-sm uppercase tracking-wider transition-all";
+                ibanBadge.textContent = "En attente";
+                ibanBadge.className = "text-[11px] font-bold text-gray-400";
+                ibanIcon.innerHTML = `<svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01"/></svg>`;
+                ibanHelp.textContent = "Format SEPA (27 caractères pour la France). Clé de contrôle Modulo 97 vérifiée en direct.";
+                ibanHelp.className = "text-[11px] text-gray-400 mt-1";
+                return;
+            }
+
+            const valid = isValidIban(rawVal);
+
+            if (valid) {
+                ibanInput.className = "w-full pl-4 pr-10 py-2.5 rounded-xl border-2 border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none font-mono text-sm uppercase tracking-wider bg-emerald-50/20 text-emerald-950 font-bold transition-all";
+                ibanBadge.textContent = "✓ IBAN Valide";
+                ibanBadge.className = "text-[11px] font-bold text-emerald-600";
+                ibanIcon.innerHTML = `<svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+                ibanHelp.textContent = "✓ Clé de contrôle bancaire Modulo 97 vérifiée et conforme.";
+                ibanHelp.className = "text-[11px] text-emerald-600 font-semibold mt-1";
+            } else if (rawVal.length >= 8) {
+                ibanInput.className = "w-full pl-4 pr-10 py-2.5 rounded-xl border-2 border-rose-400 focus:ring-2 focus:ring-rose-100 outline-none font-mono text-sm uppercase tracking-wider bg-rose-50/20 text-rose-950 transition-all";
+                ibanBadge.textContent = "✗ Non conforme";
+                ibanBadge.className = "text-[11px] font-bold text-rose-500";
+                ibanIcon.innerHTML = `<svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`;
+                ibanHelp.textContent = rawVal.startsWith('FR') && rawVal.length !== 27 
+                    ? `Longueur requise pour la France : 27 caractères (${rawVal.length}/27 saisis).` 
+                    : "Clé de contrôle ou structure de l'IBAN incorrecte.";
+                ibanHelp.className = "text-[11px] text-rose-500 font-semibold mt-1";
+            }
+        });
+
+        // Validation en direct de l'intitulé
+        intituleInput.addEventListener('input', () => {
+            const val = intituleInput.value.trim();
+            if (val.length >= 2) {
+                intituleHelp.textContent = "✓ Intitulé valide.";
+                intituleHelp.className = "text-[11px] text-emerald-600 font-semibold mt-1 block";
+                intituleInput.classList.remove('border-rose-400');
+                intituleInput.classList.add('border-emerald-400');
+            } else {
+                intituleHelp.textContent = "Au moins 2 caractères requis.";
+                intituleHelp.className = "text-[11px] text-gray-400 mt-1 block";
+                intituleInput.classList.remove('border-emerald-400');
+            }
+        });
+
+        // Soumission du formulaire
+        form.addEventListener('submit', (e) => {
+            errorAlert.classList.add('hidden');
+            const intitule = intituleInput.value.trim();
+            const iban = ibanInput.value.replace(/\s+/g, '').toUpperCase();
+
+            if (intitule.length < 2) {
+                e.preventDefault();
+                errorAlert.textContent = "L'intitulé du compte doit comporter au moins 2 caractères.";
+                errorAlert.classList.remove('hidden');
+                intituleInput.focus();
+                return;
+            }
+
+            if (!isValidIban(iban)) {
+                e.preventDefault();
+                errorAlert.textContent = "L'IBAN saisi n'est pas conforme à la norme bancaire (erreur de clé Modulo 97).";
+                errorAlert.classList.remove('hidden');
+                ibanInput.focus();
+                return;
+            }
+        });
+    });
+</script>
 </body>
 </html>

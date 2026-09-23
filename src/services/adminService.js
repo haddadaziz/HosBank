@@ -412,6 +412,113 @@ class AdminDataService {
     async updateReclamationStatus(id, statut, reponse = null) {
         return await requestRepo.updateReclamationStatus(id, statut, reponse);
     }
+
+    /**
+     * Récupère la supervision complète de la charge et réactivité des conseillers
+     */
+    async getAdvisorsSupervision(filterAdvisorId = null) {
+        try {
+            const [advisorsRaw, overdueRequests] = await Promise.all([
+                userRepo.getAdvisorsWorkloadMetrics(),
+                userRepo.getOverdueRequests(filterAdvisorId)
+            ]);
+
+            const advisors = advisorsRaw.map(adv => {
+                const totalDossiers = adv.totalDemandes + adv.totalReclamations;
+                const totalTraites = adv.demandesTraitees + adv.reclamationsTraitees;
+                const totalEnAttente = adv.demandesEnAttente + adv.reclamationsEnAttente;
+                const totalRelance = adv.demandesRelance + adv.reclamationsRelance;
+
+                const tauxTraitement = totalDossiers > 0 ? Math.round((totalTraites / totalDossiers) * 100) : 100;
+                const tauxDemandes = adv.totalDemandes > 0 ? Math.round((adv.demandesTraitees / adv.totalDemandes) * 100) : 100;
+                const tauxReclamations = adv.totalReclamations > 0 ? Math.round((adv.reclamationsTraitees / adv.totalReclamations) * 100) : 100;
+
+                // Formatage des délais en chaînes lisibles
+                const formatDelai = (heures) => {
+                    if (!heures || heures <= 0) return "< 1 h";
+                    if (heures < 24) return `${heures} h`;
+                    const jours = (heures / 24).toFixed(1);
+                    return `${jours} j`;
+                };
+
+                // Niveau de charge
+                let chargeBadge = { label: "Équilibrée", class: "success" };
+                if (adv.assignedClientsCount >= 30) {
+                    chargeBadge = { label: "Surcharge", class: "danger" };
+                } else if (adv.assignedClientsCount >= 15) {
+                    chargeBadge = { label: "Soutenue", class: "warning" };
+                }
+
+                // Statut de réactivité
+                let reactiviteBadge = { label: "Excellente", class: "success" };
+                if (totalRelance > 0) {
+                    reactiviteBadge = { label: "Relance requise", class: "danger" };
+                } else if (tauxTraitement < 75) {
+                    reactiviteBadge = { label: "À surveiller", class: "warning" };
+                }
+
+                return {
+                    ...adv,
+                    totalDossiers,
+                    totalTraites,
+                    totalEnAttente,
+                    totalRelance,
+                    tauxTraitement,
+                    tauxDemandes,
+                    tauxReclamations,
+                    delaiMoyenDemandesStr: formatDelai(adv.delaiMoyenDemandesHeures),
+                    delaiMoyenReclamationsStr: formatDelai(adv.delaiMoyenReclamationsHeures),
+                    chargeBadge,
+                    reactiviteBadge
+                };
+            });
+
+            // Synthèse globale
+            const totalAdvisors = advisors.length;
+            const totalAssignedClients = advisors.reduce((acc, a) => acc + a.assignedClientsCount, 0);
+            const avgClientsPerAdvisor = totalAdvisors > 0 ? Math.round(totalAssignedClients / totalAdvisors) : 0;
+            const totalDossiersAll = advisors.reduce((acc, a) => acc + a.totalDossiers, 0);
+            const totalTraitesAll = advisors.reduce((acc, a) => acc + a.totalTraites, 0);
+            const globalTreatmentRate = totalDossiersAll > 0 ? Math.round((totalTraitesAll / totalDossiersAll) * 100) : 100;
+            const totalRelanceAll = advisors.reduce((acc, a) => acc + a.totalRelance, 0);
+
+            return {
+                advisors,
+                overdueRequests,
+                summary: {
+                    totalAdvisors,
+                    totalAssignedClients,
+                    avgClientsPerAdvisor,
+                    globalTreatmentRate,
+                    totalRelanceAll,
+                    totalOverdueDossiers: overdueRequests.length
+                }
+            };
+        } catch (error) {
+            console.error("Erreur getAdvisorsSupervision :", error);
+            return {
+                advisors: [],
+                overdueRequests: [],
+                summary: {
+                    totalAdvisors: 0,
+                    totalAssignedClients: 0,
+                    avgClientsPerAdvisor: 0,
+                    globalTreatmentRate: 100,
+                    totalRelanceAll: 0,
+                    totalOverdueDossiers: 0
+                }
+            };
+        }
+    }
+
+    /**
+     * Envoie une relance à un conseiller et journalise l'action
+     */
+    async sendAdvisorReminder(advisorId, { requestId, requestType, reference, message }, adminUser, ip) {
+        const actionDesc = `Relance envoyée au conseiller ID #${advisorId} pour le dossier ${requestType} [${reference}] : ${message || 'Délai de traitement dépassé'}`;
+        await this.logAction(adminUser, actionDesc, ip, "Warning");
+        return { success: true, message: `Relance enregistrée avec succès pour le conseiller.` };
+    }
 }
 
 module.exports = new AdminDataService();

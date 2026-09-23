@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        .workload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .advisor-card {
+            background: #FFFFFF;
+            border-radius: 16px;
+            border: 1px solid rgba(104, 94, 134, 0.12);
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(40, 33, 56, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .advisor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(40, 33, 56, 0.08);
+        }
+
+        .advisor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(104, 94, 134, 0.08);
+        }
+
+        .advisor-profile {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .advisor-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #282138, #685E86);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(40, 33, 56, 0.2);
+        }
+
+        .advisor-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main, #282138);
+        }
+
+        .advisor-sub {
+            font-size: 0.8rem;
+            color: var(--text-muted, #746B92);
+        }
+
+        .metrics-subgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .metric-box {
+            background: #FBF9F5;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(104, 94, 134, 0.06);
+        }
+
+        .metric-box-title {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--text-muted, #746B92);
+            margin-bottom: 6px;
+        }
+
+        .metric-box-val {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--text-main, #282138);
+            line-height: 1.1;
+        }
+
+        .metric-box-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted, #746B92);
+            margin-top: 4px;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: rgba(104, 94, 134, 0.12);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+
+        .overdue-badge-pulse {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            background: #FEE2E2;
+            color: #DC2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            animation: pulse-soft 2s infinite;
+        }
+
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <%- include('../partials/sidebar') %>
+
+    <div class="admin-main">
+        <%- include('../partials/topbar') %>
+
+        <main class="admin-content">
+            <!-- Entête de Page -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Supervision de la Charge & Réactivité</h1>
+                    <p class="page-subtitle">Suivi en temps réel de l'affectation des clients, de l'efficacité opérationnelle et des délais de réponse</p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <form method="GET" action="/admin/advisors-workload" style="display: flex; gap: 8px;">
+                        <select name="advisorId" class="form-input" style="padding: 7px 12px; font-size: 0.85rem;" onchange="this.form.submit()">
+                            <option value="">Tous les conseillers</option>
+                            <% advisors.forEach(adv => { %>
+                                <option value="<%= adv.id %>" <%= selectedAdvisorId === adv.id ? 'selected' : '' %>>
+                                    <%= adv.civilite || 'M.' %> <%= adv.prenom %> <%= adv.nom %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Message Flash de Succès -->
+            <% if (successMessage) { %>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding: 12px 18px; background: #ECFDF5; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.9rem; color: #065F46;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span><strong>Succès :</strong> <%= successMessage %></span>
+                </div>
+            <% } %>
+
+            <!-- Grille de Synthèse Globale (KPIs) -->
+            <div class="stats-grid" style="margin-bottom: 32px;">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <span class="stat-trend" style="background: var(--primary-light); color: var(--primary);">Actifs</span>
+                    </div>
+                    <div class="stat-value"><%= summary.totalAdvisors %></div>
+                    <div class="stat-label">Chargés de Clientèle Supervisés</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon success">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                        </div>
+                        <span class="stat-trend up">Moyenne: ~<%= summary.avgClientsPerAdvisor %>/agent</span>
+                    </div>
+                    <div class="stat-value"><%= summary.totalAssignedClients %></div>
+                    <div class="stat-label">Total Clients en Portefeuille</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="stat-trend" style="background: rgba(16, 185, 129, 0.1); color: #059669;">Efficacité</span>
+                    </div>
+                    <div class="stat-value"><%= summary.globalTreatmentRate %> %</div>
+                    <div class="stat-label">Taux Global de Traitement</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <div class="stat-icon coral">
+                            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <span class="stat-trend" style="background: #FEE2E2; color: #DC2626;">À arbitrer</span>
+                    </div>
+                    <div class="stat-value" style="color: <%= summary.totalRelanceAll > 0 ? '#DC2626' : 'var(--text-main)' %>;">
+                        <%= summary.totalRelanceAll %>
+                    </div>
+                    <div class="stat-label">Dossiers Nécessitant Relance (>24h)</div>
+                </div>
+            </div>
+
+            <!-- Titre Section 1 : Métriques par Conseiller -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main);">
+                    Fiches de Charge & Efficacité par Conseiller
+                </h2>
+                <span style="font-size: 0.85rem; color: var(--text-muted);"><%= advisors.length %> conseiller(s) configuré(s)</span>
+            </div>
+
+            <!-- Grille des Conseillers -->
+            <div class="workload-grid">
+                <% if (advisors && advisors.length > 0) { %>
+                    <% advisors.forEach(adv => { %>
+                        <div class="advisor-card">
+                            <!-- En-tête Conseiller -->
+                            <div class="advisor-header">
+                                <div class="advisor-profile">
+                                    <div class="advisor-avatar">
+                                        <%= adv.prenom ? adv.prenom[0] : 'C' %><%= adv.nom ? adv.nom[0] : 'L' %>
+                                    </div>
+                                    <div>
+                                        <div class="advisor-name"><%= adv.civilite || 'M.' %> <%= adv.prenom %> <%= adv.nom %></div>
+                                        <div class="advisor-sub"><%= adv.email %></div>
+                                        <div class="advisor-sub" style="font-size: 0.72rem; color: var(--text-muted);">Tél : <%= adv.telephone || 'Non renseigné' %></div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                                    <span class="badge <%= adv.chargeBadge.class %>">
+                                        <span class="badge-dot"></span> <%= adv.chargeBadge.label %>
+                                    </span>
+                                    <span class="badge <%= adv.reactiviteBadge.class %>" style="font-size: 0.72rem;">
+                                        <%= adv.reactiviteBadge.label %>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Critère 1 : Nombre de Clients Affectés -->
+                            <div class="metric-box">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <span class="metric-box-title">1. Clients Affectés en Portefeuille</span>
+                                    <span style="font-weight: 800; font-size: 1.25rem; color: var(--primary);">
+                                        <%= adv.assignedClientsCount %> client<%= adv.assignedClientsCount > 1 ? 's' : '' %>
+                                    </span>
+                                </div>
+                                <div class="progress-bar-bg">
+                                    <div class="progress-bar-fill" style="width: <%= Math.min(adv.assignedClientsCount * 5, 100) %>%; background: <%= adv.assignedClientsCount >= 30 ? '#DC2626' : (adv.assignedClientsCount >= 15 ? '#D97706' : '#10B981') %>;"></div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+                                    <span>Capacité cible : 20 clients</span>
+                                    <span><%= Math.round((adv.assignedClientsCount / 20) * 100) %>% charge</span>
+                                </div>
+                            </div>
+
+                            <!-- Critère 2 : Taux et Délai Moyen de Traitement -->
+                            <div>
+                                <div class="metric-box-title" style="margin-bottom: 8px;">2. Taux & Délais Moyens de Traitement</div>
+                                <div class="metrics-subgrid">
+                                    <div class="metric-box">
+                                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">DEMANDES</div>
+                                        <div class="metric-box-val" style="color: <%= adv.tauxDemandes >= 80 ? '#059669' : '#D97706' %>;">
+                                            <%= adv.tauxDemandes %> %
+                                        </div>
+                                        <div class="metric-box-sub">
+                                            Délai moy. : <strong><%= adv.delaiMoyenDemandesStr %></strong>
+                                        </div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                                            <%= adv.demandesTraitees %>/<%= adv.totalDemandes %> traitées
+                                        </div>
+                                    </div>
+
+                                    <div class="metric-box">
+                                        <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">RÉCLAMATIONS</div>
+                                        <div class="metric-box-val" style="color: <%= adv.tauxReclamations >= 80 ? '#059669' : '#DC2626' %>;">
+                                            <%= adv.tauxReclamations %> %
+                                        </div>
+                                        <div class="metric-box-sub">
+                                            Délai moy. : <strong><%= adv.delaiMoyenReclamationsStr %></strong>
+                                        </div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">
+                                            <%= adv.reclamationsTraitees %>/<%= adv.totalReclamations %> résolues
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Critère 3 : Indicateur Dossiers en Attente & Relances -->
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid rgba(104, 94, 134, 0.08);">
+                                <div>
+                                    <div style="font-size: 0.76rem; font-weight: 600; color: var(--text-muted);">Dossiers en attente :</div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-main);">
+                                        <%= adv.totalEnAttente %> requête<%= adv.totalEnAttente > 1 ? 's' : '' %>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <% if (adv.totalRelance > 0) { %>
+                                        <span class="overdue-badge-pulse">
+                                            ⚠️ <%= adv.totalRelance %> en souffrance (>24h)
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge success" style="font-size: 0.75rem;">
+                                            ✓ Aucun retard critique
+                                        </span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <p style="color: var(--text-muted);">Aucun chargé de clientèle actif répertorié pour le moment.</p>
+                    </div>
+                <% } %>
+            </div>
+
+            <!-- Section 2 : Registre des Dossiers en Souffrance / Nécessitant Relance -->
+            <div class="card" style="margin-top: 16px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Dossiers en Attente Nécessitant une Relance</div>
+                        <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+                            Demandes et réclamations non traitées nécessitant l'intervention de leur conseiller affecté
+                        </div>
+                    </div>
+                    <span class="badge danger"><%= overdueRequests.length %> dossier<%= overdueRequests.length > 1 ? 's' : '' %> à relancer</span>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Réf / Nature</th>
+                                <th>Client</th>
+                                <th>Conseiller Assigné</th>
+                                <th>Détail du Dossier</th>
+                                <th>Temps Écoulé</th>
+                                <th>Statut</th>
+                                <th style="text-align: right;">Action Arbitrage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (overdueRequests && overdueRequests.length > 0) { %>
+                                <% overdueRequests.forEach(reqItem => { %>
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight: 700; color: var(--text-main); font-family: monospace;"><%= reqItem.reference %></div>
+                                            <span class="badge <%= reqItem.typeDossier === 'RECLAMATION' ? 'danger' : 'purple' %>" style="font-size: 0.7rem; padding: 2px 6px; margin-top: 4px;">
+                                                <%= reqItem.typeDossier === 'RECLAMATION' ? 'Réclamation' : 'Demande' %>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600;"><%= reqItem.clientName %></div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);"><%= reqItem.clientEmail %></div>
+                                        </td>
+                                        <td>
+                                            <% if (reqItem.advisorName) { %>
+                                                <div style="font-weight: 600; color: var(--primary);"><%= reqItem.advisorName %></div>
+                                                <div style="font-size: 0.72rem; color: var(--text-muted);">Conseiller ID #<%= reqItem.advisorId %></div>
+                                            <% } else { %>
+                                                <span class="badge warning" style="font-size: 0.72rem;">Non assigné</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <div style="font-weight: 600; font-size: 0.85rem;"><%= reqItem.sujet %></div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">Déposé le : <%= reqItem.dateFormatted %></div>
+                                        </td>
+                                        <td>
+                                            <% if (reqItem.heuresEnAttente >= 24) { %>
+                                                <span class="overdue-badge-pulse">
+                                                    ⏱ +<%= reqItem.heuresEnAttente %> h
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge" style="background: var(--bg-cream-darker); color: var(--text-main);">
+                                                    ⏱ <%= reqItem.heuresEnAttente %> h
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <span class="badge warning">
+                                                <span class="badge-dot"></span> <%= reqItem.statut %>
+                                            </span>
+                                        </td>
+                                        <td style="text-align: right; white-space: nowrap;">
+                                            <% if (reqItem.advisorId) { %>
+                                                <button type="button" 
+                                                        class="btn-sm btn-primary" 
+                                                        style="background: #E97A7A; border-color: #E97A7A;"
+                                                        onclick="openReminderModal('<%= reqItem.advisorId %>', '<%= reqItem.advisorName %>', '<%= reqItem.id %>', '<%= reqItem.typeDossier %>', '<%= reqItem.reference %>')">
+                                                    ⚡ Relancer
+                                                </button>
+                                            <% } else { %>
+                                                <a href="/admin/clients" class="btn-sm btn-secondary">Assigner</a>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 32px; color: var(--text-muted);">
+                                        🎉 Aucun dossier en attente critique. Tous les conseillers sont à jour !
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Modale de Relance du Conseiller -->
+<div class="modal-overlay" id="modalReminder">
+    <div class="modal-container" style="max-width: 520px;">
+        <div class="modal-header">
+            <div class="modal-title">Envoyer un Rappel de Traitement</div>
+            <button class="modal-close" onclick="closeReminderModal()">&times;</button>
+        </div>
+        <form id="reminderForm" method="POST" action="">
+            <div class="modal-body">
+                <input type="hidden" id="modalRequestId" name="requestId">
+                <input type="hidden" id="modalRequestType" name="requestType">
+                <input type="hidden" id="modalReference" name="reference">
+
+                <div style="background: #FBF9F5; padding: 14px 16px; border-radius: 12px; margin-bottom: 18px; border: 1px solid rgba(104, 94, 134, 0.08);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Destinataire :</div>
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary);" id="modalAdvisorName">Conseiller</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">Dossier : <strong id="modalRefDisplay">REF</strong></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reminderMessage">Message ou Instruction de Priorisation</label>
+                    <textarea id="reminderMessage" name="message" class="form-input" rows="3" placeholder="Ex: Ce client attend une réponse depuis plus de 24h. Merci de traiter ce dossier en priorité aujourd'hui.">Délai de traitement dépassé. Merci de prendre en charge ce dossier en priorité.</textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sm btn-secondary" onclick="closeReminderModal()">Annuler</button>
+                <button type="submit" class="btn-primary" style="background: #E97A7A; border-color: #E97A7A;">
+                    Transmettre la relance
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+    function openReminderModal(advisorId, advisorName, requestId, requestType, reference) {
+        const form = document.getElementById('reminderForm');
+        form.action = '/admin/advisors/' + advisorId + '/remind';
+        document.getElementById('modalRequestId').value = requestId;
+        document.getElementById('modalRequestType').value = requestType;
+        document.getElementById('modalReference').value = reference;
+        document.getElementById('modalAdvisorName').textContent = advisorName;
+        document.getElementById('modalRefDisplay').textContent = reference + ' (' + requestType + ')';
+        
+        document.getElementById('modalReminder').classList.add('active');
+    }
+
+    function closeReminderModal() {
+        document.getElementById('modalReminder').classList.remove('active');
+    }
+</script>
+</body>
+</html>

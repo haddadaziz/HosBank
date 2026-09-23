@@ -22,12 +22,79 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-exports.getTransfers = (req, res) => {
-    res.render("client/transfers", {
-        title: "Virements bancaires | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
-        currentPath: "/client/transfers"
-    });
+exports.getTransfers = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+
+        const [accounts, beneficiaries] = await Promise.all([
+            clientService.getUserAccounts(userId),
+            clientService.getBeneficiaries(userId)
+        ]);
+
+        res.render("client/transfers", {
+            title: "Virements bancaires | HosBank",
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            accounts: accounts,
+            beneficiaries: beneficiaries,
+            successMessage: req.query.success ? "Bénéficiaire enregistré avec succès !" : null,
+            errorMessage: req.query.error ? decodeURIComponent(req.query.error) : null,
+            currentPath: "/client/transfers"
+        });
+    } catch (error) {
+        console.error("Erreur Virements Client :", error);
+        res.status(500).send("Erreur lors du chargement de la page des virements.");
+    }
+};
+
+exports.postAddBeneficiary = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const { intitule, iban, bic } = req.body;
+
+        const newBeneficiary = await clientService.addBeneficiary(userId, { intitule, iban, bic });
+
+        if (req.xhr || req.headers.accept?.includes("json")) {
+            return res.json({
+                success: true,
+                message: "Bénéficiaire ajouté avec succès !",
+                beneficiary: newBeneficiary
+            });
+        }
+
+        res.redirect("/client/transfers?success=1");
+    } catch (error) {
+        console.warn("Erreur ajout bénéficiaire :", error.message);
+
+        if (req.xhr || req.headers.accept?.includes("json")) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        res.redirect(`/client/transfers?error=${encodeURIComponent(error.message)}`);
+    }
+};
+
+exports.postDeleteBeneficiary = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const { id } = req.params;
+
+        await clientService.deleteBeneficiary(id, userId);
+
+        if (req.xhr || req.headers.accept?.includes("json")) {
+            return res.json({ success: true, message: "Bénéficiaire supprimé avec succès." });
+        }
+
+        res.redirect("/client/transfers");
+    } catch (error) {
+        console.warn("Erreur suppression bénéficiaire :", error.message);
+        res.redirect("/client/transfers");
+    }
 };
 
 exports.getCards = (req, res) => {

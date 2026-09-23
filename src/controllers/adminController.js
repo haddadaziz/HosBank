@@ -312,6 +312,47 @@ const adminController = {
             "Info"
         );
         res.redirect("/admin/requests");
+    },
+
+    getAdvisorsWorkload: async (req, res) => {
+        try {
+            const advisorId = req.query.advisorId ? parseInt(req.query.advisorId, 10) : null;
+            const supervisionData = await adminService.getAdvisorsSupervision(advisorId);
+
+            res.render("admin/advisors_workload", {
+                currentPath: "/admin/advisors-workload",
+                admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
+                advisors: supervisionData.advisors,
+                overdueRequests: supervisionData.overdueRequests,
+                summary: supervisionData.summary,
+                selectedAdvisorId: advisorId,
+                successMessage: req.query.success ? decodeURIComponent(req.query.success) : null,
+                title: "Supervision de la Charge et Réactivité des Conseillers - HosBank"
+            });
+        } catch (error) {
+            console.error("Erreur getAdvisorsWorkload :", error);
+            res.status(500).send("Erreur lors du chargement de la supervision des conseillers.");
+        }
+    },
+
+    postSendReminder: async (req, res) => {
+        try {
+            const { id } = req.params; // advisorId
+            const { requestId, requestType, reference, message } = req.body;
+            const adminUser = req.session?.admin?.email || "Admin";
+            const ip = req.ip || "127.0.0.1";
+
+            const result = await adminService.sendAdvisorReminder(id, { requestId, requestType, reference, message }, adminUser, ip);
+
+            if (req.xhr || req.headers.accept?.includes("json")) {
+                return res.json({ success: true, message: result.message });
+            }
+
+            res.redirect(`/admin/advisors-workload?success=${encodeURIComponent(result.message)}`);
+        } catch (error) {
+            console.error("Erreur postSendReminder :", error);
+            res.redirect("/admin/advisors-workload");
+        }
     }
 };
 
