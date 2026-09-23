@@ -4,9 +4,6 @@ const bcrypt = require("bcrypt");
 
 class ClientService {
 
-    /**
-     * Récupère la liste des comptes actifs d'un utilisateur avec solde et IBAN
-     */
     async getUserAccounts(userId) {
         const query = `
             SELECT 
@@ -22,9 +19,6 @@ class ClientService {
         return rows;
     }
 
-    /**
-     * Récupère la liste des bénéficiaires enregistrés pour les virements (HOS-24)
-     */
     async getBeneficiaries(userId) {
         const query = `
             SELECT 
@@ -38,9 +32,6 @@ class ClientService {
         return rows;
     }
 
-    /**
-     * Ajout d'un nouveau bénéficiaire (HOS-24)
-     */
     async addBeneficiary(userId, { intitule, iban, bic }) {
         if (!intitule || !iban) {
             throw new Error("Le nom du bénéficiaire et l'IBAN sont obligatoires.");
@@ -65,9 +56,6 @@ class ClientService {
         return rows[0];
     }
 
-    /**
-     * Traitement transactionnel ACID d'un virement bancaire (HOS-25)
-     */
     async executeTransfer(userId, { sourceAccountId, beneficiaryId, amount, motif }) {
         const parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -78,13 +66,11 @@ class ClientService {
             throw new Error("Plafond instantané dépassé (maximum 5 000,00 € par virement).");
         }
 
-        // Connexion dédiée au pool pour transaction ACID
         const client = await db.pool.connect();
 
         try {
             await client.query("BEGIN");
 
-            // 1. Verrouiller et vérifier le compte émetteur (FOR UPDATE)
             const sourceRes = await client.query(`
                 SELECT id, numero_compte AS "accountNumber", solde::float AS "balance",
                        decouvert_autorise::float AS "overdraft", statut AS "status"
@@ -107,7 +93,6 @@ class ClientService {
                 throw new Error(`Solde insuffisant pour ce virement. Solde disponible : ${maxAvailable.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €.`);
             }
 
-            // 2. Vérifier le bénéficiaire destinataire
             const benRes = await client.query(`
                 SELECT id, intitule, iban, bic
                 FROM beneficiaires
@@ -119,14 +104,12 @@ class ClientService {
             }
             const beneficiary = benRes.rows[0];
 
-            // 3. Débiter le compte émetteur
             const newSourceBalance = sourceAcc.balance - parsedAmount;
             await client.query(
                 "UPDATE comptes_bancaires SET solde = $1 WHERE id = $2",
                 [newSourceBalance, sourceAccountId]
             );
 
-            // 4. Générer la référence SEPA et insérer dans la table virements
             const sepaRef = `VIR-SEPA-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
             const label = (motif || `Virement vers ${beneficiary.intitule}`).trim();
 
@@ -135,13 +118,11 @@ class ClientService {
                 VALUES ($1, $2, $3, $4, $5, 'VALIDE')
             `, [sourceAccountId, beneficiaryId, sepaRef, parsedAmount, label]);
 
-            // 5. Enregistrer le débit dans la table operations
             await client.query(`
                 INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie)
                 VALUES ($1, 'DEBIT', $2, $3, $4, 'Virement émis')
             `, [sourceAccountId, parsedAmount, newSourceBalance, `Virement SEPA à ${beneficiary.intitule} : ${label}`]);
 
-            // 6. Si l'IBAN du destinataire est un compte HosBank interne, le créditer instantanément !
             const destAccRes = await client.query(`
                 SELECT id, solde::float AS "balance", numero_compte AS "accountNumber"
                 FROM comptes_bancaires
@@ -177,34 +158,27 @@ class ClientService {
         }
     }
 
-    /**
-     * Récupération paginée et filtrée de l'historique des opérations bancaires (HOS-26, HOS-27, HOS-28)
-     */
     async getPaginatedTransactions(userId, { accountId, direction, period, search, page = 1, limit = 10 } = {}) {
         const pageNum = Math.max(1, parseInt(page, 10) || 1);
         const limitNum = Math.max(1, parseInt(limit, 10) || 10);
         const offset = (pageNum - 1) * limitNum;
 
-        // Conditions dynamiques sécurisées pour l'utilisateur connecté
         const conditions = ["cb.utilisateur_id = $1"];
         const params = [userId];
         let paramIndex = 2;
 
-        // 1. Filtre par compte bancaire
         if (accountId && !isNaN(parseInt(accountId, 10))) {
             conditions.push(`cb.id = $${paramIndex}`);
             params.push(parseInt(accountId, 10));
             paramIndex++;
         }
 
-        // 2. Filtre par sens (DEBIT ou CREDIT)
         if (direction && ['DEBIT', 'CREDIT'].includes(direction.toUpperCase())) {
             conditions.push(`o.sens = $${paramIndex}`);
             params.push(direction.toUpperCase());
             paramIndex++;
         }
 
-        // 3. Filtre par période temporelle
         if (period === 'month') {
             conditions.push(`o.date_operation >= date_trunc('month', CURRENT_DATE)`);
         } else if (period === '3months') {
@@ -213,7 +187,6 @@ class ClientService {
             conditions.push(`o.date_operation >= date_trunc('year', CURRENT_DATE)`);
         }
 
-        // 4. Filtre par recherche textuelle (libellé, catégorie, référence, numéro compte)
         if (search && search.trim() !== '') {
             const searchPattern = `%${search.trim()}%`;
             conditions.push(`(
@@ -228,7 +201,6 @@ class ClientService {
 
         const whereClause = conditions.join(" AND ");
 
-        // Requête de comptage et de métriques globales pour la sélection
         const countQuery = `
             SELECT 
                 COUNT(*)::int AS "totalCount",
@@ -244,7 +216,6 @@ class ClientService {
         const totalCredits = countRes.rows[0]?.totalCredits || 0;
         const totalPages = Math.max(1, Math.ceil(totalCount / limitNum));
 
-        // Requête des lignes paginées
         const dataQuery = `
             SELECT 
                 o.id,
@@ -289,9 +260,6 @@ class ClientService {
         };
     }
 
-    /**
-     * Récupère toutes les cartes bancaires d'un utilisateur
-     */
     async getCards(userId) {
         const cardsQuery = `
             SELECT 
@@ -314,9 +282,6 @@ class ClientService {
         return rows;
     }
 
-    /**
-     * Mise en opposition d'une carte (HOS-31)
-     */
     async opposeCard(userId, cardId, motif = "NON_PRECISE") {
         const checkQuery = `
             SELECT c.id, c.pan_masque, c.statut
@@ -355,9 +320,6 @@ class ClientService {
         return { cardId, reference };
     }
 
-    /**
-     * Création instantanée d'une carte virtuelle (HOS-30)
-     */
     async createVirtualCard(userId, accountId, monthlyLimit = 1000) {
         const accountRes = await db.query(
             "SELECT id FROM comptes_bancaires WHERE id = $1 AND utilisateur_id = $2 AND statut = 'ACTIF'",
@@ -408,9 +370,6 @@ class ClientService {
         return newCardRes.rows[0];
     }
 
-    /**
-     * Demande de recalcul de code PIN (HOS-32)
-     */
     async requestPin(userId, cardId) {
         const checkQuery = `
             SELECT c.id, c.pan_masque, c.statut
@@ -442,9 +401,7 @@ class ClientService {
         return { reference };
     }
 
-    /**
-     * Dashboard Data
-     */
+
     async getDashboardData(userId = 3) {
         const accountsQuery = `
             SELECT 
@@ -509,11 +466,7 @@ class ClientService {
         };
     }
 
-    /**
-     * Consultation détaillée d'un compte bancaire (HOS-19)
-     */
     async getAccountDetail(userId, accountId) {
-        // 1. Récupération du compte avec vérification de propriété
         const accQuery = `
             SELECT 
                 cb.id,
@@ -541,12 +494,10 @@ class ClientService {
         }
         const account = accRes.rows[0];
 
-        // 2. Formatage IBAN
         const cleanIban = (account.iban || '').replace(/\s+/g, '').toUpperCase();
         account.cleanIban = cleanIban;
         account.formattedIban = cleanIban.replace(/(.{4})/g, '$1 ').trim();
 
-        // 3. Cartes bancaires rattachées à ce compte
         const cardsQuery = `
             SELECT 
                 id, pan_masque AS "maskedPan", type_carte AS "type", statut AS "status",
@@ -559,7 +510,6 @@ class ClientService {
         `;
         const { rows: cards } = await db.query(cardsQuery, [accountId]);
 
-        // 4. Statistiques du mois en cours sur ce compte
         const statsQuery = `
             SELECT 
                 COALESCE(SUM(CASE WHEN sens = 'CREDIT' THEN montant ELSE 0 END), 0)::float AS "monthCredits",
@@ -571,7 +521,6 @@ class ClientService {
         const statsRes = await db.query(statsQuery, [accountId]);
         const stats = statsRes.rows[0] || { monthCredits: 0, monthDebits: 0, totalOperationsCount: 0 };
 
-        // 5. Dernières opérations sur ce compte (10 dernières)
         const opsQuery = `
             SELECT 
                 id, reference_unique AS "reference", sens AS "direction",
@@ -593,9 +542,6 @@ class ClientService {
         };
     }
 
-    /**
-     * Récupère toutes les demandes bancaires d'un client (HOS-37)
-     */
     async getUserDemandes(userId) {
         const query = `
             SELECT 
@@ -628,9 +574,6 @@ class ClientService {
         });
     }
 
-    /**
-     * Récupère toutes les réclamations d'un client (HOS-37)
-     */
     async getUserReclamations(userId) {
         const query = `
             SELECT 
@@ -652,9 +595,6 @@ class ClientService {
         return rows;
     }
 
-    /**
-     * Demande d'ouverture d'un livret d'épargne (HOS-35)
-     */
     async createSavingsAccountDemand(userId, { initialDeposit, sourceAccountId, notes = "" }) {
         const deposit = parseFloat(initialDeposit);
         if (isNaN(deposit) || deposit < 10) {
@@ -692,9 +632,6 @@ class ClientService {
         return rows[0];
     }
 
-    /**
-     * Dépôt d'une réclamation client (HOS-36)
-     */
     async createReclamation(userId, { sujet, description, priorite = "MOYENNE" }) {
         if (!sujet || !sujet.trim()) {
             throw new Error("Le sujet de la réclamation est obligatoire.");
@@ -723,11 +660,7 @@ class ClientService {
         return rows[0];
     }
 
-    /**
-     * Récupère les données complètes du RIB d'un compte (HOS-34)
-     */
     async getAccountRibData(userId, accountId = null) {
-        // Récupérer l'utilisateur
         const userRes = await db.query(`
             SELECT u.id, u.civilite, u.nom, u.prenom, u.adresse_postale AS "address",
                    a.prenom AS "advisorPrenom", a.nom AS "advisorNom"
@@ -741,7 +674,6 @@ class ClientService {
         }
         const user = userRes.rows[0];
 
-        // Récupérer le compte sélectionné ou le premier compte actif
         let accountQuery = `
             SELECT id, numero_compte AS "accountNumber", iban, bic, type_compte AS "type", devise AS "currency"
             FROM comptes_bancaires
@@ -762,14 +694,12 @@ class ClientService {
         }
         const account = accRes.rows[0];
 
-        // Découpage du RIB national français
         const cleanIban = (account.iban || '').replace(/\s+/g, '').toUpperCase();
         const codeBanque = cleanIban.length >= 9 ? cleanIban.slice(4, 9) : "30004";
         const codeGuichet = cleanIban.length >= 14 ? cleanIban.slice(9, 14) : "01234";
         const numCompte = cleanIban.length >= 25 ? cleanIban.slice(14, 25) : account.accountNumber;
         const cleRib = cleanIban.length >= 27 ? cleanIban.slice(25, 27) : "67";
 
-        // IBAN espacé par groupes de 4
         const formattedIban = cleanIban.replace(/(.{4})/g, '$1 ').trim();
 
         return {
@@ -796,9 +726,6 @@ class ClientService {
         };
     }
 
-    /**
-     * Récupère le profil complet de l'utilisateur avec son conseiller et statistiques (HOS-38, HOS-39)
-     */
     async getUserProfile(userId) {
         const query = `
             SELECT 
@@ -827,10 +754,8 @@ class ClientService {
         }
         const profile = rows[0];
 
-        // Initiales avatar
         profile.initials = `${(profile.prenom || 'C')[0]}${(profile.nom || 'L')[0]}`.toUpperCase();
 
-        // Récupérer le nombre de comptes et cartes actifs
         const countAccountsQuery = `SELECT COUNT(*)::int AS count FROM comptes_bancaires WHERE utilisateur_id = $1 AND statut = 'ACTIF'`;
         const countCardsQuery = `SELECT COUNT(*)::int AS count FROM cartes_bancaires cb JOIN comptes_bancaires cp ON cb.compte_id = cp.id WHERE cp.utilisateur_id = $1 AND cb.statut = 'ACTIVE'`;
         
@@ -859,9 +784,6 @@ class ClientService {
         };
     }
 
-    /**
-     * Modification des coordonnées (adresse, téléphone) (HOS-39)
-     */
     async updateUserCoordinates(userId, { telephone, adressePostale }) {
         if (!telephone || typeof telephone !== 'string' || !telephone.trim()) {
             throw new Error("Le numéro de téléphone est obligatoire.");
@@ -873,7 +795,6 @@ class ClientService {
         const cleanPhone = telephone.trim();
         const cleanAddress = adressePostale.trim();
 
-        // Validation format téléphone (au moins 8 caractères)
         const phoneRegex = /^(\+?[0-9\s.\-()]{8,25})$/;
         if (!phoneRegex.test(cleanPhone)) {
             throw new Error("Le format du numéro de téléphone est invalide. Exemple : +33 6 12 34 56 78");
@@ -896,9 +817,6 @@ class ClientService {
         return rows[0];
     }
 
-    /**
-     * Modification sécurisée du mot de passe
-     */
     async updateUserPassword(userId, { currentPassword, newPassword, confirmPassword }) {
         if (!currentPassword || !newPassword || !confirmPassword) {
             throw new Error("Tous les champs de mot de passe sont obligatoires.");
@@ -910,7 +828,6 @@ class ClientService {
             throw new Error("Le nouveau mot de passe doit comporter au moins 8 caractères.");
         }
 
-        // Vérifier l'ancien mot de passe
         const userQuery = `SELECT id, mot_de_passe_hash FROM utilisateurs WHERE id = $1`;
         const { rows } = await db.query(userQuery, [userId]);
         if (rows.length === 0) throw new Error("Utilisateur introuvable.");
@@ -923,7 +840,6 @@ class ClientService {
             isMatch = false;
         }
 
-        // Seeds support
         if (!isMatch && (currentPassword === "Password123!" || currentPassword === "password123") && user.mot_de_passe_hash.startsWith("$2b$10$abcdef")) {
             isMatch = true;
         }

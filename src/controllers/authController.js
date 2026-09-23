@@ -1,7 +1,6 @@
 const authService = require("../services/authService");
 
 const authController = {
-    // Afficher la page de connexion
     getLogin: (req, res) => {
         res.render("auth/auth", {
             title: "Connexion | HosBank",
@@ -13,7 +12,6 @@ const authController = {
         });
     },
 
-    // Afficher la page d'inscription
     getRegister: (req, res) => {
         res.render("auth/auth", {
             title: "Inscription | HosBank",
@@ -25,7 +23,6 @@ const authController = {
         });
     },
 
-    // Traitement de l'inscription
     postRegister: async (req, res) => {
         try {
             const user = await authService.register(req.body, req);
@@ -39,7 +36,6 @@ const authController = {
         }
     },
 
-    // Traitement de la connexion
     postLogin: async (req, res) => {
         try {
             const identifier = req.body.name || req.body.email;
@@ -47,7 +43,6 @@ const authController = {
 
             const user = await authService.login(identifier, password);
 
-            // Enregistrer la session utilisateur
             req.session.user = {
                 id: user.id,
                 name: `${user.prenom} ${user.nom}`,
@@ -56,7 +51,6 @@ const authController = {
                 civilite: user.civilite
             };
 
-            // Rétrocompatibilité avec les espaces Admin et Conseiller existants
             if (user.role === "ADMINISTRATEUR") {
                 req.session.admin = {
                     id: user.id,
@@ -76,8 +70,6 @@ const authController = {
                 };
                 return res.redirect("/advisor/dashboard");
             }
-
-            // Client par défaut
             return res.redirect("/client/dashboard");
 
         } catch (err) {
@@ -86,7 +78,6 @@ const authController = {
         }
     },
 
-    // Validation de l'adresse email par le lien reçu
     getVerifyEmail: async (req, res) => {
         try {
             const token = req.query.token;
@@ -96,8 +87,6 @@ const authController = {
             res.redirect("/login?error=" + encodeURIComponent(err.message));
         }
     },
-
-    // Déconnexion
     getLogout: (req, res) => {
         if (req.session) {
             req.session.destroy(() => {

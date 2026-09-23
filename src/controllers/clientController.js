@@ -25,9 +25,7 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-/**
- * Consultation détaillée d'un compte bancaire (HOS-19)
- */
+
 exports.getAccountDetail = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;
@@ -55,9 +53,6 @@ exports.getAccountDetail = async (req, res) => {
     }
 };
 
-/**
- * Consultation de la page des virements (HOS-24)
- */
 exports.getTransfers = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -84,9 +79,6 @@ exports.getTransfers = async (req, res) => {
     }
 };
 
-/**
- * Traitement d'un virement bancaire (HOS-25)
- */
 exports.postTransfer = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -110,9 +102,6 @@ exports.postTransfer = async (req, res) => {
     }
 };
 
-/**
- * Enregistrement d'un nouveau bénéficiaire (HOS-24)
- */
 exports.postAddBeneficiary = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -126,9 +115,6 @@ exports.postAddBeneficiary = async (req, res) => {
     }
 };
 
-/**
- * Consultation des cartes bancaires (HOS-29)
- */
 exports.getCards = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -152,9 +138,6 @@ exports.getCards = async (req, res) => {
     }
 };
 
-/**
- * Mise en opposition d'une carte (HOS-31)
- */
 exports.postOpposeCard = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -172,9 +155,6 @@ exports.postOpposeCard = async (req, res) => {
     }
 };
 
-/**
- * Création d'une carte virtuelle (HOS-30)
- */
 exports.postCreateVirtualCard = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -192,9 +172,6 @@ exports.postCreateVirtualCard = async (req, res) => {
     }
 };
 
-/**
- * Demande de recalcul de code PIN (HOS-32)
- */
 exports.postRequestPin = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -212,9 +189,6 @@ exports.postRequestPin = async (req, res) => {
     }
 };
 
-/**
- * Consultation de la page des documents & démarches (HOS-34, HOS-37)
- */
 exports.getDocuments = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -245,9 +219,6 @@ exports.getDocuments = async (req, res) => {
     }
 };
 
-/**
- * Vue imprimable du RIB officiel (HOS-34)
- */
 exports.getPrintRib = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -266,9 +237,6 @@ exports.getPrintRib = async (req, res) => {
     }
 };
 
-/**
- * Traitement de la demande d'ouverture d'un compte épargne (HOS-35)
- */
 exports.postCreateSavingsDemand = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -291,9 +259,6 @@ exports.postCreateSavingsDemand = async (req, res) => {
     }
 };
 
-/**
- * Traitement du dépôt de réclamation client (HOS-36)
- */
 exports.postCreateReclamation = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -316,9 +281,6 @@ exports.postCreateReclamation = async (req, res) => {
     }
 };
 
-/**
- * Consultation de l'historique des opérations bancaires avec filtres et pagination (HOS-26, HOS-27, HOS-28)
- */
 exports.getTransactions = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -333,10 +295,7 @@ exports.getTransactions = async (req, res) => {
             export: exportFormat = ''
         } = req.query;
 
-        // Récupérer les comptes pour le filtre de sélection
         const accounts = await clientService.getUserAccounts(userId);
-
-        // Si export CSV demandé, récupérer toutes les écritures filtrées (jusqu'à 1000 max)
         const isExport = exportFormat === 'csv';
         const effectiveLimit = isExport ? 1000 : Math.max(1, parseInt(limit, 10) || 10);
         const effectivePage = isExport ? 1 : Math.max(1, parseInt(page, 10) || 1);
@@ -350,7 +309,6 @@ exports.getTransactions = async (req, res) => {
             limit: effectiveLimit
         });
 
-        // Traitement de l'export CSV
         if (isExport) {
             const csvRows = [
                 ["Date", "Reference", "Compte", "Type de Compte", "Sens", "Categorie", "Libelle", "Montant (EUR)", "Solde Apres (EUR)"]
@@ -378,7 +336,6 @@ exports.getTransactions = async (req, res) => {
             return res.send(csvContent);
         }
 
-        // Rendu de la vue EJS avec filtres et pagination
         res.render("client/transactions", {
             title: "Historique des opérations | HosBank",
             user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
@@ -400,9 +357,6 @@ exports.getTransactions = async (req, res) => {
     }
 };
 
-/**
- * Consultation du profil client (HOS-38, HOS-39)
- */
 exports.getProfile = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;
@@ -426,9 +380,6 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-/**
- * Mise à jour des coordonnées (téléphone, adresse postale) (HOS-39)
- */
 exports.postUpdateCoordinates = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;
@@ -437,7 +388,6 @@ exports.postUpdateCoordinates = async (req, res) => {
 
         await clientService.updateUserCoordinates(userId, { telephone, adressePostale });
 
-        // Mettre à jour la session si nécessaire
         if (req.session.user) {
             req.session.user.telephone = telephone ? telephone.trim() : "";
             req.session.user.adressePostale = adressePostale ? adressePostale.trim() : "";
@@ -450,9 +400,7 @@ exports.postUpdateCoordinates = async (req, res) => {
     }
 };
 
-/**
- * Changement sécurisé de mot de passe client
- */
+
 exports.postChangePassword = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;

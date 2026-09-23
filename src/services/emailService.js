@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
 
-// Configuration du transporteur d'emails
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.ethereal.email",
     port: process.env.SMTP_PORT || 587,
@@ -11,7 +10,6 @@ const transporter = nodemailer.createTransport({
 });
 
 const emailService = {
-    // Envoyer l'email d'activation
     async sendVerificationEmail(email, token, req) {
         const baseUrl = `${req.protocol}://${req.get("host")}`;
         const verifyLink = `${baseUrl}/verify-email?token=${token}`;
@@ -21,7 +19,6 @@ const emailService = {
         console.log("👉 Cliquez ici pour valider :", verifyLink);
         console.log("--------------------------------------------------");
 
-        // Si des identifiants SMTP existent, on envoie le vrai email
         if (process.env.SMTP_USER && process.env.SMTP_PASS) {
             try {
                 await transporter.sendMail({

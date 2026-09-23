@@ -3,9 +3,6 @@ const crypto = require("crypto");
 
 class AdvisorService {
 
-    /**
-     * Récupère le profil du conseiller connecté (ou par défaut)
-     */
     async getAdvisorProfile(advisorId) {
         const query = `
             SELECT id, civilite, nom, prenom, email, telephone, role,
@@ -31,7 +28,6 @@ class AdvisorService {
             };
         }
 
-        // Fallback conseiller
         return {
             id: advisorId || 2,
             name: "Aziz Haddad",
@@ -47,13 +43,9 @@ class AdvisorService {
         };
     }
 
-    /**
-     * Récupère toutes les données du tableau de bord conseiller (HOS-40, HOS-41, HOS-43, HOS-47)
-     */
     async getDashboardData(advisorId) {
         const advisor = await this.getAdvisorProfile(advisorId);
 
-        // 1. Clients affectés au conseiller (HOS-41)
         const clientsQuery = `
             SELECT 
                 u.id,
@@ -78,7 +70,6 @@ class AdvisorService {
         `;
         const { rows: clientRows } = await db.query(clientsQuery, [advisorId]);
 
-        // Pour chaque client, récupérer ses comptes détaillés
         const clients = await Promise.all(clientRows.map(async (c) => {
             const accRes = await db.query(`
                 SELECT numero_compte AS rib, type_compte AS type, solde::float AS balance, devise AS currency
@@ -109,7 +100,6 @@ class AdvisorService {
             };
         }));
 
-        // 2. Demandes bancaires réelles (HOS-43, HOS-44, HOS-45, HOS-46)
         const demandsQuery = `
             SELECT 
                 d.id,
@@ -185,7 +175,6 @@ class AdvisorService {
             };
         });
 
-        // 3. Réclamations réelles (HOS-47, HOS-48, HOS-49)
         const claimsQuery = `
             SELECT 
                 r.id,
@@ -233,7 +222,6 @@ class AdvisorService {
             };
         });
 
-        // 4. Journal d'historique des interactions (HOS-50)
         const interactionsQuery = `
             SELECT 
                 ja.id,
@@ -252,7 +240,6 @@ class AdvisorService {
             interactions = auditRes.rows;
         } catch (e) {}
 
-        // Compléter avec des interactions dérivées si audit vide
         if (interactions.length === 0) {
             demands.slice(0, 3).forEach(d => {
                 interactions.push({
@@ -272,7 +259,6 @@ class AdvisorService {
             });
         }
 
-        // 5. Métriques
         const metrics = {
             assignedClients: clients.length,
             pendingDemands: demands.filter(d => d.status === "En attente" || d.status === "En instruction").length,
@@ -290,11 +276,8 @@ class AdvisorService {
         };
     }
 
-    /**
-     * Fiche 360° détaillée du client sélectionné (HOS-42)
-     */
+
     async getClient360(clientId) {
-        // 1. Informations d'identité
         const userQuery = `
             SELECT 
                 u.id, u.civilite, u.nom, u.prenom, u.email, u.telephone,
@@ -314,7 +297,6 @@ class AdvisorService {
         client.clientId = `CLI-${String(client.id).padStart(4, '0')}`;
         client.initials = `${(client.prenom || 'C')[0]}${(client.nom || 'L')[0]}`.toUpperCase();
 
-        // 2. Comptes bancaires rattachés
         const accQuery = `
             SELECT 
                 id, numero_compte AS "accountNumber", iban, bic,
@@ -329,13 +311,11 @@ class AdvisorService {
         const { rows: accounts } = await db.query(accQuery, [clientId]);
         const totalAssets = accounts.reduce((sum, a) => sum + (a.status === 'ACTIF' ? a.balance : 0), 0);
 
-        // Formatage IBAN
         accounts.forEach(a => {
             const clean = (a.iban || '').replace(/\s+/g, '').toUpperCase();
             a.formattedIban = clean.replace(/(.{4})/g, '$1 ').trim();
         });
 
-        // 3. Cartes bancaires rattachées
         const cardsQuery = `
             SELECT 
                 cb.id, cb.pan_masque AS "maskedPan", cb.type_carte AS "type",
@@ -350,7 +330,6 @@ class AdvisorService {
         `;
         const { rows: cards } = await db.query(cardsQuery, [clientId]);
 
-        // 4. Dernières opérations toutes catégories confondues
         const opsQuery = `
             SELECT 
                 o.id, o.reference_unique AS "reference", o.sens AS "direction",
@@ -366,7 +345,6 @@ class AdvisorService {
         `;
         const { rows: operations } = await db.query(opsQuery, [clientId]);
 
-        // 5. Demandes du client
         const demandsQuery = `
             SELECT 
                 id, reference, type_demande, statut, payload_json, motif_rejet, reponse_conseiller,
@@ -378,7 +356,6 @@ class AdvisorService {
         `;
         const { rows: demands } = await db.query(demandsQuery, [clientId]);
 
-        // 6. Réclamations du client
         const claimsQuery = `
             SELECT 
                 id, reference, sujet, description, priorite, statut, reponse_conseiller,
@@ -401,11 +378,8 @@ class AdvisorService {
         };
     }
 
-    /**
-     * Traitement et mise à jour du statut d'une demande bancaire (HOS-44, HOS-45, HOS-46)
-     */
+
     async updateDemandStatus(advisorId, { demandId, newStatus, advisorComment }) {
-        // Trouver la demande par id numérique ou référence
         const isNumeric = !isNaN(demandId) && !isNaN(parseInt(demandId, 10)) && String(demandId).trim() === String(parseInt(demandId, 10));
         const findQuery = isNumeric
             ? `SELECT id, utilisateur_id, reference, type_demande, statut, payload_json FROM demandes WHERE id = $1 OR reference = $2`
@@ -419,7 +393,6 @@ class AdvisorService {
         }
         const demand = findRes.rows[0];
 
-        // Normaliser statut cible
         let dbStatus = 'EN_ATTENTE';
         if (newStatus === 'Validée' || newStatus === 'APPROUVEE' || newStatus === 'Approuvée') {
             dbStatus = 'APPROUVEE';
@@ -434,9 +407,7 @@ class AdvisorService {
             if (demand.payload_json) payload = JSON.parse(demand.payload_json);
         } catch (e) {}
 
-        // Actions bancaires automatisées en cas de validation
         if (dbStatus === 'APPROUVEE') {
-            // HOS-44 : Validation demande compte d'épargne -> Création automatique du compte épargne
             if (demand.type_demande === 'OUVERTURE_EPARGNE') {
                 const checkAcc = await db.query(
                     `SELECT id FROM comptes_bancaires WHERE utilisateur_id = $1 AND type_compte = 'EPARGNE'`,
@@ -455,7 +426,6 @@ class AdvisorService {
                 }
             }
 
-            // HOS-45 : Validation carte virtuelle -> Création automatique de la carte virtuelle
             if (demand.type_demande === 'CARTE_VIRTUELLE') {
                 const mainAccRes = await db.query(
                     `SELECT id FROM comptes_bancaires WHERE utilisateur_id = $1 AND type_compte = 'COURANT' LIMIT 1`,
@@ -482,7 +452,6 @@ class AdvisorService {
                 }
             }
 
-            // HOS-45 : Validation opposition carte -> Mettre la carte en statut 'OPPOSEE'
             if (demand.type_demande === 'OPPOSITION_CARTE') {
                 const cardId = payload.cardId;
                 if (cardId) {
@@ -491,7 +460,6 @@ class AdvisorService {
                         [parseInt(cardId, 10)]
                     );
                 } else {
-                    // Mettre la première carte active du client en opposition
                     await db.query(`
                         UPDATE cartes_bancaires
                         SET statut = 'OPPOSEE'
@@ -506,7 +474,6 @@ class AdvisorService {
             }
         }
 
-        // Mise à jour de la demande
         const updateQuery = `
             UPDATE demandes
             SET statut = $1::statut_demande,
@@ -522,7 +489,6 @@ class AdvisorService {
             demand.id
         ]);
 
-        // Enregistrement dans le journal d'audit (HOS-50)
         try {
             await db.query(`
                 INSERT INTO journal_audit (utilisateur_id, action, entite_cible, id_entite_cible, nouvelle_valeur)
@@ -538,9 +504,6 @@ class AdvisorService {
         return rows[0];
     }
 
-    /**
-     * Traitement et clôture d'une réclamation client (HOS-48, HOS-49)
-     */
     async resolveClaim(advisorId, { claimId, newStatus, responseText }) {
         const isNumeric = !isNaN(claimId) && !isNaN(parseInt(claimId, 10)) && String(claimId).trim() === String(parseInt(claimId, 10));
         const findQuery = isNumeric
@@ -578,7 +541,6 @@ class AdvisorService {
             claim.id
         ]);
 
-        // Enregistrement dans le journal d'audit (HOS-50)
         try {
             await db.query(`
                 INSERT INTO journal_audit (utilisateur_id, action, entite_cible, id_entite_cible, nouvelle_valeur)

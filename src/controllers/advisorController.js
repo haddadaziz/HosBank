@@ -1,8 +1,5 @@
 const advisorService = require("../services/advisorService");
 
-/**
- * Tableau de bord du Chargé Clientèle (HOS-40, HOS-41, HOS-43, HOS-47)
- */
 exports.getDashboard = async (req, res) => {
     try {
         const rawId = req.session?.user?.id || req.session?.advisor?.id;
@@ -28,9 +25,6 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-/**
- * Fiche 360° du client sélectionné (HOS-42)
- */
 exports.getClient360 = async (req, res) => {
     try {
         const rawId = req.session?.user?.id || req.session?.advisor?.id;
@@ -64,9 +58,6 @@ exports.getClient360 = async (req, res) => {
     }
 };
 
-/**
- * Traitement et validation d'une demande bancaire (HOS-44, HOS-45, HOS-46)
- */
 exports.postUpdateDemand = async (req, res) => {
     try {
         const rawId = req.session?.user?.id || req.session?.advisor?.id;
@@ -87,9 +78,6 @@ exports.postUpdateDemand = async (req, res) => {
     }
 };
 
-/**
- * Prise en charge et clôture d'une réclamation avec réponse officielle (HOS-48, HOS-49)
- */
 exports.postResolveClaim = async (req, res) => {
     try {
         const rawId = req.session?.user?.id || req.session?.advisor?.id;

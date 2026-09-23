@@ -1,5 +1,3 @@
-// Middlewares de protection des routes et gestion des rôles (RBAC)
-
 const requireRole = (...allowedRoles) => {
     return (req, res, next) => {
         const currentUser = req.session?.user || req.session?.advisor || req.session?.admin;
@@ -20,7 +18,6 @@ const requireClientAuth = requireRole("CLIENT");
 const requireAdvisorAuth = requireRole("CHARGE_CLIENT");
 const requireAdminAuth = requireRole("ADMINISTRATEUR");
 
-// Vérifier que l'utilisateur est connecté
 const isAuthenticated = (req, res, next) => {
     const currentUser = req.session?.user || req.session?.advisor || req.session?.admin;
     if (currentUser) {
@@ -30,10 +27,8 @@ const isAuthenticated = (req, res, next) => {
     res.redirect("/login?error=" + encodeURIComponent("Veuillez vous connecter pour accéder à cette page."));
 };
 
-// Vérifier le rôle de l'utilisateur
 const hasRole = (role) => requireRole(role);
 
-// Empêcher un utilisateur déjà connecté d'accéder à la page de login / register
 const isGuest = (req, res, next) => {
     const currentUser = req.session?.user || req.session?.advisor || req.session?.admin;
     if (currentUser) {
