@@ -48,13 +48,17 @@ const adminController = {
 
     getClients: async (req, res) => {
         const search = req.query.q || "";
-        const clients = await adminService.getClients(search);
+        const role = req.query.role || "";
+        const clients = await adminService.getClients(search, role);
+        const advisors = await adminService.getAdvisors();
         res.render("admin/clients", {
             currentPath: "/admin/clients",
             admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
             clients: clients,
+            advisors: advisors,
             searchQuery: search,
-            title: "Gestion des Clients - Administration HosBank"
+            currentRole: role,
+            title: "Gestion des Utilisateurs - Administration HosBank"
         });
     },
 
@@ -73,17 +77,50 @@ const adminController = {
     },
 
     postEditClient: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { gender, firstName, lastName, email, phone, city, role } = req.body;
+            if (firstName && lastName && email) {
+                await adminService.updateClient(id, { gender, firstName, lastName, email, phone, city, role });
+                await adminService.logAction(
+                    req.session?.admin?.email || "Admin",
+                    `Mise à jour de l'utilisateur #${id} (${firstName} ${lastName})`,
+                    req.ip || "127.0.0.1",
+                    "Info"
+                );
+            }
+        } catch (error) {
+            console.error("Erreur mise à jour utilisateur:", error);
+        }
+        res.redirect("/admin/clients");
+    },
+
+    postUpdateUserRole: async (req, res) => {
         const { id } = req.params;
-        const { gender, firstName, lastName, email, phone, city, role } = req.body;
-        if (firstName && lastName && email) {
-            await adminService.updateClient(id, { gender, firstName, lastName, email, phone, city, role });
+        const { role } = req.body;
+        if (role && ["CLIENT", "CHARGE_CLIENT", "ADMINISTRATEUR"].includes(role)) {
+            await adminService.updateUserRole(id, role);
             await adminService.logAction(
                 req.session?.admin?.email || "Admin",
-                `Mise à jour de l'utilisateur #${id} (${firstName} ${lastName})`,
+                `Attribution du rôle ${role} à l'utilisateur #${id}`,
                 req.ip || "127.0.0.1",
-                "Info"
+                "Avertissement"
             );
         }
+        res.redirect("/admin/clients");
+    },
+
+    postAssignAdvisor: async (req, res) => {
+        const { id } = req.params;
+        const { advisorId } = req.body;
+        const assignedId = advisorId && !isNaN(advisorId) ? parseInt(advisorId, 10) : null;
+        await adminService.assignClientAdvisor(id, assignedId);
+        await adminService.logAction(
+            req.session?.admin?.email || "Admin",
+            `Affectation du client #${id} au conseiller #${assignedId || 'aucun'}`,
+            req.ip || "127.0.0.1",
+            "Info"
+        );
         res.redirect("/admin/clients");
     },
 

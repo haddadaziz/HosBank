@@ -1,8 +1,7 @@
 const authService = require("../services/authService");
 
 const authController = {
-    // Afficher la page de connexion
-    getLogin: (req, res) => {
+    getLogin(req, res) {
         res.render("auth/auth", {
             title: "Connexion | HosBank",
             initialMode: "login",
@@ -12,8 +11,7 @@ const authController = {
         });
     },
 
-    // Afficher la page d'inscription
-    getRegister: (req, res) => {
+    getRegister(req, res) {
         res.render("auth/auth", {
             title: "Inscription | HosBank",
             initialMode: "register",
@@ -23,59 +21,37 @@ const authController = {
         });
     },
 
-    // Traitement de l'inscription
-    postRegister: async (req, res) => {
+    async postRegister(req, res) {
         try {
             await authService.register(req.body, req);
             res.redirect("/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé."));
         } catch (err) {
             res.redirect("/register?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(req.body.email || ""));
-    // 1. Détection Profil Administrateur
-    if (identifier.includes("admin")) {
-        if (req.session) {
-            req.session.admin = {
-                id: "ADM-001",
-                name: "Administrateur HosBank",
-                email: identifier,
-                role: "ADMINISTRATEUR",
-                avatar: "HB"
-            };
         }
     },
 
-    // Traitement de la connexion
-    postLogin: async (req, res) => {
+    async postLogin(req, res) {
         try {
-            const identifier = req.body.name || req.body.email;
+            const identifier = (req.body.email || req.body.name || "").trim();
             const password = req.body.password;
 
             const user = await authService.login(identifier, password);
 
-            // Enregistrer la session utilisateur
             req.session.user = {
                 id: user.id,
                 name: `${user.prenom} ${user.nom}`,
                 email: user.email,
                 role: user.role,
                 civilite: user.civilite
-    // 2. Détection Profil Conseiller
-    if (identifier.includes("advisor") || identifier.includes("conseil") || identifier.includes("bennani")) {
-        if (req.session) {
-            req.session.advisor = {
-                id: "ADV-104",
-                name: "Karim Bennani",
-                role: "CHARGE_CLIENT",
-                agency: "Agence Casablanca Finance City",
-                avatar: "KB"
             };
 
-            // Rétrocompatibilité avec les espaces Admin et Conseiller existants
             if (user.role === "ADMINISTRATEUR") {
                 req.session.admin = {
                     id: user.id,
                     name: `${user.prenom} ${user.nom}`,
                     email: user.email,
-                    role: "Super Admin"
+                    role: "Super Admin",
+                    avatar: "HB"
                 };
                 return res.redirect("/admin/dashboard");
             }
@@ -85,49 +61,38 @@ const authController = {
                     id: user.id,
                     name: `${user.prenom} ${user.nom}`,
                     email: user.email,
-                    role: "Chargé de Clientèle"
+                    role: "Chargé de Clientèle",
+                    avatar: "KB"
                 };
                 return res.redirect("/advisor/dashboard");
             }
 
-            // Client par défaut
             return res.redirect("/client/dashboard");
-
         } catch (err) {
-            const emailInput = req.body.name || req.body.email || "";
+            const emailInput = req.body.email || req.body.name || "";
             res.redirect("/login?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(emailInput));
         }
     },
 
-    // Validation de l'adresse email par le lien reçu
-    getVerifyEmail: async (req, res) => {
+    async getVerifyEmail(req, res) {
         try {
             const token = req.query.token;
             await authService.verifyEmail(token);
-            res.redirect("/login?message=" + encodeURIComponent("Votre adresse e-mail a été vérifiée avec succès ! Vous pouvez vous connecter."));
+            res.redirect("/login?message=" + encodeURIComponent("Votre adresse e-mail a été vérifiée avec succès ! Vous pouvez maintenant vous connecter."));
         } catch (err) {
             res.redirect("/login?error=" + encodeURIComponent(err.message));
         }
     },
 
-    // Déconnexion
-    getLogout: (req, res) => {
+    logout(req, res) {
         if (req.session) {
             req.session.destroy(() => {
-                res.redirect("/login");
+                res.clearCookie("hosbank_session");
+                res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
             });
         } else {
             res.redirect("/login");
         }
-    // 3. Espace Client par défaut
-    if (req.session) {
-        req.session.user = {
-            id: 3,
-            name: req.body.name || "Alexandre Moreau",
-            email: identifier || "alexandre.moreau@email.fr",
-            role: "CLIENT",
-            avatar: "AM"
-        };
     }
 };
 

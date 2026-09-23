@@ -190,9 +190,9 @@ class AdminDataService {
         }
     }
 
-    async getClients(query = "") {
+    async getClients(query = "", role = "") {
         try {
-            return await userRepo.findAll(query);
+            return await userRepo.findAll(query, role);
         } catch (err) {
             console.error(err);
             return [];
@@ -233,6 +233,23 @@ class AdminDataService {
             telephone: data.phone || null,
             adressePostale: data.city || null
         });
+    }
+
+    async updateUserRole(id, role) {
+        return await userRepo.updateRole(id, role);
+    }
+
+    async getAdvisors() {
+        try {
+            return await userRepo.getAdvisors();
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+    }
+
+    async assignClientAdvisor(clientId, advisorId) {
+        return await userRepo.assignAdvisor(clientId, advisorId);
     }
 
     async toggleClientStatus(id) {

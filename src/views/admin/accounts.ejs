@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -18,126 +18,275 @@
         <%- include('../partials/topbar') %>
 
         <main class="admin-content">
-            <div class="page-header">
+            <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
                 <div>
-                    <h1 class="page-title">Comptes & Cartes Bancaires</h1>
-                    <p class="page-subtitle">Supervision des IBAN, types de comptes, cartes bancaires associées et plafonds</p>
+                    <h1 class="page-title">Actifs Bancaires & Moyens de Paiement</h1>
+                    <p class="page-subtitle">Supervision en direct des comptes certifiés (Chèques) et des cartes bancaires sécurisées (Émission 2026)</p>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
+            <!-- ==========================================================
+                 SECTION 1 : INVENTAIRE DES COMPTES ACTIFS (CARTES MODERNES)
+                 ========================================================== -->
+            <div class="card" style="border-radius: 20px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
                     <div style="display: flex; align-items: center; gap: 14px;">
-                        <span class="card-title">Inventaire des Comptes Actifs</span>
-                        <span class="badge purple"><%= accounts.length %> comptes répertoriés</span>
+                        <span class="card-title" style="font-size: 1.15rem; font-weight: 800;">Inventaire des Comptes Actifs</span>
+                        <span class="badge purple"><%= accounts.length %> comptes enregistrés</span>
                     </div>
                 </div>
 
-                <div class="data-table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>N° Compte / IBAN</th>
-                                <th>Type de Compte</th>
-                                <th>Titulaire</th>
-                                <th>Solde Actuel</th>
-                                <th>Carte Associée</th>
-                                <th>Statut Carte</th>
-                                <th>Statut Compte</th>
-                                <th style="text-align: right;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% accounts.forEach(acc => { %>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 700; color: var(--text-main);"><%= acc.numeroCompte || acc.id %></div>
-                                        <div style="font-family: monospace; font-size: 0.78rem; color: var(--text-muted);"><%= acc.iban %></div>
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background: var(--bg-cream-darker); color: var(--text-main); font-weight: 600;">
-                                            <%= acc.type %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600;"><%= acc.clientName %></div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><%= acc.clientId %></div>
-                                    </td>
-                                    <td>
-                                        <span style="font-weight: 700; font-size: 0.98rem; color: var(--text-main);">
-                                            <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> <%= acc.currency %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div><%= acc.cardType %></div>
-                                        <% if (acc.cardsCount > 0) { %>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);"><%= acc.cardsCount %> carte(s) émise(s)</div>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <% if (acc.cardStatus === 'Active') { %>
-                                            <span class="badge success"><span class="badge-dot"></span> Active</span>
-                                        <% } else if (acc.cardStatus === 'Bloquée' || acc.cardStatus === 'Suspendue' || acc.cardStatus === 'Opposée') { %>
-                                            <span class="badge danger"><span class="badge-dot"></span> <%= acc.cardStatus %></span>
-                                        <% } else { %>
-                                            <span style="color: var(--text-muted); font-size: 0.85rem;">Aucune</span>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <% if (acc.status === 'Actif') { %>
-                                            <span class="badge success"><span class="badge-dot"></span> Actif</span>
-                                        <% } else { %>
-                                            <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
-                                        <% } %>
-                                    </td>
-                                    <td style="text-align: right; white-space: nowrap;">
-                                        <!-- Action Compte -->
-                                        <form action="/admin/accounts/<%= acc.id %>/toggle-status" method="POST" style="display: inline-block; margin-right: 4px;">
-                                            <% if (acc.status === 'Actif') { %>
-                                                <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer ce compte bancaire ?">Bloquer Compte</button>
-                                            <% } else { %>
-                                                <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Activer Compte</button>
-                                            <% } %>
-                                        </form>
+                <!-- Grille des Cartes de Comptes Modernes -->
+                <div class="accounts-cards-grid">
+                    <% accounts.forEach(acc => { %>
+                        <div class="account-modern-card">
+                            <!-- En-tête : Type de Compte & Statut -->
+                            <div class="account-card-header">
+                                <div class="account-type-pill">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                    </svg>
+                                    <%= acc.type %>
+                                </div>
 
-                                        <!-- Action Carte -->
-                                        <% if (acc.cardsCount > 0) { %>
-                                            <form action="/admin/accounts/<%= acc.id %>/toggle-card" method="POST" style="display: inline-block;">
-                                                <% if (acc.cardStatus === 'Active') { %>
-                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer cette carte bancaire immédiatement ?">Bloquer Carte</button>
+                                <div>
+                                    <% if (acc.status === 'Actif') { %>
+                                        <span class="badge success"><span class="badge-dot"></span> Actif</span>
+                                    <% } else { %>
+                                        <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <!-- Bloc Solde Principal -->
+                            <div class="account-balance-section">
+                                <div class="account-balance-label">Solde Disponible</div>
+                                <div class="account-balance-val">
+                                    <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> <span style="font-size: 0.95rem; font-weight: 700; color: var(--primary);"><%= acc.currency %></span>
+                                </div>
+                            </div>
+
+                            <!-- Détails Titulaire & Numéro de compte -->
+                            <div class="account-details-list">
+                                <div class="account-detail-row">
+                                    <span class="account-detail-label">Titulaire</span>
+                                    <div style="text-align: right;">
+                                        <span class="account-detail-value"><%= acc.clientName %></span>
+                                        <span class="badge" style="font-size: 0.68rem; margin-left: 4px;"><%= acc.clientId %></span>
+                                    </div>
+                                </div>
+
+                                <div class="account-detail-row">
+                                    <span class="account-detail-label">N° de Compte</span>
+                                    <span class="account-detail-value" style="font-family: monospace;"><%= acc.numeroCompte || acc.id %></span>
+                                </div>
+
+                                <div>
+                                    <div class="account-detail-label" style="margin-bottom: 5px; font-size: 0.76rem;">IBAN du Compte</div>
+                                    <div class="account-iban-box">
+                                        <span class="account-iban-text"><%= acc.iban %></span>
+                                        <button type="button" onclick="copyIban('<%= acc.iban %>')" title="Copier l'IBAN" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 4px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700;">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                            Copier
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pied de carte : Action Administrateur -->
+                            <div class="account-card-footer">
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                    BIC: <strong><%= acc.bic || 'HOSBFR2P' %></strong>
+                                </div>
+
+                                <form action="/admin/accounts/<%= acc.id %>/toggle-status" method="POST" style="margin: 0;">
+                                    <% if (acc.status === 'Actif') { %>
+                                        <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Attention : Voulez-vous vraiment bloquer ce compte bancaire ? Les opérations seront suspendues.">
+                                            Bloquer Compte
+                                        </button>
+                                    <% } else { %>
+                                        <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">
+                                            Activer Compte
+                                        </button>
+                                    <% } %>
+                                </form>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+
+            <!-- ==========================================================
+                 SECTION 2 : SUPERVISION GLOBALE DES CARTES BANCAIRES 3D
+                 ========================================================== -->
+            <div class="card" style="margin-top: 32px; border-radius: 20px;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span class="card-title" style="font-size: 1.15rem; font-weight: 800;">Supervision Globale des Cartes Bancaires</span>
+                        <span class="badge purple"><%= (typeof cards !== 'undefined' && cards) ? cards.length : 0 %> cartes actives & virtuelles</span>
+                    </div>
+
+                    <!-- Commutateur de vue : Cartes 3D Réalistes vs Tableau -->
+                    <div class="view-mode-toggle">
+                        <button type="button" class="view-btn active" id="btnViewCards3D" onclick="switchCardsView('cards')">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2" stroke-width="2"/><line x1="2" y1="10" x2="22" y2="10" stroke-width="2"/></svg>
+                            Cartes 3D
+                        </button>
+                        <button type="button" class="view-btn" id="btnViewCardsTable" onclick="switchCardsView('table')">
+                            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                            Tableau
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2.A. Grille des Cartes Bancaires 3D Ultra-Réalistes -->
+                <div id="cardsRealisticView" class="cards-realistic-grid">
+                    <% if (typeof cards !== 'undefined' && cards && cards.length > 0) { %>
+                        <% cards.forEach(card => { 
+                            let themeClass = 'card-theme-premier';
+                            if (card.statut === 'OPPOSEE') {
+                                themeClass = 'card-theme-opposed';
+                            } else if (card.statut !== 'ACTIVE') {
+                                themeClass = 'card-theme-blocked';
+                            } else if (card.typeCarte === 'VIRTUELLE') {
+                                themeClass = 'card-theme-virtual';
+                            }
+                        %>
+                            <div class="realistic-card-wrapper">
+                                <!-- Objet Carte Physique -->
+                                <div class="physical-credit-card <%= themeClass %>">
+                                    <!-- Statut Flottant sur la Carte -->
+                                    <div class="card-floating-badge">
+                                        <% if (card.statut === 'ACTIVE') { %>
+                                            <span class="badge success" style="background: rgba(16, 185, 129, 0.25); color: #A7F3D0; border: 1px solid rgba(16, 185, 129, 0.5); backdrop-filter: blur(4px);">
+                                                <span class="badge-dot"></span> Active
+                                            </span>
+                                        <% } else if (card.statut === 'OPPOSEE') { %>
+                                            <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
+                                                <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
+                                                <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                            </span>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- En-tête de carte avec le Logo Officiel HosBank -->
+                                    <div class="card-top-row">
+                                        <div class="card-logo-container">
+                                            <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Puce EMV & Sans-Contact -->
+                                    <div class="card-chip-row">
+                                        <div class="emv-chip"></div>
+                                        <div class="nfc-icon">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                                <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                                <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Numéro PAN embossé -->
+                                    <div class="card-pan-number">
+                                        <%= card.panMasque %>
+                                    </div>
+
+                                    <!-- Bas de carte : Titulaire & Expiration -->
+                                    <div class="card-bottom-row">
+                                        <div>
+                                            <div class="card-holder-label">Titulaire de la carte</div>
+                                            <div class="card-holder-name"><%= card.clientName %></div>
+                                        </div>
+                                        <div class="card-expiry-box">
+                                            <div class="card-holder-label">Expire Fin</div>
+                                            <div class="card-expiry-val"><%= card.dateExpiration || '12/28' %></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Panneau de Contrôle & Plafonds sous la carte -->
+                                <div class="card-controls-panel">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+                                        <span style="color: var(--text-muted);">Compte rattaché :</span>
+                                        <strong style="color: var(--text-main); font-family: monospace;"><%= card.numeroCompte %></strong>
+                                    </div>
+
+                                    <!-- Plafonds de la carte -->
+                                    <div class="card-limits-strip">
+                                        <div>
+                                            <div class="limit-item-title">Plafond Paiement</div>
+                                            <div class="limit-item-val"><%= card.plafondPaiement ? card.plafondPaiement.toLocaleString('fr-FR') : '3 000' %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ mois</span></div>
+                                        </div>
+                                        <div>
+                                            <div class="limit-item-title">Plafond Retrait</div>
+                                            <div class="limit-item-val"><%= card.plafondRetrait ? card.plafondRetrait.toLocaleString('fr-FR') : '1 000' %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ sem.</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Boutons d'Action Administrateur -->
+                                    <div class="card-actions-toolbar">
+                                        <% if (card.statut !== 'OPPOSEE') { %>
+                                            <!-- Bouton Ajuster Plafonds -->
+                                            <button type="button" class="btn-sm btn-secondary btn-edit-limits"
+                                                data-id="<%= card.id %>"
+                                                data-pan="<%= card.panMasque %>"
+                                                data-client="<%= card.clientName %>"
+                                                data-paiement="<%= card.plafondPaiement || 3000 %>"
+                                                data-retrait="<%= card.plafondRetrait || 1000 %>">
+                                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 4px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                                                Plafonds
+                                            </button>
+
+                                            <!-- Bouton Bloquer / Débloquer temporaire -->
+                                            <form action="/admin/cards/<%= card.id %>/toggle-block" method="POST" style="display: inline-block;">
+                                                <% if (card.statut === 'ACTIVE') { %>
+                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer temporairement cette carte ?">
+                                                        Bloquer
+                                                    </button>
                                                 <% } else { %>
-                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Débloquer Carte</button>
+                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">
+                                                        Débloquer
+                                                    </button>
                                                 <% } %>
                                             </form>
+
+                                            <!-- Bouton Opposition d'urgence -->
+                                            <form action="/admin/cards/<%= card.id %>/oppose" method="POST" style="display: inline-block;">
+                                                <button type="submit" class="btn-sm btn-danger" style="background: #DC2626; color: white; border: none;" data-confirm="Attention critique : L'opposition de carte est DÉFINITIVE et irréversible. Confirmer ?">
+                                                    Opposition
+                                                </button>
+                                            </form>
+                                        <% } else { %>
+                                            <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; padding: 4px 8px;">Carte neutralisée définitivement</span>
                                         <% } %>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Supervision Globale des Cartes Bancaires -->
-            <div class="card" style="margin-top: 28px;">
-                <div class="card-header">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                        <span class="card-title">Supervision Globale des Cartes Bancaires</span>
-                        <span class="badge purple"><%= (typeof cards !== 'undefined' && cards) ? cards.length : 0 %> cartes répertoriées</span>
-                    </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px; background: #FFFFFF; border-radius: 16px;">
+                            Aucune carte bancaire trouvée.
+                        </div>
+                    <% } %>
                 </div>
 
-                <div class="data-table-wrapper">
+                <!-- 2.B. Vue Tableau Classique des Cartes (Accessible via Switcher) -->
+                <div id="cardsTableView" class="data-table-wrapper" style="display: none; margin-top: 14px;">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Carte & Type</th>
+                                <th>Carte</th>
                                 <th>Titulaire</th>
                                 <th>Compte Associé</th>
                                 <th>Plafonds (Mois / Sem.)</th>
                                 <th>Expiration</th>
                                 <th>Statut</th>
-                                <th style="text-align: right;">Actions Administrateur</th>
+                                <th style="text-align: right;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -148,9 +297,6 @@
                                             <div style="font-weight: 700; font-family: monospace; font-size: 0.95rem; color: var(--text-main);">
                                                 <%= card.panMasque %>
                                             </div>
-                                            <span class="badge" style="background: <%= card.typeCarte === 'VIRTUELLE' ? '#EBF5FF' : 'var(--bg-cream-darker)' %>; color: <%= card.typeCarte === 'VIRTUELLE' ? '#1E40AF' : 'var(--text-main)' %>; font-size: 0.7rem; font-weight: 600;">
-                                                <%= card.typeCarte %>
-                                            </span>
                                         </td>
                                         <td>
                                             <div style="font-weight: 600;"><%= card.clientName %></div>
@@ -178,7 +324,14 @@
                                         </td>
                                         <td style="text-align: right; white-space: nowrap;">
                                             <% if (card.statut !== 'OPPOSEE') { %>
-                                                <!-- Bloquer / Débloquer temporaire -->
+                                                <button type="button" class="btn-sm btn-secondary btn-edit-limits" style="margin-right: 4px;"
+                                                    data-id="<%= card.id %>"
+                                                    data-pan="<%= card.panMasque %>"
+                                                    data-client="<%= card.clientName %>"
+                                                    data-paiement="<%= card.plafondPaiement || 3000 %>"
+                                                    data-retrait="<%= card.plafondRetrait || 1000 %>">
+                                                    Plafonds
+                                                </button>
                                                 <form action="/admin/cards/<%= card.id %>/toggle-block" method="POST" style="display: inline-block; margin-right: 4px;">
                                                     <% if (card.statut === 'ACTIVE') { %>
                                                         <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer temporairement cette carte ?">Bloquer</button>
@@ -186,8 +339,6 @@
                                                         <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">Débloquer</button>
                                                     <% } %>
                                                 </form>
-
-                                                <!-- Mettre en opposition définitive -->
                                                 <form action="/admin/cards/<%= card.id %>/oppose" method="POST" style="display: inline-block;">
                                                     <button type="submit" class="btn-sm btn-danger" style="background: #DC2626; color: white; border: none;" data-confirm="Attention : L'opposition est définitive ! Confirmer ?">Opposition</button>
                                                 </form>
@@ -210,6 +361,100 @@
     </div>
 </div>
 
+<!-- ==========================================================
+     MODALE DE MODIFICATION DES PLAFONDS DE LA CARTE
+     ========================================================== -->
+<div class="modal-overlay" id="modalEditLimits">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">Modifier les Plafonds de la Carte</div>
+            <button class="modal-close" data-close-modal>&times;</button>
+        </div>
+        <form id="formEditLimits" method="POST" action="">
+            <div class="modal-body">
+                <div id="modalLimitsInfo" style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px; padding: 10px 14px; background: var(--bg-cream, #FBF9F5); border-radius: 8px; font-weight: 600;"></div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label for="inputPlafondPaiement" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Plafond de Paiement Mensuel (€)</label>
+                    <input type="number" step="100" min="100" max="50000" id="inputPlafondPaiement" name="plafondPaiement" class="form-input" required>
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">Limite autorisée pour les achats TPE et E-Commerce.</small>
+                </div>
+                <div class="form-group">
+                    <label for="inputPlafondRetrait" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">Plafond de Retrait Hebdomadaire (€)</label>
+                    <input type="number" step="50" min="50" max="20000" id="inputPlafondRetrait" name="plafondRetrait" class="form-input" required>
+                    <small style="color: var(--text-muted); font-size: 0.75rem;">Limite de retrait DAB glissant sur 7 jours.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-sm btn-secondary" data-close-modal>Annuler</button>
+                <button type="submit" class="btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Enregistrer les Plafonds</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="/js/admin.js"></script>
+<script>
+    // 1. Commutateur de Vue pour les Cartes (Cartes 3D vs Tableau)
+
+    function switchCardsView(mode) {
+        const cardsView = document.getElementById("cardsRealisticView");
+        const tableView = document.getElementById("cardsTableView");
+        const btnCards = document.getElementById("btnViewCards3D");
+        const btnTable = document.getElementById("btnViewCardsTable");
+
+        if (mode === 'cards') {
+            cardsView.style.display = "grid";
+            tableView.style.display = "none";
+            btnCards.classList.add("active");
+            btnTable.classList.remove("active");
+        } else {
+            cardsView.style.display = "none";
+            tableView.style.display = "block";
+            btnCards.classList.remove("active");
+            btnTable.classList.add("active");
+        }
+    }
+
+    // 2. Copier l'IBAN dans le presse-papier avec toast
+    function copyIban(iban) {
+        if (!iban) return;
+        navigator.clipboard.writeText(iban).then(() => {
+            if (window.hosToast) {
+                window.hosToast("IBAN copié dans le presse-papier !", "success");
+            } else {
+                alert("IBAN copié : " + iban);
+            }
+        });
+    }
+
+    // 3. Gestion de la modale des Plafonds
+    document.addEventListener("DOMContentLoaded", () => {
+        const editLimitBtns = document.querySelectorAll(".btn-edit-limits");
+        const modalEditLimits = document.getElementById("modalEditLimits");
+        const formEditLimits = document.getElementById("formEditLimits");
+        const modalLimitsInfo = document.getElementById("modalLimitsInfo");
+        const inputPlafondPaiement = document.getElementById("inputPlafondPaiement");
+        const inputPlafondRetrait = document.getElementById("inputPlafondRetrait");
+
+        editLimitBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.getAttribute("data-id");
+                const pan = btn.getAttribute("data-pan");
+                const client = btn.getAttribute("data-client");
+                const paiement = btn.getAttribute("data-paiement");
+                const retrait = btn.getAttribute("data-retrait");
+
+                formEditLimits.action = `/admin/cards/${id}/limits`;
+                modalLimitsInfo.textContent = `Carte : ${pan} — Titulaire : ${client}`;
+                inputPlafondPaiement.value = paiement || 3000;
+                inputPlafondRetrait.value = retrait || 1000;
+
+                if (modalEditLimits) {
+                    modalEditLimits.classList.add("active");
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>
