@@ -5,11 +5,9 @@
     userRole==='admin' ? 'Superviseur' : (userRole==='advisor' ? 'Conseiller Clientèle' : 'Particulier' ), avatar:
     userRole==='admin' ? 'HB' : (userRole==='advisor' ? 'KB' : 'CL' ) }); %>
 
-    <aside class="admin-sidebar"
-        style="width: 275px; background: linear-gradient(180deg, #3C3352 0%, #29223A 100%); color: #FFFFFF; display: flex; flex-direction: column; padding: 28px 20px; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; box-shadow: 4px 0 25px rgba(33, 26, 48, 0.15); box-sizing: border-box;">
+    <aside class="admin-sidebar" id="adminSidebar">
         <!-- En-tête Sidebar : Logo HosBank Officiel -->
-        <div class="sidebar-brand"
-            style="padding: 0 8px 24px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between;">
+        <div class="sidebar-brand">
             <a href="<%= userRole === 'admin' ? '/admin/dashboard' : (userRole === 'advisor' ? '/advisor/dashboard' : '/client/dashboard') %>"
                 class="hosbank-logo" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
                 <img src="/images/logo-white.svg" alt="HosBank" style="height: 28px; width: auto;" />
@@ -19,8 +17,9 @@
                     <% } else if (userRole==='advisor' ) { %>
                         <span class="hosbank-badge-advisor"
                             style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: rgba(116, 107, 146, 0.25); color: #FFFFFF; padding: 2px 7px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2);">Pro</span>
-                        <% } %>
+                    <% } %>
             </a>
+            <button type="button" class="sidebar-mobile-close" id="sidebarMobileClose" aria-label="Fermer le menu">&times;</button>
         </div>
 
         <!-- Navigation Principale -->

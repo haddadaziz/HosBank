@@ -36,10 +36,13 @@ const userRepository = {
                 u.role,
                 u.email_verifie AS "emailVerifie",
                 u.compte_verrouille AS "compteVerrouille",
+                u.conseiller_id AS "conseillerId",
+                (adv.prenom || ' ' || adv.nom) AS "conseillerName",
                 TO_CHAR(u.date_creation, 'YYYY-MM-DD') AS "dateCreation",
                 COUNT(cb.id)::int AS "comptesCount",
                 COALESCE(SUM(cb.solde), 0)::float AS "totalSolde"
             FROM utilisateurs u
+            LEFT JOIN utilisateurs adv ON u.conseiller_id = adv.id
             LEFT JOIN comptes_bancaires cb ON u.id = cb.utilisateur_id
         `;
         const params = [];
@@ -65,12 +68,34 @@ const userRepository = {
         }
 
         query += `
-            GROUP BY u.id
+            GROUP BY u.id, adv.id
             ORDER BY u.id DESC
         `;
 
         const result = await db.query(query, params);
         return result.rows;
+    },
+
+    async getAdvisors() {
+        const query = `
+            SELECT id, civilite, nom, prenom, email, telephone
+            FROM utilisateurs
+            WHERE role = 'CHARGE_CLIENT' AND compte_verrouille = FALSE
+            ORDER BY nom ASC
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    },
+
+    async assignAdvisor(clientId, advisorId) {
+        const query = `
+            UPDATE utilisateurs
+            SET conseiller_id = $1
+            WHERE id = $2
+            RETURNING *
+        `;
+        const result = await db.query(query, [advisorId, clientId]);
+        return result.rows[0] || null;
     },
 
     async updateRole(id, role) {
@@ -132,7 +157,7 @@ const userRepository = {
                 nom = COALESCE($2, nom),
                 prenom = COALESCE($3, prenom),
                 email = COALESCE($4, email),
-                role = COALESCE($5, role),
+                role = COALESCE($5::role_utilisateur, role),
                 telephone = COALESCE($6, telephone),
                 adresse_postale = COALESCE($7, adresse_postale)
             WHERE id = $8

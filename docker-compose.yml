@@ -37,6 +37,10 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres
       DB_NAME: hosbank
+      SMTP_HOST: sandbox.smtp.mailtrap.io
+      SMTP_PORT: 2525
+      SMTP_USER: af0d4e69ad869e
+      SMTP_PASS: 50f6a72ec6976d
     volumes:
       # Synchronisation du code en direct pour le Hot Reload
       - .:/app

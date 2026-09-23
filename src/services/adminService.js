@@ -239,6 +239,19 @@ class AdminDataService {
         return await userRepo.updateRole(id, role);
     }
 
+    async getAdvisors() {
+        try {
+            return await userRepo.getAdvisors();
+        } catch (err) {
+            console.error(err);
+            return [];
+        }
+    }
+
+    async assignClientAdvisor(clientId, advisorId) {
+        return await userRepo.assignAdvisor(clientId, advisorId);
+    }
+
     async toggleClientStatus(id) {
         return await userRepo.toggleLock(id);
     }

@@ -1,14 +1,15 @@
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.ethereal.email",
-    port: parseInt(process.env.SMTP_PORT || "587", 10),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-        user: process.env.SMTP_USER || "",
-        pass: process.env.SMTP_PASS || ""
-    }
-});
+function getTransporter() {
+    return nodemailer.createTransport({
+        host: process.env.SMTP_HOST || "sandbox.smtp.mailtrap.io",
+        port: parseInt(process.env.SMTP_PORT || "2525", 10),
+        auth: {
+            user: process.env.SMTP_USER || "",
+            pass: process.env.SMTP_PASS || ""
+        }
+    });
+}
 
 const emailService = {
     async sendVerificationEmail(email, token, req) {
@@ -57,9 +58,11 @@ const emailService = {
 
         if (process.env.SMTP_USER && process.env.SMTP_PASS) {
             try {
-                await transporter.sendMail(mailOptions);
+                const transporter = getTransporter();
+                const info = await transporter.sendMail(mailOptions);
+                console.log("✅ Email envoyé avec succès vers Mailtrap ! MessageId:", info.messageId);
             } catch (err) {
-                console.warn("Erreur envoi email :", err.message);
+                console.error("❌ Erreur envoi email Mailtrap :", err.message);
             }
         }
 
