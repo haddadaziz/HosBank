@@ -189,7 +189,18 @@ const userRepository = {
             RETURNING *
         `;
         const result = await db.query(query, [userId, numCompte, iban]);
-        return result.rows[0];
+        const account = result.rows[0];
+
+        try {
+            await db.query(`
+                INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie, date_valeur, date_operation)
+                VALUES ($1, 'CREDIT', 100.00, 100.00, 'Dépôt initial d''ouverture de compte', 'Revenus', CURRENT_DATE, CURRENT_TIMESTAMP)
+            `, [account.id]);
+        } catch (opErr) {
+            console.warn("Opération initiale non créée :", opErr.message);
+        }
+
+        return account;
     },
 
     async verifyEmail(id) {

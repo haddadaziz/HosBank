@@ -418,11 +418,19 @@ class AdvisorService {
                     const ibanNum = `FR763000401234${Math.floor(10000000000 + Math.random() * 90000000000)}67`;
                     const initialDep = parseFloat(payload.initialDeposit) || 100.00;
 
-                    await db.query(`
+                    const epaRes = await db.query(`
                         INSERT INTO comptes_bancaires (
                             utilisateur_id, numero_compte, iban, bic, devise, type_compte, solde, taux_interet, statut
                         ) VALUES ($1, $2, $3, 'HOSBFR2P', 'EUR', 'EPARGNE', $4, 3.00, 'ACTIF')
+                        RETURNING id
                     `, [demand.utilisateur_id, accNum, ibanNum, initialDep]);
+
+                    if (initialDep > 0) {
+                        await db.query(`
+                            INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie, date_valeur, date_operation)
+                            VALUES ($1, 'CREDIT', $2, $2, 'Dépôt initial d''ouverture de Livret d''Épargne', 'Revenus', CURRENT_DATE, CURRENT_TIMESTAMP)
+                        `, [epaRes.rows[0].id, initialDep]);
+                    }
                 }
             }
 
