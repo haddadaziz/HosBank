@@ -448,47 +448,136 @@
         <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-extrabold text-hos-dark">Ouvrir un Livret Épargne</h3>
-                <button onclick="document.getElementById('savingsModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+                <button onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
             </div>
 
             <p class="text-xs text-gray-500 mb-6 leading-relaxed">
-                Votre demande sera directement instruite et validée par votre conseiller <strong>Karim Bennani</strong> sous 24h ouvrées.
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    Votre demande sera directement instruite et validée par votre conseiller <strong><%= advisor.name %></strong> sous 24h ouvrées.
+                <% } else { %>
+                    Votre demande sera directement transmise au pôle gestion HosBank et instruite par un conseiller sous 24h ouvrées dès son affectation.
+                <% } %>
             </p>
 
-            <form onsubmit="event.preventDefault(); document.getElementById('savingsSuccess').classList.remove('hidden'); document.getElementById('savingsFormBody').classList.add('hidden');">
+            <form id="savingsDemandForm" onsubmit="handleSavingsSubmit(event)">
                 <div id="savingsFormBody">
                     <div class="mb-4">
-                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité
-                            (€)</label>
-                        <input type="number" min="10" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
-                        <span class="text-[11px] text-gray-400 mt-1 block">Débité immédiatement depuis votre Compte
-                            Courant.</span>
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Compte de prélèvement</label>
+                        <select name="sourceAccountId" id="savingsSourceAccount" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-semibold bg-white">
+                            <% (accounts || []).forEach(acc => { %>
+                                <option value="<%= acc.id %>">
+                                    <%= acc.accountNumber %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>) - Solde : <%= Number(acc.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                </option>
+                            <% }) %>
+                        </select>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité (€)</label>
+                        <input type="number" step="0.01" min="10" name="initialDeposit" id="savingsDeposit" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
+                        <span class="text-[11px] text-gray-400 mt-1 block">Débité lors de l'activation depuis votre compte (Min. 10,00 €).</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Projet d'épargne (optionnel)</label>
+                        <input type="text" name="notes" id="savingsNotes" placeholder="Ex: Épargne projet, vacances..." class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-normal">
+                    </div>
+
+                    <div id="savingsError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
+
                     <div class="flex items-center justify-end gap-3 mt-6">
-                        <button type="button" onclick="document.getElementById('savingsModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                        <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                             Annuler
                         </button>
-                        <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
-                            Envoyer ma demande
+                        <button type="submit" id="savingsSubmitBtn" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                            <span>Envoyer ma demande</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Message de succès après envoi -->
+                <!-- Message de succès dynamique après envoi -->
                 <div id="savingsSuccess" class="hidden text-center py-4">
                     <div class="text-4xl mb-3">🎉</div>
                     <h4 class="text-base font-bold text-emerald-600 mb-1">Demande transmise avec succès !</h4>
-                    <p class="text-xs text-gray-500 mb-5 leading-relaxed">
-                        Référence : <strong>DEM-2026-003</strong>. Votre conseiller Karim Bennani a reçu votre requête et vous notifiera dès son activation.
+                    <p id="savingsSuccessMsg" class="text-xs text-gray-500 mb-5 leading-relaxed">
+                        <!-- Rempli dynamiquement avec la référence et le conseiller réel -->
                     </p>
-                    <button type="button" onclick="document.getElementById('savingsModal').classList.add('hidden'); document.getElementById('savingsSuccess').classList.add('hidden'); document.getElementById('savingsFormBody').classList.remove('hidden');" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
+                    <button type="button" onclick="window.location.reload();" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
                         Fermer
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script>
+        function closeSavingsModal() {
+            document.getElementById('savingsModal').classList.add('hidden');
+        }
+
+        async function handleSavingsSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('savingsSubmitBtn');
+            const errBox = document.getElementById('savingsError');
+            if (errBox) {
+                errBox.classList.add('hidden');
+                errBox.innerText = '';
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Envoi en cours...';
+            }
+
+            const sourceAccountId = document.getElementById('savingsSourceAccount')?.value;
+            const initialDeposit = document.getElementById('savingsDeposit')?.value;
+            const notes = document.getElementById('savingsNotes')?.value || '';
+
+            try {
+                const response = await fetch('/client/documents/savings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ sourceAccountId, initialDeposit, notes })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    document.getElementById('savingsFormBody').classList.add('hidden');
+                    const successBox = document.getElementById('savingsSuccess');
+                    const msgEl = document.getElementById('savingsSuccessMsg');
+
+                    const advisorText = result.advisor 
+                        ? `Votre conseiller <strong>${result.advisor.name}</strong> a reçu votre requête et vous notifiera dès son activation.`
+                        : `Votre requête a bien été enregistrée et sera instruite par nos équipes bancaires sous 24h ouvrées.`;
+
+                    msgEl.innerHTML = `Référence : <strong>${result.reference}</strong>. ${advisorText}`;
+                    successBox.classList.remove('hidden');
+                } else {
+                    if (errBox) {
+                        errBox.innerText = result.error || "Une erreur est survenue lors de l'envoi de la demande.";
+                        errBox.classList.remove('hidden');
+                    }
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Envoyer ma demande';
+                    }
+                }
+            } catch (err) {
+                if (errBox) {
+                    errBox.innerText = "Erreur de connexion. Veuillez réessayer.";
+                    errBox.classList.remove('hidden');
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Envoyer ma demande';
+                }
+            }
+        }
+    </script>
 
 </body>
 

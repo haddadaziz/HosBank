@@ -17,6 +17,7 @@ exports.getDashboard = async (req, res) => {
             currentBalance: data.currentBalance,
             savingsBalance: data.savingsBalance,
             hasSavingsAccount: data.hasSavingsAccount,
+            advisor: data.advisor,
             currentPath: "/client/dashboard"
         });
     } catch (error) {
@@ -243,7 +244,11 @@ exports.postCreateSavingsDemand = async (req, res) => {
         const { initialDeposit, sourceAccountId, notes } = req.body;
 
         if (!sourceAccountId || !initialDeposit) {
-            return res.redirect("/client/documents?error=" + encodeURIComponent("Veuillez sélectionner un compte source et renseigner un versement initial."));
+            const errorMsg = "Veuillez sélectionner un compte source et renseigner un versement initial.";
+            if (req.xhr || req.headers.accept?.includes('application/json') || req.is('json')) {
+                return res.status(400).json({ success: false, error: errorMsg });
+            }
+            return res.redirect("/client/documents?error=" + encodeURIComponent(errorMsg));
         }
 
         const demand = await clientService.createSavingsAccountDemand(userId, {
@@ -252,9 +257,29 @@ exports.postCreateSavingsDemand = async (req, res) => {
             notes
         });
 
-        res.redirect("/client/documents?success=" + encodeURIComponent(`Votre demande d'ouverture de livret d'épargne (${demand.reference}) a été transmise à votre conseiller.`));
+        const advisorMsg = demand.advisor 
+            ? `Votre conseiller ${demand.advisor.name} a reçu votre requête et vous notifiera dès son activation.`
+            : "Votre demande a été transmise avec succès au pôle gestion HosBank et sera instruite par un conseiller sous 24h ouvrées.";
+
+        if (req.xhr || req.headers.accept?.includes('application/json') || req.is('json')) {
+            return res.json({
+                success: true,
+                reference: demand.reference,
+                advisor: demand.advisor,
+                message: advisorMsg
+            });
+        }
+
+        const redirectMsg = demand.advisor
+            ? `Votre demande d'ouverture de livret d'épargne (${demand.reference}) a été transmise à votre conseiller ${demand.advisor.name}.`
+            : `Votre demande d'ouverture de livret d'épargne (${demand.reference}) a été transmise aux équipes bancaires HosBank.`;
+
+        res.redirect("/client/documents?success=" + encodeURIComponent(redirectMsg));
     } catch (error) {
         console.error("Erreur demande livret d'épargne :", error);
+        if (req.xhr || req.headers.accept?.includes('application/json') || req.is('json')) {
+            return res.status(400).json({ success: false, error: error.message });
+        }
         res.redirect("/client/documents?error=" + encodeURIComponent(error.message));
     }
 };

@@ -455,6 +455,32 @@ class ClientService {
         const savingsBalance = accounts.filter(a => a.type === 'EPARGNE').reduce((sum, a) => sum + a.balance, 0);
         const hasSavingsAccount = accounts.some(a => a.type === 'EPARGNE');
 
+        // Récupérer le conseiller attitré au client (s'il lui a été assigné par l'admin)
+        const advisorQuery = `
+            SELECT 
+                c.id,
+                c.nom,
+                c.prenom,
+                c.email,
+                c.telephone
+            FROM utilisateurs u
+            JOIN utilisateurs c ON u.conseiller_id = c.id
+            WHERE u.id = $1
+        `;
+        const { rows: advisorRows } = await db.query(advisorQuery, [userId]);
+        let advisor = null;
+        if (advisorRows.length > 0) {
+            const adv = advisorRows[0];
+            advisor = {
+                id: adv.id,
+                name: `${adv.prenom} ${adv.nom}`,
+                email: adv.email || "conseiller@hosbank.fr",
+                phone: adv.telephone || "+33 1 42 68 55 00",
+                agency: "Agence Centrale HosBank Paris",
+                avatar: `${(adv.prenom[0] || '').toUpperCase()}${(adv.nom[0] || '').toUpperCase()}`
+            };
+        }
+
         return { 
             accounts, 
             cards, 
@@ -462,7 +488,8 @@ class ClientService {
             totalBalance, 
             currentBalance, 
             savingsBalance, 
-            hasSavingsAccount 
+            hasSavingsAccount,
+            advisor
         };
     }
 
@@ -629,7 +656,26 @@ class ClientService {
             RETURNING id, reference, type_demande, statut, date_demande
         `;
         const { rows } = await db.query(query, [userId, reference, payload]);
-        return rows[0];
+        const demand = rows[0];
+
+        // Vérifier si le client dispose d'un conseiller attitré
+        const advQuery = `
+            SELECT c.id, c.nom, c.prenom, c.email
+            FROM utilisateurs u
+            JOIN utilisateurs c ON u.conseiller_id = c.id
+            WHERE u.id = $1
+        `;
+        const { rows: advRows } = await db.query(advQuery, [userId]);
+        const advisor = advRows.length > 0 ? {
+            id: advRows[0].id,
+            name: `${advRows[0].prenom} ${advRows[0].nom}`,
+            email: advRows[0].email
+        } : null;
+
+        return {
+            ...demand,
+            advisor
+        };
     }
 
     async createReclamation(userId, { sujet, description, priorite = "MOYENNE" }) {
@@ -706,7 +752,7 @@ class ClientService {
             user: {
                 fullName: `${user.civilite || ''} ${user.prenom} ${user.nom}`.trim(),
                 address: user.address || "14 Rue de la République, 75001 Paris",
-                advisorName: user.advisorPrenom ? `${user.advisorPrenom} ${user.advisorNom}` : "Aziz Haddad"
+                advisorName: user.advisorPrenom ? `${user.advisorPrenom} ${user.advisorNom}` : "Pôle Gestion HosBank"
             },
             account: {
                 id: account.id,
@@ -775,12 +821,7 @@ class ClientService {
                 email: profile.conseillerEmail || 'conseiller@hosbank.fr',
                 phone: profile.conseillerTelephone || '+33 1 42 68 55 00',
                 agency: 'HosBank Agence Centrale • Paris Opéra'
-            } : {
-                fullName: 'Aziz Haddad',
-                email: 'conseiller@hosbank.fr',
-                phone: '+33 1 42 68 55 00',
-                agency: 'HosBank Agence Centrale • Paris Opéra'
-            }
+            } : null
         };
     }
 
