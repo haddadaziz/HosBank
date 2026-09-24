@@ -327,6 +327,7 @@ const adminController = {
                 summary: supervisionData.summary,
                 selectedAdvisorId: advisorId,
                 successMessage: req.query.success ? decodeURIComponent(req.query.success) : null,
+                errorMessage: req.query.error ? decodeURIComponent(req.query.error) : null,
                 title: "Supervision de la Charge et Réactivité des Conseillers - HosBank"
             });
         } catch (error) {
@@ -351,7 +352,7 @@ const adminController = {
             res.redirect(`/admin/advisors-workload?success=${encodeURIComponent(result.message)}`);
         } catch (error) {
             console.error("Erreur postSendReminder :", error);
-            res.redirect("/admin/advisors-workload");
+            res.redirect(`/admin/advisors-workload?error=${encodeURIComponent(error.message)}`);
         }
     }
 };

@@ -516,7 +516,15 @@ class AdminDataService {
      */
     async sendAdvisorReminder(advisorId, { requestId, requestType, reference, message }, adminUser, ip) {
         const actionDesc = `Relance envoyée au conseiller ID #${advisorId} pour le dossier ${requestType} [${reference}] : ${message || 'Délai de traitement dépassé'}`;
-        await this.logAction(adminUser, actionDesc, ip, "Warning");
+        await auditRepo.log({
+            adminUser,
+            action: "RELANCE_CONSEILLER",
+            ip,
+            severity: "Warning",
+            entiteCible: requestType ? requestType.toUpperCase().trim() : null,
+            idEntiteCible: requestId ? parseInt(requestId, 10) : null,
+            detail: actionDesc
+        });
         return { success: true, message: `Relance enregistrée avec succès pour le conseiller.` };
     }
 }
