@@ -1,0 +1,42 @@
+{
+  "name": "hosbank",
+  "version": "1.0.0",
+  "description": "Application bancaire en ligne sécurisée développée en architecture N-tiers.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "db:init": "node database/init.js",
+    "docker:up": "docker compose up --build",
+    "docker:reset": "docker compose down -v && docker compose up --build",
+    "docker:db": "docker compose up -d db",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haddadaziz/HosBank.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/haddadaziz/HosBank/issues"
+  },
+  "homepage": "https://github.com/haddadaziz/HosBank#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "mysql2": "^3.24.4",
+    "nodemailer": "^10.0.10",
+    "pg": "^8.23.0"
+  },
+  "allowScripts": {
+    "node-gyp-build@4.8.4": true
+  }
+}

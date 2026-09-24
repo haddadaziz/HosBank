@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="admin-layout">
+    <%- include('../partials/sidebar') %>
+
+    <div class="admin-main">
+        <%- include('../partials/topbar') %>
+
+        <main class="admin-content">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Surveillance des Flux & Transactions</h1>
+                    <p class="page-subtitle">Contrôle en temps réel des virements SEPA, internationaux et détection anti-fraude</p>
+                </div>
+            </div>
+
+            <!-- Liste des transactions -->
+            <div class="card">
+                <div class="card-header">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <span class="card-title">Journal des Opérations Récentes</span>
+                        <span class="badge purple"><%= transactions.length %> flux enregistrés</span>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Référence / Date</th>
+                                <th>Émetteur</th>
+                                <th>Bénéficiaire</th>
+                                <th>Type de Flux</th>
+                                <th>Montant</th>
+                                <th>Statut / Alerte</th>
+                                <th style="text-align: right;">Action Arbitrage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% transactions.forEach(tx => { %>
+                                <tr style="<%= tx.flagged ? 'background-color: #FFFDF5;' : '' %>">
+                                    <td>
+                                        <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);"><%= tx.reference %></div>
+                                        <div style="font-size: 0.76rem; color: var(--text-muted);"><%= tx.date %></div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 600;"><%= tx.sender %></div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><%= tx.senderIban %></div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 500;"><%= tx.recipient %></div>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 600;">
+                                            <%= tx.type %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="font-weight: 800; font-size: 0.98rem; color: <%= tx.amount < 0 ? 'var(--text-main)' : 'var(--status-success)' %>;">
+                                            <%= tx.amount > 0 ? '+' : '' %><%= tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <% if (tx.status === 'Validé') { %>
+                                            <span class="badge success"><span class="badge-dot"></span> Validé</span>
+                                        <% } else if (tx.status === 'En attente') { %>
+                                            <span class="badge warning"><span class="badge-dot"></span> En attente</span>
+                                        <% } else { %>
+                                            <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
+                                        <% } %>
+
+                                        <% if (tx.flagged) { %>
+                                            <div style="margin-top: 4px; font-size: 0.74rem; color: var(--accent-coral); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                                                ⚠️ <%= tx.flagReason %>
+                                            </div>
+                                        <% } %>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <% if (tx.status === 'En attente' || tx.flagged) { %>
+                                            <div style="display: flex; justify-content: flex-end; gap: 6px;">
+                                                <form action="/admin/transactions/<%= tx.id %>/approve" method="POST" style="display: inline-block;">
+                                                    <button type="submit" class="btn-sm btn-success-sm" data-confirm="Valider définitivement ce virement ?">Approuver</button>
+                                                </form>
+                                                <form action="/admin/transactions/<%= tx.id %>/reject" method="POST" style="display: inline-block;">
+                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Rejeter et geler ce virement ?">Rejeter</button>
+                                                </form>
+                                            </div>
+                                        <% } else { %>
+                                            <span style="color: var(--text-muted); font-size: 0.8rem;">Traité</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

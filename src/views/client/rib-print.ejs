@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        hos: {
+                            dark: '#29223A',
+                            primary: '#746B92',
+                            cream: '#F6EFE0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+            .rib-sheet {
+                box-shadow: none !important;
+                border: 1px solid #d1d5db !important;
+                margin: 0 auto !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-gray-900 bg-gray-100 min-h-screen p-4 sm:p-8 flex flex-col items-center justify-center">
+
+    <!-- Barre d'action supérieure (masquée à l'impression) -->
+    <div class="no-print max-w-[800px] w-full flex items-center justify-between mb-4 bg-white p-3.5 rounded-2xl shadow-sm border border-gray-200">
+        <a href="/client/documents" class="text-xs text-gray-500 hover:text-hos-dark font-bold flex items-center gap-1.5 transition-colors">
+            ← Retour à l'espace Client
+        </a>
+        <div class="flex items-center gap-2">
+            <button onclick="window.print()" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-[#3C3352] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition-all">
+                <span>🖨️</span> Imprimer / Enregistrer en PDF
+            </button>
+            <button onclick="window.close()" class="text-xs text-gray-400 hover:text-gray-600 px-3 py-2 font-medium">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+    <!-- Feuille Officielle A4 RIB -->
+    <div class="rib-sheet max-w-[800px] w-full bg-white border border-gray-200 rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
+        
+        <!-- Filigrane d'authenticité bancaire en arrière-plan -->
+        <div class="absolute -right-16 -bottom-16 w-80 h-80 rounded-full bg-[#746B92]/5 pointer-events-none flex items-center justify-center font-extrabold text-9xl text-hos-dark/5 select-none font-mono">
+            HB
+        </div>
+
+        <!-- En-tête officiel HosBank -->
+        <div class="flex items-start justify-between border-b-2 border-hos-dark pb-6 mb-8">
+            <div>
+                <div class="flex items-center gap-3 mb-1">
+                    <span class="text-2xl font-black text-hos-dark tracking-tight">HosBank</span>
+                    <span class="text-[10px] bg-hos-dark text-white font-bold px-2 py-0.5 rounded tracking-widest uppercase">Certifié</span>
+                </div>
+                <div class="text-[11px] text-gray-500 font-medium">
+                    Établissement bancaire agréé • S.A. au capital de 50 000 000 €
+                </div>
+                <div class="text-[11px] text-gray-400">RCS Paris B 891 002 918 • Code APE 6419Z</div>
+            </div>
+
+            <div class="text-right">
+                <span class="text-xs font-extrabold text-hos-dark uppercase tracking-widest block">
+                    Relevé d'Identité Bancaire
+                </span>
+                <span class="text-[10px] text-gray-400 block mt-0.5">
+                    Émis le <%= new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) %>
+                </span>
+                <span class="text-[10px] font-mono text-gray-400 block">Réf : CERT-RIB-<%= Date.now().toString().slice(-8) %></span>
+            </div>
+        </div>
+
+        <!-- Coordonnées Titulaire & Agence -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8 text-xs">
+            <div class="bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Titulaire du compte</span>
+                <div class="font-extrabold text-sm text-hos-dark"><%= rib.user.fullName %></div>
+                <div class="text-gray-600 mt-1 leading-relaxed"><%= rib.user.address %></div>
+            </div>
+
+            <div class="bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Domiciliation du compte</span>
+                <div class="font-extrabold text-sm text-hos-dark"><%= rib.account.agencyName %></div>
+                <div class="text-gray-600 mt-1">Conseiller référent : <span class="font-bold text-hos-dark"><%= rib.user.advisorName %></span></div>
+                <div class="text-gray-500 text-[11px]">Compte : <span class="font-bold uppercase text-hos-primary"><%= rib.account.type %></span> (<%= rib.account.number %>)</div>
+            </div>
+        </div>
+
+        <!-- Cartouche IBAN / BIC International -->
+        <div class="bg-[#29223A] text-white rounded-2xl p-6 mb-6 shadow-md">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-[10px] uppercase font-bold tracking-widest text-[#F6EFE0]">
+                    Identifiant International de Compte Bancaire (IBAN)
+                </span>
+                <span class="text-[10px] font-bold bg-white/10 px-2.5 py-0.5 rounded-full text-white/90">
+                    SEPA Standard
+                </span>
+            </div>
+
+            <div class="font-mono text-lg sm:text-xl font-black tracking-widest text-white mb-4 select-all">
+                <%= rib.account.iban %>
+            </div>
+
+            <div class="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                <div>
+                    <span class="text-[10px] uppercase font-semibold text-gray-400 block">Code BIC / SWIFT</span>
+                    <span class="font-mono font-bold text-[#F6EFE0] tracking-wider text-sm"><%= rib.account.bic %></span>
+                </div>
+                <div>
+                    <span class="text-[10px] uppercase font-semibold text-gray-400 block">Devise</span>
+                    <span class="font-bold text-white"><%= rib.account.currency %> (Euro)</span>
+                </div>
+                <div>
+                    <span class="text-[10px] uppercase font-semibold text-gray-400 block">Pays</span>
+                    <span class="font-bold text-white">France (FR)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Découpage National Français (RIB) -->
+        <div class="mb-8">
+            <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2.5">
+                Coordonnées Bancaires Nationales (Format RIB France)
+            </span>
+            <div class="grid grid-cols-4 gap-3 font-mono text-center">
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div class="text-[10px] text-gray-400 font-sans font-medium">Code Banque</div>
+                    <div class="font-black text-sm text-hos-dark mt-1"><%= rib.account.codeBanque %></div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div class="text-[10px] text-gray-400 font-sans font-medium">Code Guichet</div>
+                    <div class="font-black text-sm text-hos-dark mt-1"><%= rib.account.codeGuichet %></div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div class="text-[10px] text-gray-400 font-sans font-medium">N° de Compte</div>
+                    <div class="font-black text-sm text-hos-dark mt-1"><%= rib.account.numCompte %></div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div class="text-[10px] text-gray-400 font-sans font-medium">Clé RIB</div>
+                    <div class="font-black text-sm text-hos-dark mt-1"><%= rib.account.cleRib %></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mentions légales & Signature d'authenticité -->
+        <div class="pt-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-gray-400">
+            <div class="leading-relaxed">
+                Ce relevé d'identité bancaire est un document officiel destiné à être communiqué à vos débiteurs ou créanciers pour l'exécution de virements ou prélèvements SEPA. Document certifié conforme par la banque HosBank.
+            </div>
+
+            <!-- Cachet et signature numérique -->
+            <div class="shrink-0 flex items-center gap-3 bg-gray-50 px-3.5 py-2 rounded-xl border border-gray-200">
+                <div class="text-right">
+                    <div class="font-bold text-hos-dark text-[10px]">HosBank Certification</div>
+                    <div class="text-[9px] text-emerald-600 font-semibold">✔ Signature électronique valide</div>
+                </div>
+                <div class="w-7 h-7 rounded-full bg-hos-dark text-white flex items-center justify-center font-bold text-xs">
+                    HB
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <% if (autoprint) { %>
+        <script>
+            window.addEventListener('load', () => {
+                setTimeout(() => window.print(), 300);
+            });
+        </script>
+    <% } %>
+
+</body>
+</html>

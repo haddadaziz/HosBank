@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-[#F8F9FA]">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CDN avec configuration des couleurs HosBank -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        hos: {
+                            dark: '#29223A', // Violet profond (sidebar, boutons, titres)
+                            hover: '#3C3352', // Hover boutons sombres
+                            primary: '#746B92', // Prune signature HosBank
+                            cream: '#F6EFE0', // Teinte crème douce
+                            surface: '#FFFFFF',
+                            bg: '#F8F9FA'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar unifiée HosBank -->
+        <%- include('../partials/sidebar', { role: 'client' , currentPath: '/client/dashboard' , user: user }) %>
+
+            <!-- Contenu Principal (décalé de 275px pour la sidebar) -->
+            <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+
+                <!-- En-tête Client -->
+                <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
+                            Bonjour,
+                            <%= (user && user.name) ? user.name.split(' ')[0] : ' Alexandre' %>
+                        </h1>
+                        <p class="text-sm text-gray-500 mt-1">Voici l'état actuel de vos avoirs et vos mouvements récents.
+                        </p>
+                    </div>
+                </header>
+
+                    <!-- Hero Solde Cumulé (Revolut / Wise Style) -->
+                    <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm flex flex-wrap justify-between items-center gap-6 mb-8">
+                        <div>
+                            <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">
+                                Solde total combiné
+                            </div>
+                            <div class="text-4xl lg:text-5xl font-extrabold text-hos-dark tracking-tight flex items-baseline">
+                                <%= Number(totalBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                <span class="text-2xl font-bold text-hos-primary ml-1.5">€</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mt-3">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700">
+                                    <span class="w-2 h-2 rounded-full bg-hos-primary"></span>
+                                    Courant : <strong><%= Number(currentBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</strong>
+                                </span>
+                                <% if (hasSavingsAccount) { %>
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/50">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        Épargne (3%) : <strong><%= Number(savingsBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</strong>
+                                    </span>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Actions rapides -->
+                        <div class="flex flex-wrap items-center gap-3">
+                            <a href="/client/transfers" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-3 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg> Faire un virement
+                            </a>
+                            <a href="/client/documents" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-sm">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg> Télécharger RIB
+                            </a>
+                            <a href="/client/cards" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-0.5 shadow-sm">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg> Mes Cartes
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Grille 2 Colonnes -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                        <!-- Colonne Gauche : Comptes & Transactions (8 colonnes) -->
+                        <div class="lg:col-span-8 space-y-8">
+
+                            <!-- Section Comptes -->
+                            <div>
+                                <h2 class="text-lg font-bold text-hos-dark mb-4">Mes Comptes Bancaires</h2>
+
+                                <!-- Liste de tous les comptes (Courant & Épargne) HOS-18 -->
+                                <% accounts.forEach(account => { %>
+                                    <div
+                                        class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all mb-4">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl flex items-center justify-center <%= account.type === 'EPARGNE' ? 'bg-amber-50 text-amber-600' : 'bg-hos-cream text-hos-dark' %>">
+                                                    <% if (account.type === 'EPARGNE') { %>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    <% } else { %>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                    <% } %>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-bold text-hos-dark text-base">
+                                                            <%= account.type === 'EPARGNE' ? "Livret d'Épargne HosBank" : "Compte Courant" %>
+                                                        </span>
+                                                        <% if (account.type === 'EPARGNE') { %>
+                                                            <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-md font-semibold">
+                                                                Taux <%= Number(account.interestRate || 3).toFixed(2) %>% / an
+                                                            </span>
+                                                        <% } else { %>
+                                                            <span class="text-xs bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md font-semibold">
+                                                                Découvert: <%= Number(account.overdraft || 0).toFixed(0) %>€
+                                                            </span>
+                                                        <% } %>
+                                                    </div>
+                                                    <div class="text-xs text-gray-400 mt-0.5 font-mono">N° <%= account.accountNumber %></div>
+                                                </div>
+                                            </div>
+                                            <div class="text-xl lg:text-2xl font-extrabold text-hos-dark">
+                                                <%= Number(account.balance).toLocaleString('fr-FR', {
+                                                    minimumFractionDigits: 2 }) %> €
+                                            </div>
+                                        </div>
+
+                                        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                                            <!-- IBAN avec copie en 1 clic -->
+                                            <span
+                                                class="inline-flex items-center gap-2 font-mono text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-transparent hover:border-hos-primary cursor-pointer transition-all"
+                                                onclick="navigator.clipboard.writeText('<%= account.iban %>'); this.classList.add('border-emerald-500', 'text-emerald-700'); setTimeout(() => this.classList.remove('border-emerald-500', 'text-emerald-700'), 1500);"
+                                                title="Cliquez pour copier l'IBAN">
+                                                <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                                <%= account.iban %>
+                                            </span>
+
+                                            <!-- Lien vers consultation détaillée (HOS-19) -->
+                                            <a href="/client/accounts/<%= account.id %>"
+                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-hos-primary hover:text-hos-dark bg-[#F6EFE0]/60 hover:bg-[#F6EFE0] px-3.5 py-1.5 rounded-lg transition-all">
+                                                <span>Détails & Relevé</span>
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                <% }) %>
+
+                                <% if (!hasSavingsAccount) { %>
+                                    <!-- CTA Demande d'ouverture de Livret Épargne (HOS-35) -->
+                                    <div
+                                        class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/40 to-white border-2 border-dashed border-hos-primary/30 hover:border-hos-primary rounded-2xl p-6 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+                                        <div class="max-w-md">
+                                            <span
+                                                class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 mb-2.5">
+                                                Taux rémunéré à 3,00% / an
+                                            </span>
+                                            <h3 class="text-base font-extrabold text-hos-dark mb-1">Livret d'Épargne
+                                                HosBank</h3>
+                                            <p class="text-xs text-gray-600 leading-relaxed">
+                                                Faites fructifier vos liquidités en toute sécurité. 0€ de frais de
+                                                gestion, retraits libres et capital garanti par le FGDR.
+                                            </p>
+                                        </div>
+                                        <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
+                                            <button type="button"
+                                                onclick="document.getElementById('savingsModal').classList.remove('hidden')"
+                                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                                                Demander l'ouverture
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                            </div>
+
+                            <!-- Dernières Opérations (Revolut Feed) -->
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h2 class="text-lg font-bold text-hos-dark">Dernières Opérations</h2>
+                                    <a href="/client/transactions" class="text-xs font-bold text-hos-primary hover:underline">
+                                        Voir tout l'historique →
+                                    </a>
+                                </div>
+
+                                <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
+                                    <% if (transactions && transactions.length> 0) { %>
+                                        <% transactions.forEach(tx=> { %>
+                                            <div class="flex items-center justify-between p-4 sm:p-5 hover:bg-gray-50/70 transition-colors">
+                                                <div class="flex items-center gap-3.5">
+                                                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 <%= tx.direction === 'CREDIT' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-700' %>">
+                                                        <%= tx.direction==='CREDIT' ? '↓' : '↑' %>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-bold text-sm text-hos-dark">
+                                                            <%= tx.label %>
+                                                        </div>
+                                                        <div class="text-xs text-gray-400 mt-0.5">
+                                                            <%= tx.dateFormatted %> •
+                                                                <%= tx.category || 'Virement' %>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right font-extrabold text-sm sm:text-base <%= tx.direction === 'CREDIT' ? 'text-emerald-600' : 'text-hos-dark' %>">
+                                                    <%= tx.direction==='CREDIT' ? '+' : '-' %>
+                                                        <%= Number(tx.amount).toLocaleString('fr-FR', {
+                                                            minimumFractionDigits: 2 }) %> €
+                                                </div>
+                                            </div>
+                                            <% }) %>
+                                                <% } else { %>
+                                                    <div class="p-8 text-center text-sm text-gray-400">
+                                                        Aucune opération récente sur vos comptes.
+                                                    </div>
+                                                    <% } %>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Colonne Droite : Carte & Conseiller (4 colonnes) -->
+                        <div class="lg:col-span-4 space-y-8">
+
+                            <!-- Widget Carte Bancaire Réaliste 3D (Design HosBank Officiel) -->
+                            <div>
+                                <div class="flex items-center justify-between mb-4">
+                                    <h2 class="text-lg font-bold text-hos-dark">Carte Principale</h2>
+                                    <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer mes cartes →</a>
+                                </div>
+
+                                <% 
+                                    const primaryCard = (cards && cards.length > 0) ? cards[0] : null;
+                                    const cardStatus = primaryCard ? (primaryCard.status || primaryCard.statut || 'ACTIVE') : 'ACTIVE';
+                                    const cardType = primaryCard ? (primaryCard.type || primaryCard.typeCarte || 'PHYSIQUE') : 'PHYSIQUE';
+                                    const cardPan = primaryCard ? (primaryCard.maskedPan || primaryCard.panMasque || '•••• •••• •••• 4289') : '•••• •••• •••• 4289';
+                                    const cardExpiry = primaryCard ? (primaryCard.expiry || primaryCard.dateExpiration || '12/28') : '12/28';
+                                    const cardMonthlyLimit = primaryCard ? (primaryCard.monthlyLimit ?? primaryCard.plafondPaiement ?? 3000) : 3000;
+                                    const cardWeeklyLimit = primaryCard ? (primaryCard.weeklyLimit ?? primaryCard.plafondRetrait ?? 1000) : 1000;
+
+                                    let themeClass = 'card-theme-premier';
+                                    if (cardStatus === 'OPPOSEE') {
+                                        themeClass = 'card-theme-opposed';
+                                    } else if (cardStatus !== 'ACTIVE') {
+                                        themeClass = 'card-theme-blocked';
+                                    } else if (cardType === 'VIRTUELLE') {
+                                        themeClass = 'card-theme-virtual';
+                                    }
+
+                                    const linkedAccount = (primaryCard && accounts) ? accounts.find(a => a.id === primaryCard.accountId) : (accounts && accounts[0] ? accounts[0] : null);
+                                    const linkedAccountNumber = linkedAccount ? linkedAccount.accountNumber : 'FR76 3000 4000 1234 5678 901';
+                                    const cardHolderName = (user && user.name) ? user.name : 'Alexandre Moreau';
+                                %>
+
+                                <div class="realistic-card-wrapper">
+                                    <!-- Objet Carte Physique -->
+                                    <div class="physical-credit-card <%= themeClass %>">
+                                        <!-- Statut Flottant sur la Carte -->
+                                        <div class="card-floating-badge">
+                                            <% if (cardStatus === 'ACTIVE') { %>
+                                                <span class="badge success" style="background: rgba(16, 185, 129, 0.25); color: #A7F3D0; border: 1px solid rgba(16, 185, 129, 0.5); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot"></span> Active
+                                                </span>
+                                            <% } else if (cardStatus === 'OPPOSEE') { %>
+                                                <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                                </span>
+                                            <% } %>
+                                        </div>
+
+                                        <!-- En-tête de carte avec le Logo Officiel HosBank -->
+                                        <div class="card-top-row">
+                                            <div class="card-logo-container">
+                                                <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+                                            </div>
+                                        </div>
+
+                                        <!-- Puce EMV & Sans-Contact -->
+                                        <div class="card-chip-row">
+                                            <div class="emv-chip"></div>
+                                            <div class="nfc-icon">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                    <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                                    <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                                    <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+
+                                        <!-- Numéro PAN embossé -->
+                                        <div class="card-pan-number">
+                                            <%= cardPan %>
+                                        </div>
+
+                                        <!-- Bas de carte : Titulaire & Expiration -->
+                                        <div class="card-bottom-row">
+                                            <div>
+                                                <div class="card-holder-label">Titulaire de la carte</div>
+                                                <div class="card-holder-name"><%= cardHolderName %></div>
+                                            </div>
+                                            <div class="card-expiry-box">
+                                                <div class="card-holder-label">Expire Fin</div>
+                                                <div class="card-expiry-val"><%= cardExpiry %></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Panneau de Contrôle & Plafonds sous la carte -->
+                                    <div class="card-controls-panel">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+                                            <span style="color: var(--text-muted);">Compte rattaché :</span>
+                                            <strong style="color: var(--text-main); font-family: monospace;"><%= linkedAccountNumber %></strong>
+                                        </div>
+
+                                        <!-- Plafonds de la carte -->
+                                        <div class="card-limits-strip">
+                                            <div>
+                                                <div class="limit-item-title">Plafond Paiement</div>
+                                                <div class="limit-item-val"><%= Number(cardMonthlyLimit).toLocaleString('fr-FR') %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ mois</span></div>
+                                            </div>
+                                            <div>
+                                                <div class="limit-item-title">Plafond Retrait</div>
+                                                <div class="limit-item-val"><%= Number(cardWeeklyLimit).toLocaleString('fr-FR') %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ sem.</span></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Lien rapide de gestion -->
+                                        <div class="card-actions-toolbar" style="margin-top: 2px;">
+                                            <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2 px-3 rounded-xl transition-all border border-gray-200 shadow-sm">
+                                                <svg class="w-3.5 h-3.5 text-hos-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                                Gérer ma carte & plafonds
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Widget Mon Conseiller Dédié -->
+                            <div>
+                                <h2 class="text-lg font-bold text-hos-dark mb-4">Mon Conseiller Dédié</h2>
+
+                                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                        <div class="flex items-center gap-3.5 mb-4">
+                                            <div class="w-12 h-12 rounded-full bg-hos-primary text-white flex items-center justify-center font-bold text-base shrink-0 shadow-sm">
+                                                <%= advisor.avatar || 'KB' %>
+                                            </div>
+                                            <div>
+                                                <h3 class="font-bold text-sm text-hos-dark">
+                                                    <%= advisor.name %>
+                                                </h3>
+                                                <p class="text-xs text-gray-400">Chargé de Clientèle HosBank</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-xs text-gray-500 space-y-1.5 mb-5 pb-5 border-b border-gray-100">
+                                            <div>📍
+                                                <%= advisor.agency || 'Agence Centrale HosBank Paris' %>
+                                            </div>
+                                            <div>✉️
+                                                <%= advisor.email || 'conseiller@hosbank.fr' %>
+                                            </div>
+                                        </div>
+
+                                        <a href="mailto:<%= advisor.email || 'conseiller@hosbank.fr' %>" class="w-full inline-flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-hos-dark font-semibold text-xs py-2.5 px-4 rounded-xl transition-colors border border-gray-200">
+                                            Contacter mon conseiller
+                                        </a>
+                                    </div>
+                                    <% } else { %>
+                                        <!-- État initial : Aucun conseiller attitré -->
+                                        <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                                            <div class="flex items-center gap-3.5 mb-4">
+                                                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl shrink-0 border border-amber-200/50">
+                                                    ⏳
+                                                </div>
+                                                <div>
+                                                    <h3 class="font-bold text-sm text-hos-dark">Aucun conseiller attitré</h3>
+                                                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 mt-0.5">
+                                                    En cours d'attribution
+                                                </span>
+                                                </div>
+                                            </div>
+
+                                            <p class="text-xs text-gray-500 leading-relaxed mb-5 pb-5 border-b border-gray-100">
+                                                Votre compte est actif. Un chargé de clientèle dédié vous sera affecté par l'administration dans les prochaines 24h.
+                                            </p>
+                                        </div>
+                                        <% } %>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+            </main>
+    </div>
+
+    <!-- Modale Interactive de Demande de Livret Épargne (HOS-35) -->
+    <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-extrabold text-hos-dark">Ouvrir un Livret Épargne</h3>
+                <button onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            </div>
+
+            <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    Votre demande sera directement instruite et validée par votre conseiller <strong><%= advisor.name %></strong> sous 24h ouvrées.
+                <% } else { %>
+                    Votre demande sera directement transmise au pôle gestion HosBank et instruite par un conseiller sous 24h ouvrées dès son affectation.
+                <% } %>
+            </p>
+
+            <form id="savingsDemandForm" onsubmit="handleSavingsSubmit(event)">
+                <div id="savingsFormBody">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Compte de prélèvement</label>
+                        <select name="sourceAccountId" id="savingsSourceAccount" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-semibold bg-white">
+                            <% (accounts || []).forEach(acc => { %>
+                                <option value="<%= acc.id %>">
+                                    <%= acc.accountNumber %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>) - Solde : <%= Number(acc.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité (€)</label>
+                        <input type="number" step="0.01" min="10" name="initialDeposit" id="savingsDeposit" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
+                        <span class="text-[11px] text-gray-400 mt-1 block">Débité lors de l'activation depuis votre compte (Min. 10,00 €).</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Projet d'épargne (optionnel)</label>
+                        <input type="text" name="notes" id="savingsNotes" placeholder="Ex: Épargne projet, vacances..." class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-normal">
+                    </div>
+
+                    <div id="savingsError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
+
+                    <div class="flex items-center justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                            Annuler
+                        </button>
+                        <button type="submit" id="savingsSubmitBtn" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                            <span>Envoyer ma demande</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Message de succès dynamique après envoi -->
+                <div id="savingsSuccess" class="hidden text-center py-4">
+                    <div class="text-4xl mb-3">🎉</div>
+                    <h4 class="text-base font-bold text-emerald-600 mb-1">Demande transmise avec succès !</h4>
+                    <p id="savingsSuccessMsg" class="text-xs text-gray-500 mb-5 leading-relaxed">
+                        <!-- Rempli dynamiquement avec la référence et le conseiller réel -->
+                    </p>
+                    <button type="button" onclick="window.location.reload();" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
+                        Fermer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function closeSavingsModal() {
+            document.getElementById('savingsModal').classList.add('hidden');
+        }
+
+        async function handleSavingsSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('savingsSubmitBtn');
+            const errBox = document.getElementById('savingsError');
+            if (errBox) {
+                errBox.classList.add('hidden');
+                errBox.innerText = '';
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Envoi en cours...';
+            }
+
+            const sourceAccountId = document.getElementById('savingsSourceAccount')?.value;
+            const initialDeposit = document.getElementById('savingsDeposit')?.value;
+            const notes = document.getElementById('savingsNotes')?.value || '';
+
+            try {
+                const response = await fetch('/client/documents/savings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ sourceAccountId, initialDeposit, notes })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    document.getElementById('savingsFormBody').classList.add('hidden');
+                    const successBox = document.getElementById('savingsSuccess');
+                    const msgEl = document.getElementById('savingsSuccessMsg');
+
+                    const advisorText = result.advisor 
+                        ? `Votre conseiller <strong>${result.advisor.name}</strong> a reçu votre requête et vous notifiera dès son activation.`
+                        : `Votre requête a bien été enregistrée et sera instruite par nos équipes bancaires sous 24h ouvrées.`;
+
+                    msgEl.innerHTML = `Référence : <strong>${result.reference}</strong>. ${advisorText}`;
+                    successBox.classList.remove('hidden');
+                } else {
+                    if (errBox) {
+                        errBox.innerText = result.error || "Une erreur est survenue lors de l'envoi de la demande.";
+                        errBox.classList.remove('hidden');
+                    }
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Envoyer ma demande';
+                    }
+                }
+            } catch (err) {
+                if (errBox) {
+                    errBox.innerText = "Erreur de connexion. Veuillez réessayer.";
+                    errBox.classList.remove('hidden');
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Envoyer ma demande';
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <%- include('../partials/sidebar') %>
+
+            <div class="admin-main">
+                <%- include('../partials/topbar') %>
+
+                    <main class="admin-content">
+                        <div class="page-header">
+                            <div>
+                                <h1 class="page-title">Gestion des Utilisateurs</h1>
+                                <p class="page-subtitle">Consultez, créez, modifiez et activez/désactivez l'ensemble des
+                                    comptes utilisateurs HosBank</p>
+                            </div>
+                            <button class="btn-primary" data-open-modal="modalAddClient">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Nouvel Utilisateur
+                            </button>
+                        </div>
+
+                        <!-- Barre de Recherche & Filtres -->
+                        <div class="card" style="margin-bottom: 24px;">
+                            <div class="card-header"
+                                style="border-bottom: none; flex-wrap: wrap; gap: 16px; padding: 18px 24px;">
+                                <div style="display: flex; align-items: center; gap: 14px;">
+                                    <span class="card-title" style="font-size: 1.05rem;">Annuaire des
+                                        Utilisateurs</span>
+                                    <span class="badge purple" style="font-size: 0.8rem;">
+                                        <%= clients.length %> enregistré(s)
+                                    </span>
+                                </div>
+
+                                <form action="/admin/clients" method="GET"
+                                    style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                    <div style="position: relative;">
+                                        <input type="text" id="tableLiveSearch" name="q" value="<%= searchQuery %>"
+                                            placeholder="Recherche instantanée..." class="form-input"
+                                            style="padding: 7px 14px 7px 32px; font-size: 0.85rem; width: 230px; border: 1px solid var(--primary-border); border-radius: 10px; background: #FFFFFF;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            style="position: absolute; left: 10px; top: 10px; color: var(--text-subtle);">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <select name="role" class="form-input"
+                                        style="padding: 7px 12px; font-size: 0.85rem; border: 1px solid var(--primary-border); border-radius: 10px; background: #FFFFFF;"
+                                        onchange="this.form.submit()">
+                                        <option value="">Tous les rôles</option>
+                                        <option value="CLIENT" <%=(typeof currentRole !=='undefined' &&
+                                            currentRole==='CLIENT' ) ? 'selected' : '' %>>Clients Particuliers</option>
+                                        <option value="CHARGE_CLIENT" <%=(typeof currentRole !=='undefined' &&
+                                            currentRole==='CHARGE_CLIENT' ) ? 'selected' : '' %>>Chargés de Clientèle
+                                        </option>
+                                        <option value="ADMINISTRATEUR" <%=(typeof currentRole !=='undefined' &&
+                                            currentRole==='ADMINISTRATEUR' ) ? 'selected' : '' %>>Administrateurs
+                                        </option>
+                                    </select>
+
+                                    <% if (searchQuery || (typeof currentRole !=='undefined' && currentRole)) { %>
+                                        <a href="/admin/clients" class="btn-sm btn-secondary"
+                                            style="padding: 7px 14px; border-radius: 10px;">Effacer</a>
+                                        <% } %>
+                                            <button type="submit" class="btn-sm btn-primary"
+                                                style="padding: 7px 16px; border-radius: 10px;">Filtrer</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Grille de Cartes Modernes des Utilisateurs -->
+                        <div class="users-cards-grid">
+                            <% if (clients && clients.length> 0) { %>
+                                <% clients.forEach(client=> { %>
+                                    <div
+                                        class="user-card <%= (client.compteVerrouille || client.status === 'Suspendu') ? 'is-locked' : '' %>">
+                                        <!-- En-tête de la carte -->
+                                        <div class="user-card-topbar">
+                                            <div class="user-card-profile">
+                                                <div
+                                                    class="user-card-avatar <%= client.role === 'ADMINISTRATEUR' ? 'role-admin' : (client.role === 'CHARGE_CLIENT' ? 'role-charge' : 'role-client') %>">
+                                                    <%= (client.prenom ? client.prenom[0] : (client.firstName ?
+                                                        client.firstName[0] : 'U' )) %>
+                                                        <%= (client.nom ? client.nom[0] : (client.lastName ?
+                                                            client.lastName[0] : '' )) %>
+                                                </div>
+                                                <div class="user-card-meta">
+                                                    <div class="user-card-name">
+                                                        <span>
+                                                            <%= client.civilite || 'M.' %>
+                                                                <%= client.prenom || client.firstName %>
+                                                                    <%= client.nom || client.lastName %>
+                                                        </span>
+                                                        <span class="user-card-id">#<%= client.id %></span>
+                                                    </div>
+                                                    <div class="user-card-email">
+                                                        <%= client.email %>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <% if (client.compteVerrouille || client.status==='Suspendu' ) { %>
+                                                    <span class="badge danger"><span class="badge-dot"></span>
+                                                        Désactivé</span>
+                                                    <% } else { %>
+                                                        <span class="badge success"><span class="badge-dot"></span>
+                                                            Actif</span>
+                                                        <% } %>
+                                            </div>
+                                        </div>
+
+                                        <!-- Corps de la carte -->
+                                        <div class="user-card-body">
+                                            <!-- Coordonnées -->
+                                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                <div class="user-info-row">
+                                                    <div class="user-info-icon">
+                                                        <svg width="15" height="15" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                        </svg>
+                                                    </div>
+                                                    <span style="font-weight: 500;">
+                                                        <%= client.telephone || client.phone
+                                                            || 'Aucun téléphone renseigné' %>
+                                                    </span>
+                                                </div>
+                                                <div class="user-info-row">
+                                                    <div class="user-info-icon">
+                                                        <svg width="15" height="15" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                    </div>
+                                                    <span>
+                                                        <%= client.adressePostale || client.city
+                                                            || 'Adresse non communiquée' %>
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Section Rôle & Attribution -->
+                                            <div class="user-card-section">
+                                                <div class="user-section-title">Rôle & Affectation</div>
+                                                <div class="user-control-row">
+                                                    <span class="user-control-label">Rôle système :</span>
+                                                    <form action="/admin/clients/<%= client.id %>/role" method="POST"
+                                                        style="margin: 0;">
+                                                        <select name="role" class="hos-confirm-select"
+                                                            data-confirm-change="Confirmer l'attribution de ce rôle pour <%= client.prenom %> <%= client.nom %> ?"
+                                                            style="padding: 5px 10px; font-size: 0.8rem; font-weight: 600; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.12); background: <%= client.role === 'ADMINISTRATEUR' ? '#F3E8FF' : (client.role === 'CHARGE_CLIENT' ? '#FEF3C7' : '#EFF6FF') %>; color: <%= client.role === 'ADMINISTRATEUR' ? '#7E22CE' : (client.role === 'CHARGE_CLIENT' ? '#B45309' : '#1D4ED8') %>;">
+                                                            <option value="CLIENT" <%=client.role==='CLIENT'
+                                                                ? 'selected' : '' %>>Client Particulier</option>
+                                                            <option value="CHARGE_CLIENT"
+                                                                <%=client.role==='CHARGE_CLIENT' ? 'selected' : '' %>
+                                                                >Chargé de Clientèle</option>
+                                                            <option value="ADMINISTRATEUR"
+                                                                <%=client.role==='ADMINISTRATEUR' ? 'selected' : '' %>
+                                                                >Administrateur</option>
+                                                        </select>
+                                                    </form>
+                                                </div>
+
+                                                <% if (client.role==='CLIENT' ) { %>
+                                                    <div class="user-control-row">
+                                                        <span class="user-control-label">Conseiller :</span>
+                                                        <form action="/admin/clients/<%= client.id %>/assign"
+                                                            method="POST" style="margin: 0;">
+                                                            <select name="advisorId" class="hos-confirm-select"
+                                                                data-confirm-change="Confirmer la réaffectation du conseiller pour ce client ?"
+                                                                style="padding: 5px 10px; font-size: 0.78rem; font-weight: 500; border-radius: 8px; cursor: pointer; border: 1px solid var(--primary-border); background: #FFFFFF; color: var(--text-main); max-width: 170px;">
+                                                                <option value="">Non affecté</option>
+                                                                <% if (typeof advisors !=='undefined' && advisors) { %>
+                                                                    <% advisors.forEach(adv=> { %>
+                                                                        <option value="<%= adv.id %>"
+                                                                            <%=(client.conseillerId===adv.id)
+                                                                            ? 'selected' : '' %>>
+                                                                            <%= adv.prenom %>
+                                                                                <%= adv.nom %>
+                                                                        </option>
+                                                                        <% }) %>
+                                                                            <% } %>
+                                                            </select>
+                                                        </form>
+                                                    </div>
+                                                    <% } %>
+                                            </div>
+
+                                            <!-- Section Solde & Actifs (pour les clients) -->
+                                            <% if (client.role==='CLIENT' ) { %>
+                                                <div class="user-finance-pill">
+                                                    <div>
+                                                        <div
+                                                            style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700;">
+                                                            Solde Global</div>
+                                                        <div class="user-finance-balance">
+                                                            <%= (client.totalSolde || client.totalBalance ||
+                                                                0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })
+                                                                %> €
+                                                        </div>
+                                                    </div>
+                                                    <span class="badge purple"
+                                                        style="font-size: 0.76rem; padding: 4px 8px;">
+                                                        <%= client.comptesCount || client.accountsCount || 0 %>
+                                                            compte(s)
+                                                    </span>
+                                                </div>
+                                                <% } %>
+                                        </div>
+
+                                        <!-- Pied de carte & Actions -->
+                                        <div class="user-card-footer">
+                                            <button type="button" class="btn-sm btn-secondary btn-edit-user"
+                                                style="padding: 6px 14px; font-weight: 600;" data-id="<%= client.id %>"
+                                                data-gender="<%= client.civilite || 'M.' %>"
+                                                data-firstname="<%= client.prenom || client.firstName %>"
+                                                data-lastname="<%= client.nom || client.lastName %>"
+                                                data-email="<%= client.email %>"
+                                                data-role="<%= client.role || 'CLIENT' %>"
+                                                data-phone="<%= client.telephone || client.phone || '' %>"
+                                                data-city="<%= client.adressePostale || client.city || '' %>">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                    style="margin-right: 4px; vertical-align: middle;">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                                Modifier
+                                            </button>
+
+                                            <form action="/admin/clients/<%= client.id %>/toggle-status" method="POST"
+                                                style="margin: 0;">
+                                                <% if (client.compteVerrouille || client.status==='Suspendu' ) { %>
+                                                    <button type="submit" class="btn-sm btn-secondary"
+                                                        style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.4); font-weight: 600;">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                            style="margin-right: 4px; vertical-align: middle;">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        Activer
+                                                    </button>
+                                                    <% } else { %>
+                                                        <button type="submit" class="btn-sm btn-danger-outline"
+                                                            data-confirm="Voulez-vous désactiver l'accès de cet utilisateur ?"
+                                                            style="font-weight: 600;">
+                                                            <svg width="14" height="14" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24"
+                                                                style="margin-right: 4px; vertical-align: middle;">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                            </svg>
+                                                            Désactiver
+                                                        </button>
+                                                        <% } %>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <% }) %>
+                                        <% } else { %>
+                                            <div
+                                                style="grid-column: 1 / -1; padding: 48px; text-align: center; background: #FFFFFF; border-radius: var(--radius-lg); border: 1px dashed var(--primary-border);">
+                                                <div style="font-size: 2.5rem; margin-bottom: 12px;">👥</div>
+                                                <div
+                                                    style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">
+                                                    Aucun utilisateur trouvé</div>
+                                                <p
+                                                    style="color: var(--text-muted); font-size: 0.88rem; margin-top: 4px;">
+                                                    Essayez d'ajuster vos critères de recherche ou réinitialisez les
+                                                    filtres.</p>
+                                                <a href="/admin/clients" class="btn-sm btn-primary"
+                                                    style="margin-top: 16px; display: inline-block;">Réinitialiser les
+                                                    filtres</a>
+                                            </div>
+                                            <% } %>
+                        </div>
+                    </main>
+            </div>
+    </div>
+
+    <!-- Modal Ajout Utilisateur -->
+    <div class="modal-overlay" id="modalAddClient">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">Créer un Nouvel Utilisateur</div>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <form action="/admin/clients/new" method="POST">
+                <div class="modal-body">
+                    <div class="form-group" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="gender" value="M." checked style="accent-color: var(--primary);">
+                            M.
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="gender" value="Mme" style="accent-color: var(--primary);"> Mme
+                        </label>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="firstName">Prénom</label>
+                            <input type="text" id="firstName" name="firstName" class="form-input"
+                                placeholder="Ex: Alexandre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Nom</label>
+                            <input type="text" id="lastName" name="lastName" class="form-input" placeholder="Ex: Moreau"
+                                required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Adresse E-mail</label>
+                        <input type="email" id="email" name="email" class="form-input"
+                            placeholder="utilisateur@hosbank.fr" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="role">Rôle utilisateur</label>
+                            <select id="role" name="role" class="form-input">
+                                <option value="CLIENT" selected>Client Particulier</option>
+                                <option value="CHARGE_CLIENT">Chargé de Clientèle</option>
+                                <option value="ADMINISTRATEUR">Administrateur</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Mot de passe</label>
+                            <input type="password" id="password" name="password" class="form-input"
+                                placeholder="Défaut: Password123!">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="phone">Téléphone</label>
+                            <input type="text" id="phone" name="phone" class="form-input"
+                                placeholder="+33 6 12 34 56 78">
+                        </div>
+                        <div class="form-group">
+                            <label for="city">Adresse / Ville</label>
+                            <input type="text" id="city" name="city" class="form-input" placeholder="Paris, Lyon...">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-sm btn-secondary" data-close-modal>Annuler</button>
+                    <button type="submit" class="btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Créer
+                        l'utilisateur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Modification Utilisateur -->
+    <div class="modal-overlay" id="modalEditUser">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-title">Modifier l'Utilisateur</div>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <form id="formEditUser" method="POST" action="">
+                <div class="modal-body">
+                    <div class="form-group" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="gender" id="editGenderM" value="M."
+                                style="accent-color: var(--primary);"> M.
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="radio" name="gender" id="editGenderMme" value="Mme"
+                                style="accent-color: var(--primary);"> Mme
+                        </label>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="editFirstName">Prénom</label>
+                            <input type="text" id="editFirstName" name="firstName" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLastName">Nom</label>
+                            <input type="text" id="editLastName" name="lastName" class="form-input" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Adresse E-mail</label>
+                        <input type="email" id="editEmail" name="email" class="form-input" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="editRole">Rôle utilisateur</label>
+                            <select id="editRole" name="role" class="form-input">
+                                <option value="CLIENT">Client Particulier</option>
+                                <option value="CHARGE_CLIENT">Chargé de Clientèle</option>
+                                <option value="ADMINISTRATEUR">Administrateur</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">Téléphone</label>
+                            <input type="text" id="editPhone" name="phone" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editCity">Adresse / Ville</label>
+                        <input type="text" id="editCity" name="city" class="form-input">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-sm btn-secondary" data-close-modal>Annuler</button>
+                    <button type="submit" class="btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Enregistrer
+                        les modifications</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/admin.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const editButtons = document.querySelectorAll(".btn-edit-user");
+            const editModal = document.getElementById("modalEditUser");
+            const editForm = document.getElementById("formEditUser");
+
+            editButtons.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = btn.getAttribute("data-id");
+                    const gender = btn.getAttribute("data-gender");
+                    const firstName = btn.getAttribute("data-firstname");
+                    const lastName = btn.getAttribute("data-lastname");
+                    const email = btn.getAttribute("data-email");
+                    const role = btn.getAttribute("data-role");
+                    const phone = btn.getAttribute("data-phone");
+                    const city = btn.getAttribute("data-city");
+
+                    editForm.action = `/admin/clients/${id}/edit`;
+                    document.getElementById("editFirstName").value = firstName || "";
+                    document.getElementById("editLastName").value = lastName || "";
+                    document.getElementById("editEmail").value = email || "";
+                    document.getElementById("editRole").value = role || "CLIENT";
+                    document.getElementById("editPhone").value = phone || "";
+                    document.getElementById("editCity").value = city || "";
+
+                    if (gender === "Mme") {
+                        const rMme = document.getElementById("editGenderMme");
+                        if (rMme) rMme.checked = true;
+                    } else {
+                        const rM = document.getElementById("editGenderM");
+                        if (rM) rM.checked = true;
+                    }
+
+                    if (editModal) {
+                        editModal.classList.add("active");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
