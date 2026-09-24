@@ -45,7 +45,7 @@
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/documents', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- Messages de feedback (Succès / Erreur) -->
         <% if (success) { %>
@@ -77,14 +77,14 @@
                 <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
                     RIB & Démarches
                 </h1>
-                <p class="text-sm text-gray-500 mt-1">Consultez et téléchargez vos coordonnées bancaires certifiées, et suivez vos démarches en direct.</p>
+                <p class="text-sm text-gray-500 mt-1">Consultez et téléchargez vos coordonnées bancaires, et suivez vos démarches en direct.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
                 <button type="button" onclick="document.getElementById('savingsModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                    <span>✨</span> Ouvrir un Livret Épargne
+                    <span></span> Ouvrir un Livret Épargne
                 </button>
                 <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                    <span>✉️</span> Déposer une réclamation
+                    <span></span> Déposer une réclamation
                 </button>
             </div>
         </header>
@@ -96,38 +96,20 @@
             <div class="lg:col-span-7">
                 <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
                     
-                    <!-- Sélecteur de compte pour le RIB -->
-                    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-gray-100">
-                        <div>
-                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Compte bancaire actif</span>
-                            <span class="text-xs text-gray-500">Sélectionnez le compte dont vous souhaitez éditer le RIB</span>
-                        </div>
-                        <div>
-                            <select onchange="window.location.href = '/client/documents?accountId=' + this.value" class="px-3.5 py-2 rounded-xl border border-gray-200 focus:border-hos-primary outline-none text-xs font-bold text-hos-dark bg-white cursor-pointer shadow-sm">
-                                <% accounts.forEach(acc => { %>
-                                    <option value="<%= acc.id %>" <%= String(acc.id) === String(selectedAccountId) ? 'selected' : '' %>>
-                                        <%= acc.accountNumber %> (<%= acc.type %>)
-                                    </option>
-                                <% }) %>
-                            </select>
-                        </div>
-                    </div>
-
                     <!-- En-tête du document RIB -->
                     <div class="flex justify-between items-start border-b border-gray-100 pb-6 mb-6">
                         <div>
-                            <div class="flex items-center gap-2.5 mb-1.5">
-                                <span class="text-2xl font-black text-hos-dark tracking-tight">HosBank</span>
-                                <span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold px-2 py-0.5 rounded uppercase">Certifié</span>
+                            <div class="mb-1.5">
+                                <img src="/images/logo.svg" alt="HosBank" class="h-7 w-auto" />
                             </div>
                             <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Relevé d'Identité Bancaire (RIB)</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <a href="/client/documents/rib/print?accountId=<%= rib.account.id %>&autoprint=1" target="_blank" class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-hos-dark text-xs font-bold px-3.5 py-2 rounded-xl transition-colors">
-                                <span>🖨️</span> Imprimer
+                                <span></span> Imprimer
                             </a>
                             <a href="/client/documents/rib/print?accountId=<%= rib.account.id %>" target="_blank" class="inline-flex items-center gap-1.5 bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors shadow-sm">
-                                <span>⬇️</span> Format PDF
+                                <span></span> Format PDF
                             </a>
                         </div>
                     </div>
@@ -146,8 +128,8 @@
                         </div>
                     </div>
 
-                    <!-- Cartouche IBAN / BIC International -->
-                    <div class="p-5 rounded-2xl bg-[#29223A] text-white mb-6 space-y-4 shadow-md">
+                    <!-- Cartouche IBAN International -->
+                    <div class="p-5 rounded-2xl bg-[#29223A] text-white shadow-md">
                         <div>
                             <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">
                                 IBAN (International Bank Account Number)
@@ -157,44 +139,6 @@
                                 <button type="button" onclick="navigator.clipboard.writeText('<%= rib.account.cleanIban %>'); alert('IBAN copié dans le presse-papier !');" class="text-xs text-[#F6EFE0] hover:underline font-sans font-bold bg-white/10 px-2.5 py-1 rounded-lg">
                                     Copier
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="pt-3 border-t border-white/10 flex justify-between items-center text-xs">
-                            <div>
-                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Code BIC / SWIFT</span>
-                                <span class="font-mono font-bold text-[#F6EFE0]"><%= rib.account.bic %></span>
-                            </div>
-                            <div>
-                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Devise</span>
-                                <span class="font-bold text-white"><%= rib.account.currency %> (Euro)</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Type de compte</span>
-                                <span class="font-bold uppercase text-white"><%= rib.account.type %></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Découpage RIB National Français -->
-                    <div>
-                        <span class="text-[11px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Identifiant Bancaire National (RIB Français)</span>
-                        <div class="grid grid-cols-4 gap-2 text-center font-mono">
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">Code Banque</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5"><%= rib.account.codeBanque %></div>
-                            </div>
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">Code Guichet</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5"><%= rib.account.codeGuichet %></div>
-                            </div>
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">N° de Compte</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5"><%= rib.account.numCompte %></div>
-                            </div>
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">Clé RIB</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5"><%= rib.account.cleRib %></div>
                             </div>
                         </div>
                     </div>
@@ -231,7 +175,7 @@
                                 else if (d.type === 'CARTE_VIRTUELLE') typeLabel = "Carte Virtuelle E-Commerce";
                                 else if (d.type === 'OPPOSITION_CARTE') typeLabel = "Opposition Carte Bancaire";
                                 else if (d.type === 'RECALCUL_PIN') typeLabel = "Recalcul Code PIN";
-                                else if (d.type === 'DEMANDE_RIB') typeLabel = "Édition Certifiée RIB";
+                                else if (d.type === 'DEMANDE_RIB') typeLabel = "Édition du RIB";
 
                                 let statusBadge = 'bg-amber-50 text-amber-700 border-amber-200';
                                 let statusText = 'En attente';

@@ -64,7 +64,7 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transactions', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -77,15 +77,10 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
                 </h1>
                 <p class="text-sm text-gray-500 mt-1">Consultez, filtrez et exportez l'ensemble de vos mouvements bancaires avec traçabilité complète.</p>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="<%= exportUrl %>" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm hover:border-gray-300 transition-all">
-                    <span>📥</span> Exporter en CSV
-                </a>
-            </div>
         </header>
 
         <!-- Cartes récapitulatives de la sélection (Statistiques HOS-28) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Crédits (Entrées)</span>
@@ -106,15 +101,6 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
                 </div>
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Mouvements trouvés</span>
-                    <span class="w-7 h-7 rounded-lg bg-purple-50 text-hos-primary flex items-center justify-center text-xs font-bold">#</span>
-                </div>
-                <div class="text-xl font-extrabold text-hos-dark mt-2">
-                    <%= pagination.totalCount %> écriture<%= pagination.totalCount > 1 ? 's' : '' %>
-                </div>
-            </div>
         </div>
 
         <!-- Formulaire de recherche et filtres multicritères (HOS-28) -->
@@ -123,12 +109,12 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
                 
                 <!-- Recherche textuelle -->
                 <div class="md:col-span-4 relative">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></span>
                     <input 
                         type="text" 
                         name="search" 
                         value="<%= filters.search %>" 
-                        placeholder="Libellé, catégorie, n° compte, référence..." 
+                        placeholder="Rechercher par libellé ou référence..." 
                         class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-hos-primary outline-none text-xs text-gray-700 transition-colors"
                     >
                 </div>
@@ -197,143 +183,127 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
             </div>
         </form>
 
-        <!-- Table des opérations (HOS-27) -->
-        <div class="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-gray-50/80 border-b border-gray-100 text-gray-400 uppercase font-bold text-[10px] tracking-wider">
-                        <tr>
-                            <th class="py-3.5 px-6">Date & Heure</th>
-                            <th class="py-3.5 px-6">Compte rattaché</th>
-                            <th class="py-3.5 px-6">Libellé de l'opération</th>
-                            <th class="py-3.5 px-6">Catégorie</th>
-                            <th class="py-3.5 px-6 text-right">Montant</th>
-                            <th class="py-3.5 px-6 text-right">Solde après</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-700">
-                        <% if (transactions && transactions.length > 0) { %>
-                            <% transactions.forEach(tx => { 
-                                // Détermination du style du badge catégorie
-                                const cat = (tx.category || '').toLowerCase();
-                                let catBadgeStyle = 'bg-gray-100 text-gray-700 border-gray-200';
-                                if (cat.includes('revenu') || cat.includes('salaire')) {
-                                    catBadgeStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                                } else if (cat.includes('reçu')) {
-                                    catBadgeStyle = 'bg-teal-50 text-teal-700 border-teal-200';
-                                } else if (cat.includes('émis') || cat.includes('sepa')) {
-                                    catBadgeStyle = 'bg-purple-50 text-purple-700 border-purple-200';
-                                } else if (cat.includes('santé')) {
-                                    catBadgeStyle = 'bg-blue-50 text-blue-700 border-blue-200';
-                                } else if (cat.includes('aliment')) {
-                                    catBadgeStyle = 'bg-orange-50 text-orange-700 border-orange-200';
-                                } else if (cat.includes('loisi') || cat.includes('abonn')) {
-                                    catBadgeStyle = 'bg-amber-50 text-amber-700 border-amber-200';
-                                }
-                            %>
-                                <tr class="hover:bg-gray-50/75 transition-colors">
-                                    <td class="py-4 px-6 text-gray-500 font-mono text-[11px] whitespace-nowrap">
-                                        <%= tx.dateFormatted %>
-                                    </td>
-                                    <td class="py-4 px-6 whitespace-nowrap">
-                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 font-mono text-[11px] font-semibold border border-gray-200">
-                                            <span>💳</span> <%= tx.accountNumber %>
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        <div class="font-bold text-hos-dark text-xs"><%= tx.label %></div>
-                                        <div class="text-[10px] text-gray-400 font-mono mt-0.5" title="Référence unique"><%= tx.reference %></div>
-                                    </td>
-                                    <td class="py-4 px-6 whitespace-nowrap">
-                                        <span class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold border <%= catBadgeStyle %>">
-                                            <%= tx.category || 'Opération' %>
-                                        </span>
-                                    </td>
-                                    <td class="py-4 px-6 text-right whitespace-nowrap">
-                                        <% if (tx.direction === 'CREDIT') { %>
-                                            <span class="font-extrabold text-emerald-600 text-sm">
-                                                +<%= tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
-                                            </span>
-                                        <% } else { %>
-                                            <span class="font-extrabold text-hos-dark text-sm">
-                                                -<%= tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
-                                            </span>
-                                        <% } %>
-                                    </td>
-                                    <td class="py-4 px-6 text-right font-mono text-gray-500 whitespace-nowrap text-xs">
-                                        <%= tx.balanceAfter.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="6" class="py-12 px-6 text-center text-gray-400">
-                                    <div class="text-3xl mb-2">🔍</div>
-                                    <div class="font-bold text-sm text-hos-dark mb-1">Aucune opération trouvée</div>
-                                    <p class="text-xs text-gray-500 max-w-sm mx-auto">
-                                        Aucun mouvement bancaire ne correspond à vos critères de recherche actuels.
-                                    </p>
-                                    <% if (hasActiveFilters) { %>
-                                        <a href="/client/transactions" class="inline-block mt-3 px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-hos-dark rounded-lg text-xs font-bold transition-all">
-                                            Effacer tous les filtres
-                                        </a>
-                                    <% } %>
-                                </td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </div>
+        <!-- Liste des opérations sous forme de cartes (Responsive Mobile & PC) -->
+        <div class="space-y-3 mb-6">
+            <% if (transactions && transactions.length > 0) { %>
+                <% transactions.forEach(tx => { 
+                    const isCredit = (tx.direction === 'CREDIT');
+                %>
+                    <!-- Carte Opération -->
+                    <div class="group bg-white hover:bg-gray-50/75 border border-gray-100 hover:border-gray-200/80 rounded-2xl p-4 sm:px-5 sm:py-3.5 shadow-sm hover:shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                        
+                        <!-- Côté Gauche : Icône + Libellé + Date & Référence -->
+                        <div class="flex items-center gap-3.5 min-w-0">
+                            <!-- Icône Visuelle -->
+                            <div class="w-11 h-11 sm:w-10 sm:h-10 rounded-2xl sm:rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs transition-transform group-hover:scale-105 <%= isCredit ? 'bg-emerald-50 text-emerald-600 border border-emerald-100/60' : 'bg-rose-50 text-rose-600 border border-rose-100/60' %>">
+                                <% if (isCredit) { %>
+                                    <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                <% } else { %>
+                                    <svg class="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                    </svg>
+                                <% } %>
+                            </div>
 
-            <!-- Pagination Dynamique (HOS-27) -->
-            <div class="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-                <div>
-                    <% if (pagination.totalCount > 0) { %>
-                        Affichage de <span class="font-bold text-hos-dark"><%= pagination.from %></span> à <span class="font-bold text-hos-dark"><%= pagination.to %></span> sur <span class="font-bold text-hos-dark"><%= pagination.totalCount %></span> opérations
-                    <% } else { %>
-                        0 opération
+                            <!-- Informations Texte Essentielles -->
+                            <div class="min-w-0 flex-1">
+                                <div class="font-bold text-sm text-hos-dark truncate group-hover:text-hos-primary transition-colors">
+                                    <%= tx.label %>
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                                    <span class="font-medium"><%= tx.dateFormatted %></span>
+                                    <% if (tx.reference) { %>
+                                        <span class="text-gray-300">•</span>
+                                        <span class="font-mono text-[11px] text-gray-400 truncate max-w-[160px] sm:max-w-none"><%= tx.reference %></span>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Côté Droit : Badge Statut & Montant -->
+                        <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2.5 sm:pt-0 border-t border-gray-50 sm:border-0">
+                            <!-- Badge Léger (visible sur desktop et mobile) -->
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-bold tracking-wide uppercase <%= isCredit ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50' : 'bg-gray-100 text-gray-600 border border-gray-200/60' %>">
+                                <%= isCredit ? 'Crédit' : 'Débit' %>
+                            </span>
+
+                            <!-- Montant -->
+                            <div class="text-right font-extrabold text-base sm:text-base tracking-tight <%= isCredit ? 'text-emerald-600' : 'text-hos-dark' %>">
+                                <%= isCredit ? '+' : '-' %><%= tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
+                            </div>
+                        </div>
+
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <!-- État vide -->
+                <div class="py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
+                    <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl text-gray-400">
+                        💸
+                    </div>
+                    <div class="font-bold text-sm text-hos-dark mb-1">Aucune opération trouvée</div>
+                    <p class="text-xs text-gray-500 max-w-sm mx-auto">
+                        Aucun mouvement bancaire ne correspond à vos critères de recherche actuels.
+                    </p>
+                    <% if (hasActiveFilters) { %>
+                        <a href="/client/transactions" class="inline-block mt-4 px-4 py-2 bg-hos-dark hover:bg-hos-hover text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                            Effacer tous les filtres
+                        </a>
                     <% } %>
                 </div>
+            <% } %>
+        </div>
 
-                <% if (pagination.totalPages > 1) { %>
-                    <div class="flex items-center gap-1">
-                        <!-- Précédent -->
-                        <% if (pagination.hasPrev) { %>
-                            <a href="<%= buildUrl(pagination.currentPage - 1) %>" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-hos-dark font-medium transition-all">
-                                ← Précédent
-                            </a>
-                        <% } else { %>
-                            <span class="px-3 py-1.5 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                                ← Précédent
-                            </span>
-                        <% } %>
-
-                        <!-- Numéros de page -->
-                        <% for (let p = 1; p <= pagination.totalPages; p++) { %>
-                            <% if (p === pagination.currentPage) { %>
-                                <span class="px-3 py-1.5 rounded-lg bg-hos-dark text-white font-bold">
-                                    <%= p %>
-                                </span>
-                            <% } else { %>
-                                <a href="<%= buildUrl(p) %>" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium transition-all">
-                                    <%= p %>
-                                </a>
-                            <% } %>
-                        <% } %>
-
-                        <!-- Suivant -->
-                        <% if (pagination.hasNext) { %>
-                            <a href="<%= buildUrl(pagination.currentPage + 1) %>" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-hos-dark font-medium transition-all">
-                                Suivant →
-                            </a>
-                        <% } else { %>
-                            <span class="px-3 py-1.5 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
-                                Suivant →
-                            </span>
-                        <% } %>
-                    </div>
+        <!-- Pagination Dynamique (HOS-27) -->
+        <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+            <div>
+                <% if (pagination.totalCount > 0) { %>
+                    Affichage de <span class="font-bold text-hos-dark"><%= pagination.from %></span> à <span class="font-bold text-hos-dark"><%= pagination.to %></span> sur <span class="font-bold text-hos-dark"><%= pagination.totalCount %></span> opérations
+                <% } else { %>
+                    0 opération
                 <% } %>
             </div>
+
+            <% if (pagination.totalPages > 1) { %>
+                <div class="flex items-center gap-1">
+                    <!-- Précédent -->
+                    <% if (pagination.hasPrev) { %>
+                        <a href="<%= buildUrl(pagination.currentPage - 1) %>" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-hos-dark font-medium transition-all">
+                            ← Précédent
+                        </a>
+                    <% } else { %>
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
+                            ← Précédent
+                        </span>
+                    <% } %>
+
+                    <!-- Numéros de page -->
+                    <% for (let p = 1; p <= pagination.totalPages; p++) { %>
+                        <% if (p === pagination.currentPage) { %>
+                            <span class="px-3 py-1.5 rounded-lg bg-hos-dark text-white font-bold">
+                                <%= p %>
+                            </span>
+                        <% } else { %>
+                            <a href="<%= buildUrl(p) %>" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium transition-all">
+                                <%= p %>
+                            </a>
+                        <% } %>
+                    <% } %>
+
+                    <!-- Suivant -->
+                    <% if (pagination.hasNext) { %>
+                        <a href="<%= buildUrl(pagination.currentPage + 1) %>" class="px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-hos-dark font-medium transition-all">
+                            Suivant →
+                        </a>
+                    <% } else { %>
+                        <span class="px-3 py-1.5 rounded-lg border border-gray-100 text-gray-300 cursor-not-allowed">
+                            Suivant →
+                        </span>
+                    <% } %>
+                </div>
+            <% } %>
         </div>
 
     </main>

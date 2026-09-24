@@ -933,6 +933,64 @@ a {
     visibility: visible;
 }
 
+/* Barre de navigation mobile pour l'espace Client & Conseiller */
+.mobile-nav-header {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .mobile-nav-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        background: #241E30;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 18px;
+        z-index: 999;
+        box-shadow: 0 4px 20px rgba(15, 12, 22, 0.25);
+    }
+
+    .mobile-hamburger-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #FFFFFF;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .mobile-hamburger-btn:hover,
+    .mobile-hamburger-btn:active {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(0.96);
+    }
+
+    .mobile-avatar-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #746B92;
+        color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+}
+
 /* ==========================================================
    RESPONSIVE DESIGN (TABLET & MOBILE)
    ========================================================== */

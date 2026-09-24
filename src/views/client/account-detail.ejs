@@ -44,7 +44,7 @@
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/dashboard', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- En-tête avec Fil d'Ariane -->
         <header class="mb-8">
@@ -71,7 +71,7 @@
                             </span>
                         </div>
                         <div class="text-xs text-gray-400 font-mono mt-0.5 flex items-center gap-2">
-                            <span>N° <%= account.accountNumber %></span>
+                            <span>N° : <%= (account.accountNumber || '').replace(/^CPT-/, '') %></span>
                             <span>•</span>
                             <span>Ouvert le <%= account.openingDate || '16/09/2026' %></span>
                         </div>
@@ -105,14 +105,11 @@
                     </div>
 
                     <div class="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                        <% if (account.type === 'COURANT') { %>
-                            <span class="inline-flex items-center gap-1.5 font-medium">
-                                <span>🛡️</span> Découvert autorisé : <strong class="text-hos-dark"><%= Number(account.overdraft).toFixed(2) %> €</strong>
-                            </span>
-                        <% } else { %>
+                        <% if (account.type === 'EPARGNE') { %>
                             <span class="inline-flex items-center gap-1.5 font-medium">
                                 <span>📈</span> Taux d'intérêt annuel : <strong class="text-emerald-700"><%= (account.interestRate || 3).toFixed(2) %>% brut</strong>
                             </span>
+                            <span>•</span>
                         <% } %>
                         <span>•</span>
                         <span>Devise : <strong><%= account.currency %> (Euro)</strong></span>

@@ -5,6 +5,31 @@
     userRole==='admin' ? 'Superviseur' : (userRole==='advisor' ? 'Conseiller Clientèle' : 'Particulier' ), avatar:
     userRole==='admin' ? 'HB' : (userRole==='advisor' ? 'KB' : 'CL' ) }); %>
 
+    <% if (userRole !== 'admin') { %>
+        <!-- Barre Mobile avec Menu Hamburger pour Client & Conseiller (Visible uniquement sur mobile/tablette) -->
+        <header class="mobile-nav-header">
+            <button type="button" class="mobile-hamburger-btn" id="mobileMenuToggle" aria-label="Ouvrir le menu">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+
+            <a href="<%= userRole === 'advisor' ? '/advisor/dashboard' : '/client/dashboard' %>" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                <img src="/images/logo-white.svg" alt="HosBank" style="height: 24px; width: auto;" />
+                <% if (userRole === 'advisor') { %>
+                    <span style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; background: rgba(116, 107, 146, 0.35); color: #FFFFFF; padding: 2px 7px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2);">Pro</span>
+                <% } %>
+            </a>
+
+            <a href="<%= userRole === 'client' ? '/client/profile' : '#' %>" class="mobile-avatar-pill" title="Mon Profil">
+                <%= currentUser.avatar || 'HB' %>
+            </a>
+        </header>
+    <% } %>
+
+    <!-- Overlay sombre pour fermer au clic en dehors -->
+    <div id="sidebarMobileOverlay" class="sidebar-mobile-overlay"></div>
+
     <aside class="admin-sidebar" id="adminSidebar">
         <!-- En-tête Sidebar : Logo HosBank Officiel -->
         <div class="sidebar-brand">
@@ -220,3 +245,54 @@
             </div>
         </div>
     </aside>
+
+    <!-- Script JavaScript Universel d'Ouverture/Fermeture du Menu Mobile -->
+    <script>
+        (function() {
+            const toggleBtn = document.getElementById("mobileMenuToggle");
+            const sidebar = document.getElementById("adminSidebar");
+            const closeBtn = document.getElementById("sidebarMobileClose");
+            const overlay = document.getElementById("sidebarMobileOverlay");
+
+            function openSidebar() {
+                if (sidebar) sidebar.classList.add("mobile-open");
+                if (overlay) overlay.classList.add("active");
+                document.body.style.overflow = "hidden";
+            }
+
+            function closeSidebar() {
+                if (sidebar) sidebar.classList.remove("mobile-open");
+                if (overlay) overlay.classList.remove("active");
+                document.body.style.overflow = "";
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    openSidebar();
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener("click", closeSidebar);
+            }
+
+            if (overlay) {
+                overlay.addEventListener("click", closeSidebar);
+            }
+
+            // Fermer automatiquement si la fenêtre est agrandie vers le bureau
+            window.addEventListener("resize", function() {
+                if (window.innerWidth >= 1024 && sidebar && sidebar.classList.contains("mobile-open")) {
+                    closeSidebar();
+                }
+            });
+
+            // Fermer avec la touche Echap
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape" && sidebar && sidebar.classList.contains("mobile-open")) {
+                    closeSidebar();
+                }
+            });
+        })();
+    </script>

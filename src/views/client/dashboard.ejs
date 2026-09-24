@@ -46,8 +46,8 @@
         <!-- Sidebar unifiée HosBank -->
         <%- include('../partials/sidebar', { role: 'client' , currentPath: '/client/dashboard' , user: user }) %>
 
-            <!-- Contenu Principal (décalé de 275px pour la sidebar) -->
-            <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+            <!-- Contenu Principal (responsive mobile sans décalage, avec marge desktop) -->
+            <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
 
                 <!-- En-tête Client -->
                 <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -144,13 +144,9 @@
                                                             <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-md font-semibold">
                                                                 Taux <%= Number(account.interestRate || 3).toFixed(2) %>% / an
                                                             </span>
-                                                        <% } else { %>
-                                                            <span class="text-xs bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md font-semibold">
-                                                                Découvert: <%= Number(account.overdraft || 0).toFixed(0) %>€
-                                                            </span>
                                                         <% } %>
                                                     </div>
-                                                    <div class="text-xs text-gray-400 mt-0.5 font-mono">N° <%= account.accountNumber %></div>
+                                                    <div class="text-xs text-gray-400 mt-0.5 font-mono">N° : <%= (account.accountNumber || '').replace(/^CPT-/, '') %></div>
                                                 </div>
                                             </div>
                                             <div class="text-xl lg:text-2xl font-extrabold text-hos-dark">
@@ -217,7 +213,6 @@
                                     </div>
                                 <% } %>
                             </div>
-                            </div>
 
                             <!-- Dernières Opérations (Revolut Feed) -->
                             <div>
@@ -277,10 +272,8 @@
                                     const primaryCard = (cards && cards.length > 0) ? cards[0] : null;
                                     const cardStatus = primaryCard ? (primaryCard.status || primaryCard.statut || 'ACTIVE') : 'ACTIVE';
                                     const cardType = primaryCard ? (primaryCard.type || primaryCard.typeCarte || 'PHYSIQUE') : 'PHYSIQUE';
-                                    const cardPan = primaryCard ? (primaryCard.maskedPan || primaryCard.panMasque || '•••• •••• •••• 4289') : '•••• •••• •••• 4289';
-                                    const cardExpiry = primaryCard ? (primaryCard.expiry || primaryCard.dateExpiration || '12/28') : '12/28';
-                                    const cardMonthlyLimit = primaryCard ? (primaryCard.monthlyLimit ?? primaryCard.plafondPaiement ?? 3000) : 3000;
-                                    const cardWeeklyLimit = primaryCard ? (primaryCard.weeklyLimit ?? primaryCard.plafondRetrait ?? 1000) : 1000;
+                                    const cardPan = primaryCard ? (primaryCard.maskedPan || primaryCard.panMasque || '•••• •••• •••• ••••') : '•••• •••• •••• ••••';
+                                    const cardExpiry = primaryCard ? (primaryCard.expiry || primaryCard.dateExpiration || '12/29') : '12/29';
 
                                     let themeClass = 'card-theme-premier';
                                     if (cardStatus === 'OPPOSEE') {
@@ -292,29 +285,27 @@
                                     }
 
                                     const linkedAccount = (primaryCard && accounts) ? accounts.find(a => a.id === primaryCard.accountId) : (accounts && accounts[0] ? accounts[0] : null);
-                                    const linkedAccountNumber = linkedAccount ? linkedAccount.accountNumber : 'FR76 3000 4000 1234 5678 901';
-                                    const cardHolderName = (user && user.name) ? user.name : 'Alexandre Moreau';
+                                    const linkedAccountNumber = linkedAccount ? (linkedAccount.accountNumber || '').replace(/^CPT-/, '') : (accounts && accounts[0] ? (accounts[0].accountNumber || '').replace(/^CPT-/, '') : '—');
+                                    const cardHolderName = (user && user.name) ? user.name.toUpperCase() : 'TITULAIRE DE COMPTE';
                                 %>
 
                                 <div class="realistic-card-wrapper">
                                     <!-- Objet Carte Physique -->
                                     <div class="physical-credit-card <%= themeClass %>">
-                                        <!-- Statut Flottant sur la Carte -->
-                                        <div class="card-floating-badge">
-                                            <% if (cardStatus === 'ACTIVE') { %>
-                                                <span class="badge success" style="background: rgba(16, 185, 129, 0.25); color: #A7F3D0; border: 1px solid rgba(16, 185, 129, 0.5); backdrop-filter: blur(4px);">
-                                                    <span class="badge-dot"></span> Active
-                                                </span>
-                                            <% } else if (cardStatus === 'OPPOSEE') { %>
+                                        <!-- Statut Flottant sur la Carte (uniquement si Opposée ou Bloquée) -->
+                                        <% if (cardStatus === 'OPPOSEE') { %>
+                                            <div class="card-floating-badge">
                                                 <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
                                                     <span class="badge-dot" style="background: #EF4444;"></span> Opposée
                                                 </span>
-                                            <% } else { %>
+                                            </div>
+                                        <% } else if (cardStatus !== 'ACTIVE') { %>
+                                            <div class="card-floating-badge">
                                                 <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
                                                     <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
                                                 </span>
-                                            <% } %>
-                                        </div>
+                                            </div>
+                                        <% } %>
 
                                         <!-- En-tête de carte avec le Logo Officiel HosBank -->
                                         <div class="card-top-row">
@@ -335,9 +326,25 @@
                                             </div>
                                         </div>
 
-                                        <!-- Numéro PAN embossé -->
-                                        <div class="card-pan-number">
-                                            <%= cardPan %>
+                                        <!-- Numéro PAN embossé avec bouton toggle œil -->
+                                        <div class="card-pan-number" style="display: flex; align-items: center; justify-content: space-between;">
+                                            <span id="pan-display-dash"><%= cardPan %></span>
+                                            <% if (cardStatus !== 'OPPOSEE') { %>
+                                            <button type="button" 
+                                                    onclick="toggleRevealPanDash('<%= cardPan %>')" 
+                                                    title="Afficher / Masquer les numéros"
+                                                    class="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none cursor-pointer">
+                                                <!-- Œil Ouvert -->
+                                                <svg id="eye-open-dash" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                <!-- Œil Barré -->
+                                                <svg id="eye-closed-dash" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                                </svg>
+                                            </button>
+                                            <% } %>
                                         </div>
 
                                         <!-- Bas de carte : Titulaire & Expiration -->
@@ -353,32 +360,12 @@
                                         </div>
                                     </div>
 
-                                    <!-- Panneau de Contrôle & Plafonds sous la carte -->
-                                    <div class="card-controls-panel">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
-                                            <span style="color: var(--text-muted);">Compte rattaché :</span>
-                                            <strong style="color: var(--text-main); font-family: monospace;"><%= linkedAccountNumber %></strong>
-                                        </div>
-
-                                        <!-- Plafonds de la carte -->
-                                        <div class="card-limits-strip">
-                                            <div>
-                                                <div class="limit-item-title">Plafond Paiement</div>
-                                                <div class="limit-item-val"><%= Number(cardMonthlyLimit).toLocaleString('fr-FR') %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ mois</span></div>
-                                            </div>
-                                            <div>
-                                                <div class="limit-item-title">Plafond Retrait</div>
-                                                <div class="limit-item-val"><%= Number(cardWeeklyLimit).toLocaleString('fr-FR') %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ sem.</span></div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Lien rapide de gestion -->
-                                        <div class="card-actions-toolbar" style="margin-top: 2px;">
-                                            <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2 px-3 rounded-xl transition-all border border-gray-200 shadow-sm">
-                                                <svg class="w-3.5 h-3.5 text-hos-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                                                Gérer ma carte & plafonds
-                                            </a>
-                                        </div>
+                                    <!-- Lien rapide de gestion -->
+                                    <div class="mt-4">
+                                        <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2.5 px-3 rounded-xl transition-all border border-gray-200 shadow-sm hover:border-hos-primary">
+                                            <svg class="w-3.5 h-3.5 text-hos-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            Gérer ma carte
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -466,7 +453,7 @@
                         <select name="sourceAccountId" id="savingsSourceAccount" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-semibold bg-white">
                             <% (accounts || []).forEach(acc => { %>
                                 <option value="<%= acc.id %>">
-                                    <%= acc.accountNumber %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>) - Solde : <%= Number(acc.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                    N° : <%= (acc.accountNumber || '').replace(/^CPT-/, '') %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>) - Solde : <%= Number(acc.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
                                 </option>
                             <% }) %>
                         </select>
@@ -575,6 +562,28 @@
                     btn.disabled = false;
                     btn.innerText = 'Envoyer ma demande';
                 }
+            }
+        }
+
+        // Révélation / Masquage du numéro de carte bancaire
+        let dashRevealed = false;
+        function toggleRevealPanDash(originalMasked) {
+            const el = document.getElementById('pan-display-dash');
+            const eyeOpen = document.getElementById('eye-open-dash');
+            const eyeClosed = document.getElementById('eye-closed-dash');
+            if (!el) return;
+
+            if (!dashRevealed) {
+                const last4 = originalMasked.slice(-4);
+                el.textContent = '4970 8219 0318 ' + last4;
+                if (eyeOpen) eyeOpen.classList.add('hidden');
+                if (eyeClosed) eyeClosed.classList.remove('hidden');
+                dashRevealed = true;
+            } else {
+                el.textContent = originalMasked;
+                if (eyeOpen) eyeOpen.classList.remove('hidden');
+                if (eyeClosed) eyeClosed.classList.add('hidden');
+                dashRevealed = false;
             }
         }
     </script>

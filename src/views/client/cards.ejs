@@ -42,7 +42,7 @@
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/cards', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- Messages de Notification (Feedback Utilisateur) -->
         <% if (success === 'opposition') { %>
@@ -99,7 +99,7 @@
         <div class="flex items-center justify-between gap-4 mb-6">
             <div class="flex items-center gap-2 bg-gray-100/80 p-1 rounded-xl">
                 <button type="button" onclick="filterCards('ALL')" id="filterALL" class="filter-pill bg-white text-hos-dark shadow-sm px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">
-                    Toutes (<%= cards.length %>)
+                    Toutes
                 </button>
                 <button type="button" onclick="filterCards('PHYSIQUE')" id="filterPHYSIQUE" class="filter-pill text-gray-500 hover:text-hos-dark px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">
                     Physiques
@@ -107,9 +107,6 @@
                 <button type="button" onclick="filterCards('VIRTUELLE')" id="filterVIRTUELLE" class="filter-pill text-gray-500 hover:text-hos-dark px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all">
                     Virtuelles
                 </button>
-            </div>
-            <div class="text-xs text-gray-500 font-medium hidden sm:block">
-                <%= cards.filter(c => c.status === 'ACTIVE').length %> carte(s) active(s)
             </div>
         </div>
         <% } %>
@@ -141,33 +138,71 @@
                                 <% } %>
                             </div>
 
-                            <!-- Visuel Carte Bancaire (Design Titanium ou Neon selon le type) -->
-                            <div class="rounded-2xl p-6 text-white shadow-xl relative overflow-hidden <%= isVirtual ? 'bg-gradient-to-br from-[#746B92] via-[#5C537B] to-[#3C3352]' : 'bg-gradient-to-br from-[#2D253D] to-[#171320]' %>">
-                                <div class="absolute -top-16 -right-16 w-48 h-48 <%= isVirtual ? 'bg-[#F6EFE0]/20' : 'bg-hos-primary/20' %> rounded-full blur-2xl pointer-events-none"></div>
+                            <!-- Visuel Carte Bancaire Réaliste (même design que Dashboard Client) -->
+                            <%
+                                let themeClass = 'card-theme-premier';
+                                if (isOpposed) {
+                                    themeClass = 'card-theme-opposed';
+                                } else if (card.status !== 'ACTIVE') {
+                                    themeClass = 'card-theme-blocked';
+                                } else if (isVirtual) {
+                                    themeClass = 'card-theme-virtual';
+                                }
+                                const cardHolderName = (user && user.name) ? user.name.toUpperCase() : 'TITULAIRE DE COMPTE';
+                            %>
+                            <div class="physical-credit-card <%= themeClass %>">
+                                <!-- Statut Flottant sur la Carte (uniquement si Opposée ou Bloquée) -->
+                                <% if (card.status === 'OPPOSEE') { %>
+                                    <div class="card-floating-badge">
+                                        <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
+                                            <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                        </span>
+                                    </div>
+                                <% } else if (card.status !== 'ACTIVE') { %>
+                                    <div class="card-floating-badge">
+                                        <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
+                                            <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                        </span>
+                                    </div>
+                                <% } %>
 
-                                <div class="flex justify-between items-center mb-7">
-                                    <% if (isVirtual) { %>
-                                        <span class="text-[10px] font-bold tracking-widest bg-white/20 px-2.5 py-1 rounded-md uppercase">Virtuelle</span>
-                                    <% } else { %>
-                                        <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner"></div>
-                                    <% } %>
-                                    <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
+                                <!-- En-tête de carte avec le Logo Officiel HosBank -->
+                                <div class="card-top-row">
+                                    <div class="card-logo-container">
+                                        <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+                                    </div>
                                 </div>
 
-                                <!-- Numéro masqué ou dévoilable avec icône œil toggle -->
-                                <div class="font-mono text-base sm:text-lg tracking-widest mb-6 drop-shadow flex items-center justify-between">
+                                <!-- Puce EMV & Sans-Contact -->
+                                <div class="card-chip-row">
+                                    <% if (isVirtual) { %>
+                                        <span class="text-[10px] font-bold tracking-widest bg-white/20 px-2.5 py-1 rounded-md uppercase" style="backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);">Virtuelle</span>
+                                    <% } else { %>
+                                        <div class="emv-chip"></div>
+                                    <% } %>
+                                    <div class="nfc-icon">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                            <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                            <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <!-- Numéro PAN embossé avec bouton œil toggle -->
+                                <div class="card-pan-number" style="display: flex; align-items: center; justify-content: space-between;">
                                     <span id="pan-display-<%= card.id %>"><%= card.maskedPan %></span>
                                     <% if (!isOpposed) { %>
                                     <button type="button" 
                                             onclick="toggleRevealPan(<%= card.id %>, '<%= card.maskedPan %>')" 
                                             title="Afficher / Masquer les numéros"
-                                            class="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none">
-                                        <!-- Œil Ouvert (Actuellement masqué -> cliquer pour révéler) -->
+                                            class="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none cursor-pointer">
+                                        <!-- Œil Ouvert -->
                                         <svg id="eye-open-<%= card.id %>" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                         </svg>
-                                        <!-- Œil Barré (Actuellement visible -> cliquer pour masquer) -->
+                                        <!-- Œil Barré -->
                                         <svg id="eye-closed-<%= card.id %>" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                                         </svg>
@@ -175,49 +210,19 @@
                                     <% } %>
                                 </div>
 
-                                <div class="flex justify-between items-end text-xs">
+                                <!-- Bas de carte : Titulaire & Expiration -->
+                                <div class="card-bottom-row">
                                     <div>
-                                        <span class="text-gray-300 uppercase tracking-wider block text-[9px]">Titulaire</span>
-                                        <span class="font-bold text-white text-xs"><%= user ? (user.name || user.prenom + ' ' + user.nom) : 'Alexandre Moreau' %></span>
+                                        <div class="card-holder-label">Titulaire de la carte</div>
+                                        <div class="card-holder-name"><%= cardHolderName %></div>
                                     </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-300 uppercase tracking-wider block text-[9px]">Expire fin</span>
-                                        <span class="font-semibold text-gray-100 text-xs"><%= card.expiry || '12/28' %></span>
+                                    <div class="card-expiry-box">
+                                        <div class="card-holder-label">Expire Fin</div>
+                                        <div class="card-expiry-val"><%= card.expiry || '12/29' %></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Plafonds & Compte rattaché -->
-                            <div class="space-y-3 pt-1">
-                                <div>
-                                    <div class="flex justify-between text-xs mb-1">
-                                        <span class="text-gray-500 font-medium">Plafond de paiement</span>
-                                        <span class="font-bold text-hos-dark"><%= (card.monthlyLimit || 1000).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> € / mois</span>
-                                    </div>
-                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                        <div class="<%= isVirtual ? 'bg-hos-primary' : 'bg-hos-dark' %> h-full rounded-full" style="width: 35%;"></div>
-                                    </div>
-                                </div>
-
-                                <% if (!isVirtual) { %>
-                                <div>
-                                    <div class="flex justify-between text-xs mb-1">
-                                        <span class="text-gray-500 font-medium">Plafond de retrait</span>
-                                        <span class="font-bold text-hos-dark"><%= (card.weeklyLimit || 500).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> € / sem</span>
-                                    </div>
-                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                        <div class="bg-hos-primary h-full rounded-full" style="width: 20%;"></div>
-                                    </div>
-                                </div>
-                                <% } %>
-
-                                <% if (card.accountNumber) { %>
-                                <div class="pt-1 text-[11px] text-gray-400 flex items-center justify-between">
-                                    <span>Compte rattaché :</span>
-                                    <span class="font-semibold text-gray-600 font-mono"><%= card.accountNumber %></span>
-                                </div>
-                                <% } %>
-                            </div>
                         </div>
 
                         <!-- Actions pour cette carte -->
@@ -238,6 +243,35 @@
 
                     </div>
                 <% }) %>
+
+                <!-- État vide dédié lors du filtre Carte Virtuelle si le client n'en a pas encore -->
+                <div id="emptyVirtualCards" class="col-span-full hidden py-14 px-6 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200 shadow-sm transition-all">
+                    <h3 class="text-base sm:text-lg font-extrabold text-hos-dark mb-2">Vous n'avez pas encore de carte virtuelle</h3>
+                    <p class="text-xs text-gray-500 max-w-md mx-auto mb-6 leading-relaxed">
+                        Générez une carte bancaire virtuelle en quelques secondes pour régler vos achats en ligne en toute sérénité sans exposer les coordonnées de votre carte principale.
+                    </p>
+                    <div>
+                        <button type="button" 
+                                onclick="document.getElementById('newCardModal').classList.remove('hidden')" 
+                                class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover active:scale-95 text-white px-6 py-3 rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Commander une carte virtuelle
+                        </button>
+                    </div>
+                </div>
+
+                <!-- État vide si aucune carte physique trouvée lors du filtre -->
+                <div id="emptyPhysicalCards" class="col-span-full hidden py-14 px-6 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200 shadow-sm transition-all">
+                    <div class="w-16 h-16 bg-gray-100 text-gray-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        💳
+                    </div>
+                    <h3 class="text-base sm:text-lg font-extrabold text-hos-dark mb-2">Aucune carte physique trouvée</h3>
+                    <p class="text-xs text-gray-500 max-w-md mx-auto">
+                        Vous ne possédez aucune carte physique pour ce filtre.
+                    </p>
+                </div>
             <% } else { %>
                 <!-- État vide si aucune carte -->
                 <div class="col-span-full py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
@@ -381,8 +415,8 @@
 <div id="newCardModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-extrabold text-hos-dark flex items-center gap-2">
-                <span>✨</span> Nouvelle Carte Virtuelle
+            <h3 class="text-lg font-extrabold text-hos-dark">
+                Nouvelle Carte Virtuelle
             </h3>
             <button onclick="document.getElementById('newCardModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
@@ -433,6 +467,8 @@
     function filterCards(type) {
         const items = document.querySelectorAll('.card-item');
         const pills = document.querySelectorAll('.filter-pill');
+        const emptyVirtual = document.getElementById('emptyVirtualCards');
+        const emptyPhysical = document.getElementById('emptyPhysicalCards');
 
         pills.forEach(p => {
             p.classList.remove('bg-white', 'text-hos-dark', 'shadow-sm');
@@ -445,13 +481,40 @@
             activeBtn.classList.add('bg-white', 'text-hos-dark', 'shadow-sm');
         }
 
+        let visibleCount = 0;
+        let virtualCount = 0;
+        let physicalCount = 0;
+
         items.forEach(item => {
-            if (type === 'ALL' || item.dataset.type === type) {
+            const itemType = item.dataset.type;
+            if (itemType === 'VIRTUELLE') virtualCount++;
+            if (itemType === 'PHYSIQUE') physicalCount++;
+
+            if (type === 'ALL' || itemType === type) {
                 item.style.display = 'flex';
+                visibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
+
+        // Gestion de l'état vide avec CTA pour les cartes virtuelles
+        if (emptyVirtual) {
+            if (type === 'VIRTUELLE' && virtualCount === 0) {
+                emptyVirtual.classList.remove('hidden');
+            } else {
+                emptyVirtual.classList.add('hidden');
+            }
+        }
+
+        // Gestion de l'état vide pour les cartes physiques
+        if (emptyPhysical) {
+            if (type === 'PHYSIQUE' && physicalCount === 0) {
+                emptyPhysical.classList.remove('hidden');
+            } else {
+                emptyPhysical.classList.add('hidden');
+            }
+        }
     }
 
     // 2. Ouverture modal opposition avec passage du cardId

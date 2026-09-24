@@ -3,7 +3,8 @@ const clientService = require("../services/clientService");
 exports.getDashboard = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;
-        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const isClient = req.session?.user?.role === 'CLIENT';
+        const userId = (isClient && !isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
 
         const data = await clientService.getDashboardData(userId);
 

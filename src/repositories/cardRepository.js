@@ -67,6 +67,35 @@ const cardRepository = {
         `;
         const result = await db.query(query, [plafondPaiement, plafondRetrait, cardId]);
         return result.rows[0] || null;
+    },
+
+    async createPhysicalCard(accountId, monthlyLimit = 3000.00) {
+        const crypto = require("crypto");
+        const last4 = Math.floor(1000 + Math.random() * 9000);
+        const panMasque = `•••• •••• •••• ${last4}`;
+        const panHash = crypto.createHash('sha256').update(`PHYSICAL-${accountId}-${Date.now()}-${last4}`).digest('hex');
+        const pinHash = crypto.createHash('sha256').update("1234").digest('hex');
+        
+        const expiryDate = new Date();
+        expiryDate.setFullYear(expiryDate.getFullYear() + 4);
+        const expiryStr = `${expiryDate.getFullYear()}-${String(expiryDate.getMonth() + 1).padStart(2, '0')}-28`;
+
+        const query = `
+            INSERT INTO cartes_bancaires 
+                (compte_id, pan_masque, pan_hash, date_expiration, code_pin_hash, type_carte, statut, plafond_paiement_mensuel, plafond_retrait_hebdo)
+            VALUES 
+                ($1, $2, $3, $4, $5, 'PHYSIQUE', 'ACTIVE', $6, 1000.00)
+            RETURNING *
+        `;
+        const result = await db.query(query, [
+            accountId,
+            panMasque,
+            panHash,
+            expiryStr,
+            pinHash,
+            monthlyLimit
+        ]);
+        return result.rows[0];
     }
 };
 

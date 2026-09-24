@@ -200,6 +200,14 @@ const userRepository = {
             console.warn("Opération initiale non créée :", opErr.message);
         }
 
+        // Création automatique de la carte bancaire physique attitrée au nouveau compte
+        try {
+            const cardRepository = require("./cardRepository");
+            await cardRepository.createPhysicalCard(account.id);
+        } catch (cardErr) {
+            console.warn("Carte bancaire initiale non créée :", cardErr.message);
+        }
+
         return account;
     },
 
