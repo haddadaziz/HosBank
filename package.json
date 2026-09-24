@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "node --watch app.js",
+    "db:init": "node database/init.js",
     "docker:up": "docker compose up --build",
+    "docker:reset": "docker compose down -v && docker compose up --build",
     "docker:db": "docker compose up -d db",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
