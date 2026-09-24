@@ -23,13 +23,15 @@ const auditRepository = {
         return result.rows;
     },
 
-    async log({ adminUser, action, ip = '127.0.0.1', severity = 'Info' }) {
+    async log({ adminUser, action, ip = '127.0.0.1', severity = 'Info', entiteCible = null, idEntiteCible = null, detail = null }) {
         const query = `
-            INSERT INTO journal_audit (action, adresse_ip, nouvelle_valeur)
-            VALUES ($1, $2, $3)
+            INSERT INTO journal_audit (action, adresse_ip, nouvelle_valeur, entite_cible, id_entite_cible)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING *
         `;
-        const result = await db.query(query, [action, ip, `Gravité: ${severity} | Opérateur: ${adminUser}`]);
+        const safeAction = (action || "ACTION").substring(0, 80);
+        const description = detail ? `${detail} | Gravité: ${severity} | Opérateur: ${adminUser}` : `Gravité: ${severity} | Opérateur: ${adminUser}`;
+        const result = await db.query(query, [safeAction, ip, description, entiteCible, idEntiteCible]);
         return result.rows[0];
     }
 };

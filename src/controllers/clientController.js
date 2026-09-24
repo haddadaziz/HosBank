@@ -32,12 +32,16 @@ exports.getTransfers = async (req, res) => {
             clientService.getBeneficiaries(userId)
         ]);
 
+        const successMessage = req.query.success 
+            ? "Bénéficiaire enregistré avec succès !" 
+            : (req.query.deleted ? "Bénéficiaire supprimé de votre carnet avec succès." : null);
+
         res.render("client/transfers", {
             title: "Virements bancaires | HosBank",
             user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
             accounts: accounts,
             beneficiaries: beneficiaries,
-            successMessage: req.query.success ? "Bénéficiaire enregistré avec succès !" : null,
+            successMessage: successMessage,
             errorMessage: req.query.error ? decodeURIComponent(req.query.error) : null,
             currentPath: "/client/transfers"
         });
@@ -90,10 +94,10 @@ exports.postDeleteBeneficiary = async (req, res) => {
             return res.json({ success: true, message: "Bénéficiaire supprimé avec succès." });
         }
 
-        res.redirect("/client/transfers");
+        res.redirect("/client/transfers?deleted=1");
     } catch (error) {
         console.warn("Erreur suppression bénéficiaire :", error.message);
-        res.redirect("/client/transfers");
+        res.redirect(`/client/transfers?error=${encodeURIComponent("Impossible de supprimer ce bénéficiaire.")}`);
     }
 };
 

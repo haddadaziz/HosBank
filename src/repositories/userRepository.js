@@ -284,10 +284,21 @@ const userRepository = {
                 c.email AS "clientEmail",
                 c.telephone AS "clientPhone",
                 adv.id AS "advisorId",
-                (adv.prenom || ' ' || adv.nom) AS "advisorName"
+                (adv.prenom || ' ' || adv.nom) AS "advisorName",
+                CASE WHEN rel.id IS NOT NULL THEN true ELSE false END AS "isRelanced",
+                TO_CHAR(rel.date_action, 'DD/MM/YYYY à HH24:MI') AS "dateRelance"
             FROM demandes d
             JOIN utilisateurs c ON d.utilisateur_id = c.id
             LEFT JOIN utilisateurs adv ON c.conseiller_id = adv.id
+            LEFT JOIN LATERAL (
+                SELECT id, date_action 
+                FROM journal_audit 
+                WHERE action LIKE 'RELANCE_CONSEILLER%' 
+                  AND entite_cible = 'DEMANDE' 
+                  AND id_entite_cible = d.id 
+                ORDER BY date_action DESC 
+                LIMIT 1
+            ) rel ON true
             WHERE d.statut IN ('EN_ATTENTE', 'EN_INSTRUCTION')
               ${advisorFilterDemandes}
 
@@ -307,10 +318,21 @@ const userRepository = {
                 c.email AS "clientEmail",
                 c.telephone AS "clientPhone",
                 adv.id AS "advisorId",
-                (adv.prenom || ' ' || adv.nom) AS "advisorName"
+                (adv.prenom || ' ' || adv.nom) AS "advisorName",
+                CASE WHEN rel.id IS NOT NULL THEN true ELSE false END AS "isRelanced",
+                TO_CHAR(rel.date_action, 'DD/MM/YYYY à HH24:MI') AS "dateRelance"
             FROM reclamations r
             JOIN utilisateurs c ON r.utilisateur_id = c.id
             LEFT JOIN utilisateurs adv ON c.conseiller_id = adv.id
+            LEFT JOIN LATERAL (
+                SELECT id, date_action 
+                FROM journal_audit 
+                WHERE action LIKE 'RELANCE_CONSEILLER%' 
+                  AND entite_cible = 'RECLAMATION' 
+                  AND id_entite_cible = r.id 
+                ORDER BY date_action DESC 
+                LIMIT 1
+            ) rel ON true
             WHERE r.statut IN ('OUVERTE', 'EN_COURS')
               ${advisorFilterReclamations}
 
