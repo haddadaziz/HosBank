@@ -26,6 +26,11 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
+exports.getTransfers = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+
 
 exports.getAccountDetail = async (req, res) => {
     try {
@@ -62,6 +67,21 @@ exports.getTransfers = async (req, res) => {
             clientService.getBeneficiaries(userId)
         ]);
 
+        const successMessage = req.query.success 
+            ? "Bénéficiaire enregistré avec succès !" 
+            : (req.query.deleted ? "Bénéficiaire supprimé de votre carnet avec succès." : null);
+
+        res.render("client/transfers", {
+            title: "Virements bancaires | HosBank",
+            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
+            accounts: accounts,
+            beneficiaries: beneficiaries,
+            successMessage: successMessage,
+            errorMessage: req.query.error ? decodeURIComponent(req.query.error) : null,
+            currentPath: "/client/transfers"
+        });
+    } catch (error) {
+        console.error("Erreur Virements Client :", error);
         res.render("client/transfers", {
             title: "Virements bancaires | HosBank",
             user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
@@ -80,6 +100,53 @@ exports.getTransfers = async (req, res) => {
     }
 };
 
+exports.postAddBeneficiary = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const { intitule, iban, bic } = req.body;
+
+        const newBeneficiary = await clientService.addBeneficiary(userId, { intitule, iban, bic });
+
+        if (req.xhr || req.headers.accept?.includes("json")) {
+            return res.json({
+                success: true,
+                message: "Bénéficiaire ajouté avec succès !",
+                beneficiary: newBeneficiary
+            });
+        }
+
+        res.redirect("/client/transfers?success=1");
+    } catch (error) {
+        console.warn("Erreur ajout bénéficiaire :", error.message);
+
+        if (req.xhr || req.headers.accept?.includes("json")) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        res.redirect(`/client/transfers?error=${encodeURIComponent(error.message)}`);
+    }
+};
+
+exports.postDeleteBeneficiary = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const { id } = req.params;
+
+        await clientService.deleteBeneficiary(id, userId);
+
+        if (req.xhr || req.headers.accept?.includes("json")) {
+            return res.json({ success: true, message: "Bénéficiaire supprimé avec succès." });
+        }
+
+        res.redirect("/client/transfers?deleted=1");
+    } catch (error) {
+        console.warn("Erreur suppression bénéficiaire :", error.message);
+        res.redirect(`/client/transfers?error=${encodeURIComponent("Impossible de supprimer ce bénéficiaire.")}`);
 exports.postTransfer = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;

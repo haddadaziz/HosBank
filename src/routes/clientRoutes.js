@@ -9,6 +9,11 @@ router.get("/dashboard", requireClientAuth, clientController.getDashboard);
 router.get("/accounts", requireClientAuth, (req, res) => res.redirect("/client/dashboard"));
 router.get("/accounts/:id", requireClientAuth, clientController.getAccountDetail);
 router.get("/transfers", requireClientAuth, clientController.getTransfers);
+
+// Gestion des bénéficiaires
+router.post("/beneficiaries", requireClientAuth, clientController.postAddBeneficiary);
+router.post("/beneficiaries/:id/delete", requireClientAuth, clientController.postDeleteBeneficiary);
+
 router.post("/transfers", requireClientAuth, clientController.postTransfer);
 router.post("/beneficiaries", requireClientAuth, clientController.postAddBeneficiary);
 router.get("/cards", requireClientAuth, clientController.getCards);
