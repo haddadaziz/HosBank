@@ -28,6 +28,7 @@ services:
     container_name: hosbank-app
     restart: unless-stopped
 
+    command: sh -c "node database/init.js && npm run dev"
     ports:
       - "3000:3000"
 

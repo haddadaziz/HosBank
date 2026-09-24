@@ -48,7 +48,7 @@ const authService = {
 
         await emailService.sendVerificationEmail(email, token, req);
 
-        return newUser;
+        return { ...newUser, token };
     },
 
     async login(identifier, password) {

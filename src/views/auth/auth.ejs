@@ -359,6 +359,22 @@
                     </div>
                 <% } %>
 
+                <% if (typeof devToken !== 'undefined' && devToken) { %>
+                    <div class="mb-6 p-4 rounded-2xl bg-[#FAF5ED] border-2 border-[#746B92]/30 text-[#282330] text-xs sm:text-sm shadow-xs">
+                        <div class="font-extrabold flex items-center gap-1.5 mb-1.5 text-[#746B92]">
+                            <svg class="w-4 h-4 text-[#746B92]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>Activation Locale Rapide :</span>
+                        </div>
+                        <p class="text-xs text-[#7A6F82] mb-3 leading-relaxed">
+                            Votre compte vient d'être créé. Pour valider votre e-mail immédiatement sur votre PC sans passer par une boîte mail :
+                        </p>
+                        <a href="/verify-email?token=<%= devToken %>" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#746B92] hover:bg-[#635B7E] text-white font-bold text-xs shadow-xs transition-all hover:-translate-y-0.5">
+                            <span>👉 Valider et activer mon compte</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
+                    </div>
+                <% } %>
+
                 <div id="formRegister" class="fade-swap-transition <%= initialMode === 'register' ? 'opacity-100 block' : 'opacity-0 hidden' %>">
                     <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-[#282330] mb-6 text-left">
                         Inscription

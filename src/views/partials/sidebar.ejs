@@ -164,12 +164,28 @@
                             <span>Mes Cartes</span>
                         </a>
 
+                        <a href="/client/transactions" class="nav-item <%= path === '/client/transactions' ? 'active' : '' %>">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Historique</span>
+                        </a>
+
                         <a href="/client/documents" class="nav-item <%= path === '/client/documents' ? 'active' : '' %>">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             <span>RIB & Relevés</span>
+                        </a>
+
+                        <a href="/client/profile" class="nav-item <%= path === '/client/profile' ? 'active' : '' %>">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <span>Mon Profil</span>
                         </a>
                         <% } %>
         </nav>
@@ -178,22 +194,29 @@
         <div class="sidebar-footer" style="padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.08);">
             <div class="admin-profile-pill"
                 style="display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; background: rgba(255, 255, 255, 0.06);">
-                <div class="admin-profile-avatar"
-                    style="width: 38px; height: 38px; border-radius: 50%; background: #746B92; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #FFFFFF; flex-shrink: 0;">
-                    <%= currentUser.avatar || 'HB' %>
-                </div>
-                <div class="admin-profile-info" style="flex: 1; overflow: hidden;">
-                    <div class="admin-profile-name"
-                        style="font-size: 0.84rem; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; color: #FFFFFF;">
-                        <%= currentUser.name %>
+                <a href="<%= userRole === 'client' ? '/client/profile' : '#' %>" style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; text-decoration: none; color: inherit;">
+                    <div class="admin-profile-avatar"
+                        style="width: 38px; height: 38px; border-radius: 50%; background: #746B92; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #FFFFFF; flex-shrink: 0;">
+                        <%= currentUser.avatar || 'HB' %>
                     </div>
-                    <% if (userRole !=='client' ) { %>
-                        <div class="admin-profile-role"
-                            style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                            <%= currentUser.role %>
+                    <div class="admin-profile-info" style="flex: 1; overflow: hidden;">
+                        <div class="admin-profile-name"
+                            style="font-size: 0.84rem; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; color: #FFFFFF;">
+                            <%= currentUser.name %>
                         </div>
+                        <% if (userRole !=='client' ) { %>
+                            <div class="admin-profile-role"
+                                style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                <%= currentUser.role %>
+                            </div>
+                        <% } else { %>
+                            <div class="admin-profile-role"
+                                style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                Voir mon profil →
+                            </div>
                         <% } %>
-                </div>
+                    </div>
+                </a>
 
                 <a href="<%= userRole === 'admin' ? '/admin/logout' : '/logout' %>" title="Déconnexion"
                     style="color: rgba(255,255,255,0.6); padding: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 6px; transition: color 0.15s ease;">
