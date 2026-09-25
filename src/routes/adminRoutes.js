@@ -90,4 +90,7 @@ router.post(
     adminController.postUpdateReclamationStatus
 );
 
+router.get("/advisors-workload", requireAdminAuth, adminController.getAdvisorsWorkload);
+router.post("/advisors/:id/remind", requireAdminAuth, adminController.postSendReminder);
+
 module.exports = router;

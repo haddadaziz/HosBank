@@ -220,6 +220,146 @@ const userRepository = {
         `;
         const result = await db.query(query, [id]);
         return result.rows[0] || null;
+    },
+
+    /**
+     * Récupère les métriques complètes de charge et de réactivité de chaque conseiller bancaire
+     */
+    async getAdvisorsWorkloadMetrics() {
+        const query = `
+            SELECT 
+                u.id,
+                u.civilite,
+                u.nom,
+                u.prenom,
+                u.email,
+                u.telephone,
+                TO_CHAR(u.date_creation, 'DD/MM/YYYY') AS "dateCreation",
+                
+                -- Nombre de clients affectés
+                COUNT(DISTINCT c.id)::int AS "assignedClientsCount",
+                
+                -- Métriques Demandes
+                COUNT(DISTINCT d.id)::int AS "totalDemandes",
+                COUNT(DISTINCT CASE WHEN d.statut IN ('APPROUVEE', 'REJETEE') THEN d.id END)::int AS "demandesTraitees",
+                COUNT(DISTINCT CASE WHEN d.statut IN ('EN_ATTENTE', 'EN_INSTRUCTION') THEN d.id END)::int AS "demandesEnAttente",
+                COUNT(DISTINCT CASE WHEN d.statut IN ('EN_ATTENTE', 'EN_INSTRUCTION') AND d.date_demande < NOW() - INTERVAL '24 hours' THEN d.id END)::int AS "demandesRelance",
+                COALESCE(ROUND(AVG(CASE WHEN d.statut IN ('APPROUVEE', 'REJETEE') AND d.date_traitement IS NOT NULL 
+                    THEN EXTRACT(EPOCH FROM (d.date_traitement - d.date_demande)) / 3600.0 END)::numeric, 1), 0)::float AS "delaiMoyenDemandesHeures",
+
+                -- Métriques Réclamations
+                COUNT(DISTINCT r.id)::int AS "totalReclamations",
+                COUNT(DISTINCT CASE WHEN r.statut IN ('RESOLUE', 'REJETEE') THEN r.id END)::int AS "reclamationsTraitees",
+                COUNT(DISTINCT CASE WHEN r.statut IN ('OUVERTE', 'EN_COURS') THEN r.id END)::int AS "reclamationsEnAttente",
+                COUNT(DISTINCT CASE WHEN r.statut IN ('OUVERTE', 'EN_COURS') AND (r.date_depot < NOW() - INTERVAL '24 hours' OR r.priorite IN ('URGENTE', 'HAUTE')) THEN r.id END)::int AS "reclamationsRelance",
+                COALESCE(ROUND(AVG(CASE WHEN r.statut IN ('RESOLUE', 'REJETEE') AND r.date_cloture IS NOT NULL 
+                    THEN EXTRACT(EPOCH FROM (r.date_cloture - r.date_depot)) / 3600.0 END)::numeric, 1), 0)::float AS "delaiMoyenReclamationsHeures"
+
+            FROM utilisateurs u
+            LEFT JOIN utilisateurs c ON c.conseiller_id = u.id AND c.role = 'CLIENT'
+            LEFT JOIN demandes d ON d.utilisateur_id = c.id
+            LEFT JOIN reclamations r ON r.utilisateur_id = c.id
+            WHERE u.role = 'CHARGE_CLIENT'
+            GROUP BY u.id
+            ORDER BY u.nom ASC
+        `;
+        const result = await db.query(query);
+        return result.rows;
+    },
+
+    /**
+     * Récupère la liste des dossiers (demandes & réclamations) en attente nécessitant une relance
+     */
+    async getOverdueRequests(advisorId = null) {
+        let params = [];
+        let advisorFilterDemandes = "";
+        let advisorFilterReclamations = "";
+
+        if (advisorId) {
+            params.push(advisorId);
+            advisorFilterDemandes = `AND c.conseiller_id = $1`;
+            advisorFilterReclamations = `AND c.conseiller_id = $1`;
+        }
+
+        const query = `
+            SELECT 
+                'DEMANDE' AS "typeDossier",
+                d.id,
+                d.reference,
+                CASE 
+                    WHEN d.type_demande = 'OUVERTURE_EPARGNE' THEN 'Ouverture Livret Épargne'
+                    WHEN d.type_demande = 'DEMANDE_RIB' THEN 'Demande RIB'
+                    WHEN d.type_demande = 'CARTE_VIRTUELLE' THEN 'Carte Virtuelle'
+                    WHEN d.type_demande = 'OPPOSITION_CARTE' THEN 'Opposition Carte'
+                    WHEN d.type_demande = 'RECALCUL_PIN' THEN 'Renouvellement PIN'
+                    ELSE d.type_demande::text
+                END AS "sujet",
+                d.statut::text AS "statut",
+                'MOYENNE' AS "priorite",
+                d.date_demande AS "dateCreation",
+                TO_CHAR(d.date_demande, 'DD/MM/YYYY HH24:MI') AS "dateFormatted",
+                ROUND(EXTRACT(EPOCH FROM (NOW() - d.date_demande)) / 3600.0, 1)::float AS "heuresEnAttente",
+                (c.prenom || ' ' || c.nom) AS "clientName",
+                c.email AS "clientEmail",
+                c.telephone AS "clientPhone",
+                adv.id AS "advisorId",
+                (adv.prenom || ' ' || adv.nom) AS "advisorName",
+                CASE WHEN rel.id IS NOT NULL THEN true ELSE false END AS "isRelanced",
+                TO_CHAR(rel.date_action, 'DD/MM/YYYY à HH24:MI') AS "dateRelance"
+            FROM demandes d
+            JOIN utilisateurs c ON d.utilisateur_id = c.id
+            LEFT JOIN utilisateurs adv ON c.conseiller_id = adv.id
+            LEFT JOIN LATERAL (
+                SELECT id, date_action 
+                FROM journal_audit 
+                WHERE action LIKE 'RELANCE_CONSEILLER%' 
+                  AND entite_cible = 'DEMANDE' 
+                  AND id_entite_cible = d.id 
+                ORDER BY date_action DESC 
+                LIMIT 1
+            ) rel ON true
+            WHERE d.statut IN ('EN_ATTENTE', 'EN_INSTRUCTION')
+              ${advisorFilterDemandes}
+
+            UNION ALL
+
+            SELECT 
+                'RECLAMATION' AS "typeDossier",
+                r.id,
+                r.reference,
+                r.sujet AS "sujet",
+                r.statut::text AS "statut",
+                r.priorite::text AS "priorite",
+                r.date_depot AS "dateCreation",
+                TO_CHAR(r.date_depot, 'DD/MM/YYYY HH24:MI') AS "dateFormatted",
+                ROUND(EXTRACT(EPOCH FROM (NOW() - r.date_depot)) / 3600.0, 1)::float AS "heuresEnAttente",
+                (c.prenom || ' ' || c.nom) AS "clientName",
+                c.email AS "clientEmail",
+                c.telephone AS "clientPhone",
+                adv.id AS "advisorId",
+                (adv.prenom || ' ' || adv.nom) AS "advisorName",
+                CASE WHEN rel.id IS NOT NULL THEN true ELSE false END AS "isRelanced",
+                TO_CHAR(rel.date_action, 'DD/MM/YYYY à HH24:MI') AS "dateRelance"
+            FROM reclamations r
+            JOIN utilisateurs c ON r.utilisateur_id = c.id
+            LEFT JOIN utilisateurs adv ON c.conseiller_id = adv.id
+            LEFT JOIN LATERAL (
+                SELECT id, date_action 
+                FROM journal_audit 
+                WHERE action LIKE 'RELANCE_CONSEILLER%' 
+                  AND entite_cible = 'RECLAMATION' 
+                  AND id_entite_cible = r.id 
+                ORDER BY date_action DESC 
+                LIMIT 1
+            ) rel ON true
+            WHERE r.statut IN ('OUVERTE', 'EN_COURS')
+              ${advisorFilterReclamations}
+
+            ORDER BY "heuresEnAttente" DESC, "dateCreation" ASC
+        `;
+
+        const result = await db.query(query, params);
+        return result.rows;
     }
 };
 
