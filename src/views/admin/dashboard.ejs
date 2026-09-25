@@ -32,10 +32,6 @@
                         </svg>
                         Charge Conseillers
                     </a>
-                    <a href="/admin/kyc" class="btn-sm btn-secondary">
-                        <span class="badge warning" style="padding: 2px 6px;"><%= stats.metrics.pendingKycCount %></span>
-                        Dossiers KYC
-                    </a>
                     <button class="btn-primary" data-open-modal="modalAddClient">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -124,7 +120,6 @@
                             <div class="card-title">Dernières Transactions Bancaires</div>
                             <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">Virements SEPA, instantanés et opérations directes</div>
                         </div>
-                        <a href="/admin/transactions" class="btn-sm btn-secondary">Voir tout</a>
                     </div>
                     <div class="data-table-wrapper">
                         <table class="data-table">
@@ -173,27 +168,8 @@
                     </div>
                 </div>
 
-                <!-- Colonne Droite : Clients Récents & Alertes KYC -->
+                <!-- Colonne Droite : Derniers Clients Inscrits -->
                 <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <!-- Dossiers KYC Prioritaires -->
-                    <div class="card" style="margin-bottom: 0;">
-                        <div class="card-header">
-                            <div class="card-title">Dossiers KYC en Attente</div>
-                            <span class="badge purple"><%= stats.pendingKyc.length %></span>
-                        </div>
-                        <div class="card-body" style="padding: 16px 20px;">
-                            <% stats.pendingKyc.forEach(k => { %>
-                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(104, 94, 134, 0.08);">
-                                    <div>
-                                        <div style="font-weight: 600; font-size: 0.9rem;"><%= k.clientName %></div>
-                                        <div style="font-size: 0.78rem; color: var(--text-muted);"><%= k.documentType %> • <%= k.documentNumber %></div>
-                                    </div>
-                                    <a href="/admin/kyc" class="btn-sm btn-secondary" style="padding: 6px 10px;">Examiner</a>
-                                </div>
-                            <% }) %>
-                        </div>
-                    </div>
-
                     <!-- Nouveaux Clients -->
                     <div class="card" style="margin-bottom: 0;">
                         <div class="card-header">

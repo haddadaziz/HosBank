@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- Barre latérale unifiée HosBank -->
+    <%- include('../partials/sidebar') %>
+
+    <div class="admin-main">
+        <!-- Barre supérieure admin -->
+        <%- include('../partials/topbar') %>
+
+        <main class="admin-content">
+            <!-- En-tête de la page -->
+            <div class="page-header" style="flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <h1 class="page-title">Supervision des Cartes Bancaires</h1>
+                    <p class="page-subtitle">Registre centralisé des cartes émises, suivi des cartes actives, virtuelles et mises en opposition</p>
+                </div>
+            </div>
+
+            <!-- Cartes statistiques globales (Critère 1 : Volumes) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <!-- Total Cartes Émises -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Total Cartes Émises</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><%= summary.totalCards %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Registre centralisé</div>
+                </div>
+
+                <!-- Cartes Actives -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Cartes Actives</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #10B981;"><%= summary.activeCount %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">En circulation normale</div>
+                </div>
+
+                <!-- Cartes Virtuelles vs Physiques -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Cartes Virtuelles</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #746B92;"><%= summary.virtualCount %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;"><%= summary.physicalCount %> physiques actives</div>
+                </div>
+
+                <!-- Cartes en Opposition -->
+                <div class="card" style="padding: 18px 20px; border-left: 4px solid <%= summary.opposedCount > 0 ? '#DC2626' : '#10B981' %>;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">En Opposition</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: <%= summary.opposedCount > 0 ? '#DC2626' : '#10B981' %>;">
+                        <%= summary.opposedCount %>
+                    </div>
+                    <div style="font-size: 0.78rem; color: <%= summary.opposedCount > 0 ? '#DC2626' : 'var(--text-muted)' %>; margin-top: 4px; font-weight: 600;">
+                        <%= summary.opposedCount > 0 ? 'Perte ou vol signalé' : 'Aucune opposition' %>
+                    </div>
+                </div>
+
+                <!-- Cartes Bloquées Temporairement -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Bloquées Temporairement</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #F59E0B;"><%= summary.blockedCount %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Par sécurité ou client</div>
+                </div>
+            </div>
+
+            <!-- Carte principale : Filtres et Tableau des Cartes Bancaires -->
+            <div class="card">
+                <!-- En-tête de carte avec filtres par type (Physique / Virtuelle) et par statut -->
+                <div class="card-header" style="flex-wrap: wrap; gap: 14px; padding: 18px 24px; border-bottom: 1px solid var(--border-ui, #EFECE6);">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span class="card-title" style="font-size: 1.05rem;">Inventaire des Cartes Bancaires</span>
+                        <span class="badge purple" style="font-size: 0.8rem;"><%= cards.length %> affichée(s)</span>
+                    </div>
+
+                    <!-- Filtres par Type de Carte & Statut (Critère 2) -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <!-- Barre de recherche rapide -->
+                        <div style="position: relative;">
+                            <input 
+                                type="text" 
+                                id="cardSearchInput" 
+                                placeholder="Rechercher titulaire, PAN, IBAN..." 
+                                style="padding: 6px 12px 6px 30px; font-size: 0.82rem; border: 1px solid var(--primary-border, #D8CEBB); border-radius: 8px; background: #FFFFFF; outline: none; width: 220px;"
+                            >
+                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 10px; top: 9px; color: var(--text-muted, #7A6F82);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+
+                        <!-- Filtre par Type de Carte (Critère 2 : Physique vs Virtuelle) -->
+                        <a href="/admin/cards?type=ALL" class="btn-sm <%= filters.typeFilter === 'ALL' && (!filters.statusFilter || filters.statusFilter === 'ALL') ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Toutes (<%= summary.totalCards %>)
+                        </a>
+                        <a href="/admin/cards?type=PHYSIQUE" class="btn-sm <%= filters.typeFilter === 'PHYSIQUE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Physiques (<%= summary.physicalCount %>)
+                        </a>
+                        <a href="/admin/cards?type=VIRTUELLE" class="btn-sm <%= filters.typeFilter === 'VIRTUELLE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Virtuelles (<%= summary.virtualCount %>)
+                        </a>
+                        <a href="/admin/cards?status=OPPOSEE" class="btn-sm <%= filters.statusFilter === 'OPPOSEE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none; <%= filters.statusFilter !== 'OPPOSEE' && summary.opposedCount > 0 ? 'border-color: rgba(220, 38, 38, 0.4); color: #DC2626;' : '' %>">
+                            ⚠️ Opposition (<%= summary.opposedCount %>)
+                        </a>
+                        <a href="/admin/cards?status=BLOQUEE_TEMPORAIREMENT" class="btn-sm <%= filters.statusFilter === 'BLOQUEE_TEMPORAIREMENT' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Bloquées (<%= summary.blockedCount %>)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Tableau exhaustif des cartes bancaires -->
+                <div class="data-table-wrapper" style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Carte / Masque PAN</th>
+                                <th>Type de Carte</th>
+                                <th>Détail du Titulaire</th>
+                                <th>Compte & IBAN Rattaché</th>
+                                <th>Date d'Expiration</th>
+                                <th>Plafonds (Mois / Semaine)</th>
+                                <th>Statut de la Carte</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (cards && cards.length > 0) { %>
+                                <% cards.forEach(card => { %>
+                                    <tr class="card-row" data-type="<%= card.rawType %>" data-status="<%= card.rawStatus %>">
+                                        <!-- Masque PAN et ID Carte -->
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <div style="width: 32px; height: 22px; border-radius: 4px; background: <%= card.rawType === 'PHYSIQUE' ? 'linear-gradient(135deg, #2D253D, #171320)' : 'linear-gradient(135deg, #746B92, #9B8FB8)' %>; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 0.6rem; font-weight: 800;">
+                                                    <%= card.rawType === 'PHYSIQUE' ? 'CB' : 'VIR' %>
+                                                </div>
+                                                <div>
+                                                    <div style="font-family: monospace; font-size: 0.88rem; font-weight: 700; color: var(--text-main);">
+                                                        <%= card.panMasque %>
+                                                    </div>
+                                                    <span style="font-size: 0.7rem; color: var(--text-muted);">ID #<%= card.id %></span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <!-- Type de Carte (Critère 2) -->
+                                        <td>
+                                            <% if (card.rawType === 'PHYSIQUE') { %>
+                                                <span class="badge" style="background: rgba(45, 37, 61, 0.12); color: #2D253D; font-weight: 700; border: 1px solid rgba(45, 37, 61, 0.25);">
+                                                    💳 Physique
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge" style="background: rgba(116, 107, 146, 0.15); color: #746B92; font-weight: 700; border: 1px solid rgba(116, 107, 146, 0.3);">
+                                                    ⚡ Virtuelle
+                                                </span>
+                                            <% } %>
+                                        </td>
+
+                                        <!-- Détail du Titulaire (Critère 3) -->
+                                        <td>
+                                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">
+                                                <%= card.clientName %>
+                                            </div>
+                                            <div style="font-size: 0.74rem; color: var(--text-muted);">
+                                                <%= card.clientEmail %>
+                                            </div>
+                                            <span style="font-size: 0.68rem; background: rgba(116, 107, 146, 0.12); color: #746B92; font-weight: 700; padding: 1px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">
+                                                <%= card.clientId %>
+                                            </span>
+                                        </td>
+
+                                        <!-- Compte & IBAN Rattaché -->
+                                        <td>
+                                            <div style="font-weight: 600; font-size: 0.82rem; color: var(--text-main);">
+                                                <%= card.numeroCompte %>
+                                            </div>
+                                            <div style="font-family: monospace; font-size: 0.74rem; color: var(--text-muted);">
+                                                <%= card.iban %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Date d'Expiration (Critère 3) -->
+                                        <td>
+                                            <div style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: var(--text-main); letter-spacing: 0.05em;">
+                                                <%= card.dateExpiration %>
+                                            </div>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted);">Fin de mois</span>
+                                        </td>
+
+                                        <!-- Plafonds (Mois / Semaine) -->
+                                        <td>
+                                            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">
+                                                Paiement : <%= Number(card.plafondPaiement).toLocaleString('fr-FR') %> € / mois
+                                            </div>
+                                            <div style="font-size: 0.74rem; color: var(--text-muted);">
+                                                Retrait : <%= Number(card.plafondRetrait).toLocaleString('fr-FR') %> € / sem.
+                                            </div>
+                                        </td>
+
+                                        <!-- Statut de la Carte (Critère 1 : Active, Bloquée, En opposition) -->
+                                        <td>
+                                            <% if (card.rawStatus === 'ACTIVE') { %>
+                                                <span class="badge success" style="font-weight: 700; padding: 4px 8px;">
+                                                    <span class="badge-dot" style="background: #10B981;"></span>
+                                                    Active
+                                                </span>
+                                            <% } else if (card.rawStatus === 'BLOQUEE_TEMPORAIREMENT') { %>
+                                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700; padding: 4px 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                                    <span class="badge-dot" style="background: #F59E0B;"></span>
+                                                    Bloquée
+                                                </span>
+                                            <% } else if (card.rawStatus === 'OPPOSEE') { %>
+                                                <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700; padding: 4px 8px; border: 1px solid #FCA5A5;">
+                                                    <span class="badge-dot" style="background: #DC2626;"></span>
+                                                    En opposition
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge" style="background: #F3F4F6; color: #6B7280; font-weight: 600;">
+                                                    Expirée
+                                                </span>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                                        Aucune carte bancaire ne correspond aux critères sélectionnés.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Script simple pour la recherche instantanée (Style Junior clair) -->
+<script>
+    // Recherche instantanée dans le tableau des cartes bancaires
+    const inputRecherche = document.getElementById("cardSearchInput");
+    if (inputRecherche) {
+        inputRecherche.addEventListener("input", function() {
+            const texteRecherche = this.value.toLowerCase().trim();
+            const lignesCartes = document.querySelectorAll(".card-row");
+
+            lignesCartes.forEach(function(ligne) {
+                const contenu = ligne.textContent.toLowerCase();
+                if (contenu.includes(texteRecherche)) {
+                    ligne.style.display = "";
+                } else {
+                    ligne.style.display = "none";
+                }
+            });
+        });
+    }
+</script>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

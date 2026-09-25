@@ -1,5 +1,9 @@
 INSERT INTO utilisateurs (id, civilite, nom, prenom, email, mot_de_passe_hash, telephone, adresse_postale, role, email_verifie, conseiller_id)
 VALUES
+(1, 'M.', 'Admin', 'HosBank', 'admin@hosbank.fr', '$2b$10$XAyc7QZOw/tuEEA577TZmuwPCr8PeFz8dQwuDnzo7bEaWcSWK98Bu', '+33 1 00 00 00 00', '1 Place de la Banque, Paris', 'ADMINISTRATEUR', TRUE, NULL),
+(2, 'M.', 'Haddad', 'Aziz', 'conseiller@hosbank.fr', '$2b$10$XAyc7QZOw/tuEEA577TZmuwPCr8PeFz8dQwuDnzo7bEaWcSWK98Bu', '+33 6 12 34 56 78', '12 Avenue des Finances, Paris', 'CHARGE_CLIENT', TRUE, NULL),
+(3, 'M.', 'Moreau', 'Alexandre', 'alexandre.moreau@email.fr', '$2b$10$XAyc7QZOw/tuEEA577TZmuwPCr8PeFz8dQwuDnzo7bEaWcSWK98Bu', '+33 6 42 19 88 02', '14 Rue de la République, Paris', 'CLIENT', TRUE, 2),
+(4, 'Mme', 'Benali', 'Sophia', 'sophia.benali@outlook.com', '$2b$10$XAyc7QZOw/tuEEA577TZmuwPCr8PeFz8dQwuDnzo7bEaWcSWK98Bu', '+33 7 81 22 45 67', '28 Cours Franklin Roosevelt, Lyon', 'CLIENT', TRUE, 2)
 (1, 'M.', 'Admin', 'HosBank', 'admin@hosbank.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 1 00 00 00 00', '1 Place de la Banque, Paris', 'ADMINISTRATEUR', TRUE, NULL),
 (2, 'M.', 'Haddad', 'Aziz', 'conseiller@hosbank.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 6 12 34 56 78', '12 Avenue des Finances, Paris', 'CHARGE_CLIENT', TRUE, NULL),
 (3, 'M.', 'Moreau', 'Alexandre', 'alexandre.moreau@email.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 6 42 19 88 02', '14 Rue de la République, Paris', 'CLIENT', TRUE, NULL),

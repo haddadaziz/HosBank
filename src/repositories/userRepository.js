@@ -76,6 +76,7 @@ const userRepository = {
         return result.rows;
     },
 
+    // Récupérer la liste des chargés de clientèle actifs
     async getAdvisors() {
         const query = `
             SELECT id, civilite, nom, prenom, email, telephone
@@ -87,6 +88,7 @@ const userRepository = {
         return result.rows;
     },
 
+    // Affecter ou réaffecter un conseiller à un client (advisorId peut être null)
     async assignAdvisor(clientId, advisorId) {
         const query = `
             UPDATE utilisateurs
@@ -98,6 +100,7 @@ const userRepository = {
         return result.rows[0] || null;
     },
 
+    // Modifier le rôle d'un utilisateur (CLIENT, CHARGE_CLIENT, ADMINISTRATEUR)
     async updateRole(id, role) {
         const query = `
             UPDATE utilisateurs 

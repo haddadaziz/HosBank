@@ -2,17 +2,25 @@ const db = require("../config/db");
 
 const transactionRepository = {
     async findAll(limit = 100) {
-        const query = `
+        return this.findWithFilters({ limit });
+    },
+
+    // Recherche avec filtres par montant, date et comptes impliqués (Critère 1 & 2)
+    async findWithFilters(filters = {}) {
+        const { searchQuery, minAmount, maxAmount, dateStart, dateEnd, limit = 200 } = filters;
+
+        let query = `
             SELECT 
                 v.id,
                 v.reference_sepa AS "reference",
-                TO_CHAR(v.date_execution, 'YYYY-MM-DD HH24:MI') AS "date",
+                TO_CHAR(v.date_execution, 'YYYY-MM-DD HH24:MI:SS') AS "date",
                 (u.prenom || ' ' || u.nom) AS "sender",
                 c.iban AS "senderIban",
+                c.numero_compte AS "senderAccountNum",
                 COALESCE(b.intitule, 'Bénéficiaire Externe') AS "recipient",
                 COALESCE(b.iban, '-') AS "recipientIban",
                 'Virement SEPA' AS "type",
-                (-v.montant::float) AS "amount",
+                v.montant::float AS "amount",
                 v.motif,
                 CASE 
                     WHEN v.statut = 'VALIDE' THEN 'Validé'
@@ -24,17 +32,65 @@ const transactionRepository = {
                     ELSE FALSE 
                 END AS "flagged",
                 CASE 
-                    WHEN v.montant >= 5000.00 THEN 'Montant supérieur au seuil d''alerte (5 000 €)'
+                    WHEN v.montant >= 5000.00 THEN 'Seuil réglementaire dépassé (>= 5 000 €)'
                     ELSE ''
                 END AS "flagReason"
             FROM virements v
             JOIN comptes_bancaires c ON v.compte_emetteur_id = c.id
             JOIN utilisateurs u ON c.utilisateur_id = u.id
             LEFT JOIN beneficiaires b ON v.beneficiaire_id = b.id
-            ORDER BY v.date_execution DESC
-            LIMIT $1
+            WHERE 1=1
         `;
-        const result = await db.query(query, [limit]);
+
+        const params = [];
+        let paramIndex = 1;
+
+        // Filtre par comptes impliqués ou recherche textuelle
+        if (searchQuery && searchQuery.trim() !== '') {
+            query += ` AND (
+                v.reference_sepa ILIKE $${paramIndex} OR
+                (u.prenom || ' ' || u.nom) ILIKE $${paramIndex} OR
+                c.iban ILIKE $${paramIndex} OR
+                b.intitule ILIKE $${paramIndex} OR
+                b.iban ILIKE $${paramIndex} OR
+                v.motif ILIKE $${paramIndex}
+            )`;
+            params.push(`%${searchQuery.trim()}%`);
+            paramIndex++;
+        }
+
+        // Filtre par montant minimum
+        if (minAmount && !isNaN(minAmount)) {
+            query += ` AND v.montant >= $${paramIndex}`;
+            params.push(parseFloat(minAmount));
+            paramIndex++;
+        }
+
+        // Filtre par montant maximum
+        if (maxAmount && !isNaN(maxAmount)) {
+            query += ` AND v.montant <= $${paramIndex}`;
+            params.push(parseFloat(maxAmount));
+            paramIndex++;
+        }
+
+        // Filtre par date de début
+        if (dateStart) {
+            query += ` AND v.date_execution >= $${paramIndex}::timestamp`;
+            params.push(dateStart);
+            paramIndex++;
+        }
+
+        // Filtre par date de fin
+        if (dateEnd) {
+            query += ` AND v.date_execution <= ($${paramIndex}::date + INTERVAL '1 day')`;
+            params.push(dateEnd);
+            paramIndex++;
+        }
+
+        query += ` ORDER BY v.date_execution DESC LIMIT $${paramIndex}`;
+        params.push(limit);
+
+        const result = await db.query(query, params);
         return result.rows;
     },
 

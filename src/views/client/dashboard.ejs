@@ -46,6 +46,23 @@
         <!-- Sidebar unifiée HosBank -->
         <%- include('../partials/sidebar', { role: 'client' , currentPath: '/client/dashboard' , user: user }) %>
 
+            <!-- Contenu Principal (responsive mobile ml-0 et desktop lg:ml-[275px]) -->
+            <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 transition-all">
+
+                <!-- Mobile Top Bar (< lg screens) -->
+                <div class="lg:hidden flex items-center justify-between bg-white border border-gray-200/80 px-4 py-3 mb-6 rounded-2xl shadow-sm">
+                    <button type="button" class="mobile-menu-toggle p-2 text-hos-dark hover:bg-gray-100 rounded-xl" id="mobileMenuToggle" aria-label="Menu de navigation">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <img src="/images/logo-white.svg" alt="HosBank" class="h-6 w-auto" style="filter: brightness(0) saturate(100%) invert(14%) sepia(18%) saturate(1450%) hue-rotate(217deg) brightness(93%) contrast(92%);">
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-hos-dark text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                        <%= (user && user.name) ? user.name.split(' ').map(n=>n[0]).join('') : 'CL' %>
+                    </div>
+                </div>
             <!-- Contenu Principal (responsive mobile à part au-dessus, avec marge desktop) -->
             <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
 
@@ -155,6 +172,9 @@
                                             </div>
                                         </div>
 
+                                        <!-- IBAN avec copie en 1 clic -->
+                                        <div>
+                                            <span class="inline-flex items-center gap-2 font-mono text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-transparent hover:border-hos-primary cursor-pointer transition-all" onclick="copierIban(this, '<%= account.iban %>')"
                                         <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
                                             <!-- IBAN avec copie en 1 clic -->
                                             <span
@@ -171,6 +191,22 @@
                                             </span>
                                         </div>
                                     </div>
+                                    <% }) %>
+
+                                        <!-- CTA Demande d'ouverture de Livret Épargne (HOS-35) -->
+                                        <div class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/40 to-white border-2 border-dashed border-hos-primary/30 hover:border-hos-primary rounded-2xl p-6 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+                                            <div class="max-w-md">
+                                                <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 mb-2.5">
+                                                    Taux rémunéré à 3,00% / an
+                                                </span>
+                                                <h3 class="text-base font-extrabold text-hos-dark mb-1">Livret d'Épargne HosBank
+                                                </h3>
+                                                <p class="text-xs text-gray-600 leading-relaxed">
+                                                    Faites fructifier vos liquidités en toute sécurité. 0€ de frais de gestion, retraits libres et capital garanti par le FGDR.
+                                                </p>
+                                            </div>
+                                            <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
+                                                <button type="button" onclick="ouvrirModaleEpargne()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
                                 <% }) %>
 
                                 <% if (!hasSavingsAccount) { %>
@@ -438,6 +474,7 @@
         <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] my-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-extrabold text-hos-dark">Ouvrir un Livret Épargne</h3>
+                <button type="button" onclick="fermerModaleEpargne()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
                 <button type="button" onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
             </div>
 
@@ -449,6 +486,12 @@
                 <% } %>
             </p>
 
+            <form onsubmit="soumettreDemandeEpargne(event)">
+                <div id="savingsFormBody">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité (€)</label>
+                        <input type="number" min="10" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
+                        <span class="text-[11px] text-gray-400 mt-1 block">Débité immédiatement depuis votre Compte Courant.</span>
             <form id="savingsDemandForm" onsubmit="handleSavingsSubmit(event)">
                 <div id="savingsFormBody">
                     <div class="mb-4">
@@ -471,6 +514,7 @@
                     <div id="savingsError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
 
                     <div class="flex items-center justify-end gap-3 mt-6">
+                        <button type="button" onclick="fermerModaleEpargne()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                         <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                             Annuler
                         </button>
@@ -493,6 +537,7 @@
                     <p id="savingsSuccessMsg" class="text-xs text-gray-500 mb-5 leading-relaxed">
                         <!-- Rempli dynamiquement avec la référence et le conseiller réel -->
                     </p>
+                    <button type="button" onclick="fermerModaleEpargne()" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
                     <button type="button" onclick="closeSavingsModal(); window.location.reload();" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
                         Fermer
                     </button>
@@ -501,6 +546,46 @@
         </div>
     </div>
 
+    <!-- Script simple et commenté - Style Développeur Junior -->
+    <script>
+        // 1. Copier l'IBAN dans le presse-papier en 1 clic
+        function copierIban(element, iban) {
+            navigator.clipboard.writeText(iban);
+            element.classList.add('border-emerald-500', 'text-emerald-700');
+            setTimeout(function() {
+                element.classList.remove('border-emerald-500', 'text-emerald-700');
+            }, 1500);
+        }
+
+        // 2. Ouvrir la modale d'épargne
+        function ouvrirModaleEpargne() {
+            const modal = document.getElementById('savingsModal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        // 3. Fermer la modale d'épargne et réinitialiser son affichage
+        function fermerModaleEpargne() {
+            const modal = document.getElementById('savingsModal');
+            const formBody = document.getElementById('savingsFormBody');
+            const successMsg = document.getElementById('savingsSuccess');
+
+            if (modal) modal.classList.add('hidden');
+            if (formBody) formBody.classList.remove('hidden');
+            if (successMsg) successMsg.classList.add('hidden');
+        }
+
+        // 4. Soumettre la demande de livret d'épargne
+        function soumettreDemandeEpargne(event) {
+            event.preventDefault();
+            const formBody = document.getElementById('savingsFormBody');
+            const successMsg = document.getElementById('savingsSuccess');
+
+            if (formBody) formBody.classList.add('hidden');
+            if (successMsg) successMsg.classList.remove('hidden');
+        }
+    </script>
+
+    <script src="/js/admin.js"></script>
     <!-- Modale d'Information : Conseiller requis (HOS-Security) -->
     <div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">

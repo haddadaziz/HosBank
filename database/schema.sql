@@ -180,3 +180,10 @@ CREATE TABLE IF NOT EXISTS journal_audit (
     adresse_ip VARCHAR(45),
     date_action TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Index d'optimisation des performances pour la consultation des soldes et comptes
+CREATE INDEX IF NOT EXISTS idx_comptes_utilisateur ON comptes_bancaires(utilisateur_id, statut);
+CREATE INDEX IF NOT EXISTS idx_cartes_compte ON cartes_bancaires(compte_id);
+CREATE INDEX IF NOT EXISTS idx_operations_compte_date ON operations(compte_id, date_operation DESC);
+CREATE INDEX IF NOT EXISTS idx_beneficiaires_utilisateur ON beneficiaires(utilisateur_id);
+

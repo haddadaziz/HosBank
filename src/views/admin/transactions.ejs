@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,96 +13,264 @@
 <body>
 
 <div class="admin-layout">
+    <!-- Barre latérale unifiée HosBank -->
     <%- include('../partials/sidebar') %>
 
     <div class="admin-main">
+        <!-- Barre supérieure admin -->
         <%- include('../partials/topbar') %>
 
         <main class="admin-content">
-            <div class="page-header">
+            <!-- En-tête de la page -->
+            <div class="page-header" style="flex-wrap: wrap; gap: 16px;">
                 <div>
-                    <h1 class="page-title">Surveillance des Flux & Transactions</h1>
-                    <p class="page-subtitle">Contrôle en temps réel des virements SEPA, internationaux et détection anti-fraude</p>
+                    <h1 class="page-title">Audit des Virements & Flux Financiers</h1>
+                    <p class="page-subtitle">Journal d'audit centralisé de tous les virements, détection des anomalies et archivage réglementaire</p>
+                </div>
+
+                <!-- Bouton Exportation CSV (Critère 3) -->
+                <div>
+                    <a 
+                        href="/admin/transactions/export?q=<%= encodeURIComponent(filters.searchQuery || '') %>&minAmount=<%= encodeURIComponent(filters.minAmount || '') %>&maxAmount=<%= encodeURIComponent(filters.maxAmount || '') %>&dateStart=<%= encodeURIComponent(filters.dateStart || '') %>&dateEnd=<%= encodeURIComponent(filters.dateEnd || '') %>" 
+                        class="btn-primary" 
+                        style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; font-weight: 700;"
+                    >
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Exporter les Flux (CSV)
+                    </a>
                 </div>
             </div>
 
-            <!-- Liste des transactions -->
+            <!-- Cartes statistiques globales d'audit -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <!-- Total des virements enregistrés -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Total Virements Audités</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><%= summary.totalCount %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Flux enregistrés en base</div>
+                </div>
+
+                <!-- Volume financier global -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Volume Financier Total</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #746B92;">
+                        <%= Number(summary.totalVolume).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Montant cumulé audité</div>
+                </div>
+
+                <!-- Flux avec alerte réglementaire (> 5 000 €) -->
+                <div class="card" style="padding: 18px 20px; border-left: 4px solid <%= summary.flaggedCount > 0 ? '#E97A7A' : '#10B981' %>;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Alertes Réglementaires</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: <%= summary.flaggedCount > 0 ? '#E97A7A' : '#10B981' %>;">
+                        <%= summary.flaggedCount %>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; font-weight: 600;">
+                        <%= summary.flaggedCount > 0 ? 'Virements >= 5 000 € à surveiller' : 'Aucune anomalie détectée' %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de filtres par montant, date et comptes (Critère 2) -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-header" style="border-bottom: 1px solid var(--border-ui, #EFECE6); padding: 14px 20px;">
+                    <span class="card-title" style="font-size: 0.95rem;">Filtres de Contrôle Financier</span>
+                </div>
+                <div style="padding: 18px 20px;">
+                    <form action="/admin/transactions" method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: flex-end;">
+                        <!-- Comptes impliqués ou Recherche -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Comptes impliqués / IBAN / Réf</label>
+                            <input 
+                                type="text" 
+                                name="q" 
+                                value="<%= filters.searchQuery || '' %>" 
+                                placeholder="IBAN, nom ou référence..." 
+                                style="width: 100%; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none;"
+                            >
+                        </div>
+
+                        <!-- Date début -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Date de début</label>
+                            <input 
+                                type="date" 
+                                name="dateStart" 
+                                value="<%= filters.dateStart || '' %>" 
+                                style="width: 100%; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none;"
+                            >
+                        </div>
+
+                        <!-- Date fin -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Date de fin</label>
+                            <input 
+                                type="date" 
+                                name="dateEnd" 
+                                value="<%= filters.dateEnd || '' %>" 
+                                style="width: 100%; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none;"
+                            >
+                        </div>
+
+                        <!-- Montant minimum -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Montant Min (€)</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                name="minAmount" 
+                                value="<%= filters.minAmount || '' %>" 
+                                placeholder="Ex: 100" 
+                                style="width: 100%; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none;"
+                            >
+                        </div>
+
+                        <!-- Montant maximum -->
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Montant Max (€)</label>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                name="maxAmount" 
+                                value="<%= filters.maxAmount || '' %>" 
+                                placeholder="Ex: 5000" 
+                                style="width: 100%; padding: 8px 12px; font-size: 0.85rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none;"
+                            >
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="btn-primary" style="flex: 1; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
+                                Filtrer
+                            </button>
+                            <% if (filters.searchQuery || filters.minAmount || filters.maxAmount || filters.dateStart || filters.dateEnd) { %>
+                                <a href="/admin/transactions" class="btn-secondary" style="padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; text-decoration: none; text-align: center;">
+                                    Effacer
+                                </a>
+                            <% } %>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tableau d'audit complet de tous les virements (Critère 1) -->
             <div class="card">
-                <div class="card-header">
-                    <div style="display: flex; align-items: center; gap: 14px;">
-                        <span class="card-title">Journal des Opérations Récentes</span>
-                        <span class="badge purple"><%= transactions.length %> flux enregistrés</span>
+                <div class="card-header" style="flex-wrap: wrap; gap: 14px; padding: 18px 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span class="card-title" style="font-size: 1.05rem;">Journal Centralisé des Virements</span>
+                        <span class="badge purple" style="font-size: 0.8rem;"><%= transactions.length %> virement(s) répertorié(s)</span>
                     </div>
                 </div>
 
-                <div class="data-table-wrapper">
+                <div class="data-table-wrapper" style="overflow-x: auto;">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Référence / Date</th>
-                                <th>Émetteur</th>
-                                <th>Bénéficiaire</th>
+                                <th>Référence SEPA</th>
+                                <th>Horodatage</th>
+                                <th>Émetteur (Compte Source)</th>
+                                <th>Destinataire (Bénéficiaire)</th>
                                 <th>Type de Flux</th>
                                 <th>Montant</th>
-                                <th>Statut / Alerte</th>
-                                <th style="text-align: right;">Action Arbitrage</th>
+                                <th>Motif</th>
+                                <th>Statut & Alerte</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <% transactions.forEach(tx => { %>
-                                <tr style="<%= tx.flagged ? 'background-color: #FFFDF5;' : '' %>">
-                                    <td>
-                                        <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);"><%= tx.reference %></div>
-                                        <div style="font-size: 0.76rem; color: var(--text-muted);"><%= tx.date %></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 600;"><%= tx.sender %></div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);"><%= tx.senderIban %></div>
-                                    </td>
-                                    <td>
-                                        <div style="font-weight: 500;"><%= tx.recipient %></div>
-                                    </td>
-                                    <td>
-                                        <span class="badge" style="background: var(--primary-light); color: var(--primary); font-weight: 600;">
-                                            <%= tx.type %>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span style="font-weight: 800; font-size: 0.98rem; color: <%= tx.amount < 0 ? 'var(--text-main)' : 'var(--status-success)' %>;">
-                                            <%= tx.amount > 0 ? '+' : '' %><%= tx.amount.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <% if (tx.status === 'Validé') { %>
-                                            <span class="badge success"><span class="badge-dot"></span> Validé</span>
-                                        <% } else if (tx.status === 'En attente') { %>
-                                            <span class="badge warning"><span class="badge-dot"></span> En attente</span>
-                                        <% } else { %>
-                                            <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
-                                        <% } %>
+                            <% if (transactions && transactions.length > 0) { %>
+                                <% transactions.forEach(tx => { %>
+                                    <tr style="<%= tx.flagged ? 'background-color: rgba(233, 122, 122, 0.04);' : '' %>">
+                                        <!-- Référence SEPA -->
+                                        <td>
+                                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.85rem; font-family: monospace;">
+                                                <%= tx.reference %>
+                                            </div>
+                                        </td>
 
-                                        <% if (tx.flagged) { %>
-                                            <div style="margin-top: 4px; font-size: 0.74rem; color: var(--accent-coral); font-weight: 600; display: flex; align-items: center; gap: 4px;">
-                                                ⚠️ <%= tx.flagReason %>
+                                        <!-- Horodatage précis (date + heure + secondes) -->
+                                        <td>
+                                            <div style="font-weight: 600; font-size: 0.82rem; color: var(--text-main); font-family: monospace;">
+                                                <%= tx.date %>
                                             </div>
-                                        <% } %>
-                                    </td>
-                                    <td style="text-align: right;">
-                                        <% if (tx.status === 'En attente' || tx.flagged) { %>
-                                            <div style="display: flex; justify-content: flex-end; gap: 6px;">
-                                                <form action="/admin/transactions/<%= tx.id %>/approve" method="POST" style="display: inline-block;">
-                                                    <button type="submit" class="btn-sm btn-success-sm" data-confirm="Valider définitivement ce virement ?">Approuver</button>
-                                                </form>
-                                                <form action="/admin/transactions/<%= tx.id %>/reject" method="POST" style="display: inline-block;">
-                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Rejeter et geler ce virement ?">Rejeter</button>
-                                                </form>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted);">Horodatage UTC/Paris</span>
+                                        </td>
+
+                                        <!-- Émetteur -->
+                                        <td>
+                                            <div style="font-weight: 700; font-size: 0.86rem; color: var(--text-main);">
+                                                <%= tx.sender %>
                                             </div>
-                                        <% } else { %>
-                                            <span style="color: var(--text-muted); font-size: 0.8rem;">Traité</span>
-                                        <% } %>
+                                            <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-muted);">
+                                                <%= tx.senderIban %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Destinataire -->
+                                        <td>
+                                            <div style="font-weight: 700; font-size: 0.86rem; color: var(--text-main);">
+                                                <%= tx.recipient %>
+                                            </div>
+                                            <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-muted);">
+                                                <%= tx.recipientIban %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Type de Flux -->
+                                        <td>
+                                            <span class="badge" style="background: rgba(116, 107, 146, 0.15); color: #534B70; font-weight: 700;">
+                                                <%= tx.type %>
+                                            </span>
+                                        </td>
+
+                                        <!-- Montant -->
+                                        <td>
+                                            <div style="font-weight: 800; font-size: 0.98rem; color: var(--text-main);">
+                                                <%= Number(tx.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
+                                            </div>
+                                        </td>
+
+                                        <!-- Motif -->
+                                        <td>
+                                            <div style="font-size: 0.82rem; color: var(--text-muted); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<%= tx.motif %>">
+                                                <%= tx.motif || 'Aucun motif' %>
+                                            </div>
+                                        </td>
+
+                                        <!-- Statut & Alerte Réglementaire -->
+                                        <td>
+                                            <% if (tx.status === 'Validé') { %>
+                                                <span class="badge success">
+                                                    <span class="badge-dot"></span> Validé
+                                                </span>
+                                            <% } else if (tx.status === 'En attente') { %>
+                                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700;">
+                                                    <span class="badge-dot" style="background: #F59E0B;"></span> En attente
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge danger">
+                                                    <span class="badge-dot"></span> Rejeté
+                                                </span>
+                                            <% } %>
+
+                                            <% if (tx.flagged) { %>
+                                                <div style="margin-top: 4px;">
+                                                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; color: #DC2626; background: #FEE2E2; padding: 2px 6px; border-radius: 4px; border: 1px solid #FCA5A5;">
+                                                        ⚠️ Seuil >= 5 000 €
+                                                    </span>
+                                                </div>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                                        Aucun virement ne correspond aux filtres appliqués.
                                     </td>
                                 </tr>
-                            <% }) %>
+                            <% } %>
                         </tbody>
                     </table>
                 </div>
