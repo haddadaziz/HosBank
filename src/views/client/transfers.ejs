@@ -42,12 +42,12 @@
 </head>
 <body class="font-sans text-gray-900 bg-[#FAF9F7] min-h-screen antialiased">
 
-<div class="flex min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
     <!-- Sidebar unifiée multi-rôles -->
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transfers', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0 transition-all">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0 transition-all">
         
         <!-- En-tête de page -->
         <!-- Bannières de Feedback Utilisateur -->
@@ -197,10 +197,10 @@
                                                 data-balance="<%= acc.balance %>" 
                                                 data-overdraft="<%= acc.overdraft || 0 %>"
                                                 data-iban="<%= acc.iban %>"
-                                                data-number="<%= acc.accountNumber %>"
+                                                data-number="<%= (acc.accountNumber || '').replace(/^CPT-/, '') %>"
                                                 data-type="<%= acc.type === 'COURANT' ? 'Compte Courant Principal' : 'Compte Épargne' %>"
                                                 <%= idx === 0 ? 'selected' : '' %>>
-                                            <%= acc.type === 'COURANT' ? 'Compte Courant' : 'Compte Épargne' %> (<%= acc.accountNumber %>) - Solde : <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                            <%= acc.type === 'COURANT' ? 'Compte Courant' : 'Compte Épargne' %> (<%= (acc.accountNumber || '').replace(/^CPT-/, '') %>) - Solde : <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
                                         </option>
                                     <% }) %>
                                 </select>

@@ -2,17 +2,17 @@ INSERT INTO utilisateurs (id, civilite, nom, prenom, email, mot_de_passe_hash, t
 VALUES
 (1, 'M.', 'Admin', 'HosBank', 'admin@hosbank.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 1 00 00 00 00', '1 Place de la Banque, Paris', 'ADMINISTRATEUR', TRUE, NULL),
 (2, 'M.', 'Haddad', 'Aziz', 'conseiller@hosbank.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 6 12 34 56 78', '12 Avenue des Finances, Paris', 'CHARGE_CLIENT', TRUE, NULL),
-(3, 'M.', 'Moreau', 'Alexandre', 'alexandre.moreau@email.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 6 42 19 88 02', '14 Rue de la République, Paris', 'CLIENT', TRUE, 2),
-(4, 'Mme', 'Benali', 'Sophia', 'sophia.benali@outlook.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 7 81 22 45 67', '28 Cours Franklin Roosevelt, Lyon', 'CLIENT', TRUE, 2)
+(3, 'M.', 'Moreau', 'Alexandre', 'alexandre.moreau@email.fr', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 6 42 19 88 02', '14 Rue de la République, Paris', 'CLIENT', TRUE, NULL),
+(4, 'Mme', 'Benali', 'Sophia', 'sophia.benali@outlook.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoOhi5k5o1/mZ0fUvO2q6l3n.Z1jYnLrqy', '+33 7 81 22 45 67', '28 Cours Franklin Roosevelt, Lyon', 'CLIENT', TRUE, NULL)
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('utilisateurs_id_seq', (SELECT MAX(id) FROM utilisateurs));
 
 INSERT INTO comptes_bancaires (id, utilisateur_id, numero_compte, iban, bic, devise, type_compte, solde, decouvert_autorise, taux_interet, statut)
 VALUES
-(1, 3, 'CPT-00109281', 'FR76 3000 4012 3456 7890 1234 567', 'HOSBFR2P', 'EUR', 'COURANT', 14850.75, 500.00, 0.00, 'ACTIF'),
-(2, 3, 'CPT-00109282', 'FR76 3000 4012 3456 7890 9876 543', 'HOSBFR2P', 'EUR', 'EPARGNE', 10000.00, 0.00, 3.00, 'ACTIF'),
-(3, 4, 'CPT-00201948', 'FR76 3000 4012 9988 7766 5544 332', 'HOSBFR2P', 'EUR', 'COURANT', 62400.00, 1500.00, 0.00, 'ACTIF')
+(1, 3, '00109281', 'FR76 3000 4012 3456 7890 1234 567', 'HOSBFR2P', 'EUR', 'COURANT', 14850.75, 500.00, 0.00, 'ACTIF'),
+(2, 3, '00109282', 'FR76 3000 4012 3456 7890 9876 543', 'HOSBFR2P', 'EUR', 'EPARGNE', 10000.00, 0.00, 3.00, 'ACTIF'),
+(3, 4, '00201948', 'FR76 3000 4012 9988 7766 5544 332', 'HOSBFR2P', 'EUR', 'COURANT', 62400.00, 1500.00, 0.00, 'ACTIF')
 ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('comptes_bancaires_id_seq', (SELECT MAX(id) FROM comptes_bancaires));
@@ -47,20 +47,7 @@ ON CONFLICT (id) DO NOTHING;
 
 SELECT setval('operations_id_seq', (SELECT MAX(id) FROM operations));
 
-INSERT INTO demandes (id, utilisateur_id, reference, type_demande, statut, payload_json, motif_rejet, reponse_conseiller)
-VALUES
-(1, 3, 'DEM-2026-001', 'CARTE_VIRTUELLE', 'EN_ATTENTE', '{"type": "E-Commerce", "plafond": 500}', NULL, NULL),
-(2, 4, 'DEM-2026-002', 'OUVERTURE_EPARGNE', 'APPROUVEE', '{"depot_initial": 1000}', NULL, 'Livret d''épargne ouvert avec succès.')
-ON CONFLICT (id) DO NOTHING;
-
-SELECT setval('demandes_id_seq', (SELECT MAX(id) FROM demandes));
-
-INSERT INTO reclamations (id, utilisateur_id, reference, sujet, description, priorite, statut, reponse_conseiller)
-VALUES
-(1, 3, 'REC-2026-001', 'Frais bancaires non reconnus', 'Prélèvement de 12 EUR sans justification apparente.', 'MOYENNE', 'OUVERTE', NULL)
-ON CONFLICT (id) DO NOTHING;
-
-SELECT setval('reclamations_id_seq', (SELECT MAX(id) FROM reclamations));
+-- Tables demandes et reclamations initialisées vides pour le workflow réel
 
 INSERT INTO journal_audit (id, utilisateur_id, action, entite_cible, id_entite_cible, ancienne_valeur, nouvelle_valeur, adresse_ip)
 VALUES

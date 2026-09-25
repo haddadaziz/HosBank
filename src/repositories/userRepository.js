@@ -180,7 +180,7 @@ const userRepository = {
     },
 
     async createDefaultAccount(userId) {
-        const numCompte = 'CPT-' + Math.floor(10000000 + Math.random() * 90000000);
+        const numCompte = String(Math.floor(10000000 + Math.random() * 90000000));
         const iban = 'FR76 3000 4012 ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000) + ' 123';
         
         const query = `

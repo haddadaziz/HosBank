@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-num { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#282330] min-h-screen antialiased">
+
+    <div class="min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar unifiée HosBank pour Conseiller -->
+        <%- include('../partials/sidebar', { role: 'advisor', currentPath: '/advisor/demands', user: advisor, metrics: metrics }) %>
+
+        <!-- Contenu Principal -->
+        <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 space-y-6">
+
+            <!-- En-tête de page -->
+            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#282330] tracking-tight">Demandes Bancaires</h1>
+                    <p class="text-sm text-[#7A6F82] mt-1">Validation et gestion des demandes clients en temps réel</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="filterDemands('ALL')" class="demand-filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] text-white shadow-xs transition-colors">
+                        Toutes (<%= demands.length %>)
+                    </button>
+                    <button onclick="filterDemands('Opposition Carte')" class="demand-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB] transition-colors">
+                        Oppositions
+                    </button>
+                    <button onclick="filterDemands('Compte d\'Épargne')" class="demand-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB] transition-colors">
+                        Épargne
+                    </button>
+                    <button onclick="filterDemands('Carte Virtuelle')" class="demand-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB] transition-colors">
+                        Carte Virtuelle
+                    </button>
+                    <button onclick="filterDemands('Demande de RIB')" class="demand-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB] transition-colors">
+                        RIB
+                    </button>
+                    <button onclick="filterDemands('Recalcul PIN')" class="demand-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB] transition-colors">
+                        PIN
+                    </button>
+                </div>
+            </header>
+
+            <!-- Notifications -->
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>✅ La décision a été enregistrée et communiquée au client.</span>
+                </div>
+            <% } %>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>⚠️ <%= error %></span>
+                </div>
+            <% } %>
+
+            <!-- Grille des demandes -->
+            <div class="bg-white border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
+                <% if (demands.length === 0) { %>
+                    <div class="py-16 px-4 text-center bg-[#FAF5ED]/50 rounded-2xl border border-dashed border-[#D8CEBB]">
+                        <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center border border-[#D8CEBB]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <h3 class="text-sm font-bold text-[#282330]">Aucune demande bancaire</h3>
+                        <p class="text-xs text-[#7A6F82] mt-1 max-w-sm mx-auto">Vous n'avez aucune demande bancaire enregistrée pour le moment.</p>
+                    </div>
+                <% } else { %>
+                    <div id="demandsCardsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        <% demands.forEach(d => { %>
+                            <div class="bg-[#FAF5ED] border border-[#D8CEBB] hover:border-[#746B92] rounded-2xl p-5 space-y-4 demand-row shadow-xs transition-all duration-200 flex flex-col justify-between group" data-type="<%= d.type %>">
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-mono text-xs font-bold text-[#746B92] bg-[#EFE7D4] px-2.5 py-1 rounded-lg"><%= d.id %></span>
+                                            <% if (d.priority === 'URGENT') { %>
+                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E97A7A] text-white">URGENT</span>
+                                            <% } %>
+                                        </div>
+                                        <div>
+                                            <% if (d.status === 'En attente' || d.status === 'En instruction') { %>
+                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
+                                                    <%= d.status %>
+                                                </span>
+                                            <% } else if (d.status === 'Validée') { %>
+                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                                                    Validée
+                                                </span>
+                                            <% } else { %>
+                                                <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800">
+                                                    Rejetée
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="font-bold text-sm text-[#282330] group-hover:text-[#746B92] transition-colors"><%= d.type %></h4>
+                                        <div class="flex items-center justify-between mt-1 text-xs text-[#7A6F82]">
+                                            <span>Client : <strong class="text-[#282330] font-semibold"><%= d.clientName %></strong></span>
+                                            <span class="text-[11px] font-mono text-[#9D937F]"><%= d.date %></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white p-3 rounded-xl border border-[#D8CEBB]/80 text-[#282330] text-xs leading-relaxed shadow-2xs">
+                                        <span class="text-[10px] font-bold text-[#9D937F] uppercase tracking-wider block mb-1">Détails de la demande</span>
+                                        <p class="text-[#282330] line-clamp-3"><%= d.details %></p>
+                                    </div>
+
+                                    <% if (d.comment) { %>
+                                        <div class="text-[11px] text-[#7A6F82] bg-[#FAF0EE] p-2.5 rounded-lg border border-[#E97A7A]/30">
+                                            <span class="font-bold text-[#282330]">Dernière note :</span> <%= d.comment %>
+                                        </div>
+                                    <% } %>
+                                </div>
+
+                                <div class="pt-3 border-t border-[#D8CEBB] flex items-center justify-between">
+                                    <span class="text-[10px] text-[#9D937F]">Réf : <%= d.id %></span>
+                                    <button 
+                                        type="button"
+                                        class="btn-open-demand px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                        data-id="<%= d.dbId || d.id %>"
+                                        data-type="<%= d.type %>"
+                                        data-client="<%= d.clientName %>"
+                                        data-details="<%= d.details %>"
+                                    >
+                                        <span>Traiter</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Traitement Demande -->
+    <div id="demandModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl max-w-lg w-full p-6 shadow-xl relative animate-fade">
+            <button onclick="closeDemandModal()" class="absolute top-4 right-4 text-[#7A6F82] hover:text-[#282330] p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <h3 class="text-base font-bold text-[#282330]" id="modalDemandTitle">Traiter la demande</h3>
+            <p class="text-xs text-[#7A6F82] mt-0.5" id="modalDemandClient">Client : </p>
+
+            <div class="my-4 p-3.5 bg-[#FAF5ED] rounded-xl border border-[#D8CEBB] text-xs text-[#282330]">
+                <span class="font-semibold text-[#746B92]">Objet / Contenu de la demande :</span>
+                <p id="modalDemandDetails" class="mt-1 font-normal leading-relaxed"></p>
+            </div>
+
+            <form action="/advisor/demand/update" method="POST" class="space-y-4">
+                <input type="hidden" name="demandId" id="modalDemandId">
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#282330] mb-1.5">Statut de la demande</label>
+                    <select name="newStatus" id="modalDemandStatus" class="w-full bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl px-3 py-2 text-xs text-[#282330] focus:outline-none focus:border-[#746B92]">
+                        <option value="Validée">Valider la demande (Accepter)</option>
+                        <option value="Rejetée">Rejeter la demande (Refuser)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#282330] mb-1.5">Commentaire / Réponse transmise au client</label>
+                    <textarea 
+                        name="advisorComment" 
+                        id="modalDemandComment" 
+                        rows="3" 
+                        placeholder="Ex: Demande validée avec succès. Les informations ont été mises à jour dans votre espace."
+                        class="w-full bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl p-3 text-xs text-[#282330] placeholder-[#9D937F] focus:outline-none focus:border-[#746B92]"
+                    ></textarea>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeDemandModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-[#7A6F82] hover:bg-[#FAF5ED] transition-colors">
+                        Annuler
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-sm transition-colors">
+                        Enregistrer la décision
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function filterDemands(type) {
+            document.querySelectorAll('.demand-filter-btn').forEach(b => {
+                b.classList.remove('bg-[#746B92]', 'text-white', 'shadow-xs');
+                b.classList.add('bg-white', 'text-[#7A6F82]');
+            });
+            event.target.classList.remove('bg-white', 'text-[#7A6F82]');
+            event.target.classList.add('bg-[#746B92]', 'text-white', 'shadow-xs');
+
+            const rows = document.querySelectorAll('.demand-row');
+            rows.forEach(r => {
+                if (type === 'ALL' || r.getAttribute('data-type') === type) {
+                    r.style.display = 'flex';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
+        function openDemandModal(id, type, clientName, details) {
+            document.getElementById('modalDemandId').value = id;
+            document.getElementById('modalDemandTitle').textContent = 'Traiter la demande : ' + type;
+            document.getElementById('modalDemandClient').textContent = 'Client : ' + clientName;
+            document.getElementById('modalDemandDetails').textContent = details;
+            document.getElementById('demandModal').classList.remove('hidden');
+        }
+
+        function closeDemandModal() {
+            document.getElementById('demandModal').classList.add('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.btn-open-demand').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    openDemandModal(
+                        btn.dataset.id,
+                        btn.dataset.type,
+                        btn.dataset.client,
+                        btn.dataset.details
+                    );
+                });
+            });
+        });
+    </script>
+</body>
+</html>

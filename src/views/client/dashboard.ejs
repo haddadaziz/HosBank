@@ -42,12 +42,12 @@
 
 <body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
 
-    <div class="flex min-h-screen">
+    <div class="min-h-screen flex flex-col lg:flex-row">
         <!-- Sidebar unifiée HosBank -->
         <%- include('../partials/sidebar', { role: 'client' , currentPath: '/client/dashboard' , user: user }) %>
 
-            <!-- Contenu Principal (responsive mobile sans décalage, avec marge desktop) -->
-            <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
+            <!-- Contenu Principal (responsive mobile à part au-dessus, avec marge desktop) -->
+            <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
 
                 <!-- En-tête Client -->
                 <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -169,15 +169,6 @@
                                                 </svg>
                                                 <%= account.iban %>
                                             </span>
-
-                                            <!-- Lien vers consultation détaillée (HOS-19) -->
-                                            <a href="/client/accounts/<%= account.id %>"
-                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-hos-primary hover:text-hos-dark bg-[#F6EFE0]/60 hover:bg-[#F6EFE0] px-3.5 py-1.5 rounded-lg transition-all">
-                                                <span>Détails & Relevé</span>
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </a>
                                         </div>
                                     </div>
                                 <% }) %>
@@ -199,16 +190,28 @@
                                             </p>
                                         </div>
                                         <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
-                                            <button type="button"
-                                                onclick="document.getElementById('savingsModal').classList.remove('hidden')"
-                                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                                                Demander l'ouverture
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                                </svg>
-                                            </button>
+                                            <% if (typeof advisor !== 'undefined' && advisor) { %>
+                                                <button type="button"
+                                                    onclick="openSavingsModal()"
+                                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                                                    Demander l'ouverture
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                    </svg>
+                                                </button>
+                                            <% } else { %>
+                                                <button type="button"
+                                                    onclick="openNoAdvisorModal('livret')"
+                                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer"
+                                                    title="Un conseiller attitré est requis pour ouvrir un livret">
+                                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                                    </svg>
+                                                    Conseiller requis
+                                                </button>
+                                            <% } %>
                                         </div>
                                     </div>
                                 <% } %>
@@ -262,7 +265,7 @@
                         <div class="lg:col-span-4 space-y-8">
 
                             <!-- Widget Carte Bancaire Réaliste 3D (Design HosBank Officiel) -->
-                            <div>
+                            <div class="max-w-[340px] sm:max-w-[370px] lg:max-w-none mx-auto lg:mx-0">
                                 <div class="flex items-center justify-between mb-4">
                                     <h2 class="text-lg font-bold text-hos-dark">Carte Principale</h2>
                                     <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer mes cartes →</a>
@@ -333,14 +336,14 @@
                                             <button type="button" 
                                                     onclick="toggleRevealPanDash('<%= cardPan %>')" 
                                                     title="Afficher / Masquer les numéros"
-                                                    class="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none cursor-pointer">
+                                                    class="p-1 sm:p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none cursor-pointer">
                                                 <!-- Œil Ouvert -->
-                                                <svg id="eye-open-dash" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg id="eye-open-dash" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                 </svg>
                                                 <!-- Œil Barré -->
-                                                <svg id="eye-closed-dash" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg id="eye-closed-dash" class="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
                                                 </svg>
                                             </button>
@@ -361,8 +364,8 @@
                                     </div>
 
                                     <!-- Lien rapide de gestion -->
-                                    <div class="mt-4">
-                                        <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2.5 px-3 rounded-xl transition-all border border-gray-200 shadow-sm hover:border-hos-primary">
+                                    <div class="mt-3 sm:mt-4">
+                                        <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2 sm:py-2.5 px-3 rounded-xl transition-all border border-gray-200 shadow-sm hover:border-hos-primary">
                                             <svg class="w-3.5 h-3.5 text-hos-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                             Gérer ma carte
                                         </a>
@@ -431,18 +434,18 @@
     </div>
 
     <!-- Modale Interactive de Demande de Livret Épargne (HOS-35) -->
-    <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+    <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] my-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-extrabold text-hos-dark">Ouvrir un Livret Épargne</h3>
-                <button onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+                <button type="button" onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
             </div>
 
             <p class="text-xs text-gray-500 mb-6 leading-relaxed">
                 <% if (typeof advisor !== 'undefined' && advisor) { %>
                     Votre demande sera directement instruite et validée par votre conseiller <strong><%= advisor.name %></strong> sous 24h ouvrées.
                 <% } else { %>
-                    Votre demande sera directement transmise au pôle gestion HosBank et instruite par un conseiller sous 24h ouvrées dès son affectation.
+                    Votre demande nécessite la validation préalable d'un conseiller bancaire attitré.
                 <% } %>
             </p>
 
@@ -453,7 +456,7 @@
                         <select name="sourceAccountId" id="savingsSourceAccount" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-semibold bg-white">
                             <% (accounts || []).forEach(acc => { %>
                                 <option value="<%= acc.id %>">
-                                    N° : <%= (acc.accountNumber || '').replace(/^CPT-/, '') %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>) - Solde : <%= Number(acc.balance).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                    N° : <%= (acc.accountNumber || '').replace(/^CPT-/, '') %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>)
                                 </option>
                             <% }) %>
                         </select>
@@ -465,20 +468,21 @@
                         <span class="text-[11px] text-gray-400 mt-1 block">Débité lors de l'activation depuis votre compte (Min. 10,00 €).</span>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Projet d'épargne (optionnel)</label>
-                        <input type="text" name="notes" id="savingsNotes" placeholder="Ex: Épargne projet, vacances..." class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-normal">
-                    </div>
-
                     <div id="savingsError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
 
                     <div class="flex items-center justify-end gap-3 mt-6">
                         <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                             Annuler
                         </button>
-                        <button type="submit" id="savingsSubmitBtn" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors flex items-center gap-2">
-                            <span>Envoyer ma demande</span>
-                        </button>
+                        <% if (typeof advisor !== 'undefined' && advisor) { %>
+                            <button type="submit" id="savingsSubmitBtn" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors flex items-center gap-2 cursor-pointer">
+                                <span>Envoyer ma demande</span>
+                            </button>
+                        <% } else { %>
+                            <button type="button" disabled class="px-5 py-2.5 text-xs font-bold text-gray-400 bg-gray-200 rounded-xl cursor-not-allowed">
+                                Conseiller requis
+                            </button>
+                        <% } %>
                     </div>
                 </div>
 
@@ -489,7 +493,7 @@
                     <p id="savingsSuccessMsg" class="text-xs text-gray-500 mb-5 leading-relaxed">
                         <!-- Rempli dynamiquement avec la référence et le conseiller réel -->
                     </p>
-                    <button type="button" onclick="window.location.reload();" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
+                    <button type="button" onclick="closeSavingsModal(); window.location.reload();" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
                         Fermer
                     </button>
                 </div>
@@ -497,10 +501,79 @@
         </div>
     </div>
 
+    <!-- Modale d'Information : Conseiller requis (HOS-Security) -->
+    <div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl">
+                ⏳
+            </div>
+            <h3 class="text-lg font-extrabold text-hos-dark mb-2">Conseiller attitré requis</h3>
+            <p id="noAdvisorModalText" class="text-xs text-gray-500 mb-6 leading-relaxed">
+                Pour des raisons de conformité et de sécurité bancaire, l'ouverture d'un <strong>Livret Épargne</strong> requiert la validation de votre conseiller dédié.<br><br>
+                Votre compte est actuellement en cours d'attribution. Un conseiller vous sera affecté dans les plus brefs délais.
+            </p>
+            <button type="button" onclick="closeNoAdvisorModal()" class="w-full py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
+                J'ai compris
+            </button>
+        </div>
+    </div>
+
     <script>
-        function closeSavingsModal() {
-            document.getElementById('savingsModal').classList.add('hidden');
+        function openSavingsModal() {
+            const modal = document.getElementById('savingsModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
         }
+
+        function closeSavingsModal() {
+            const modal = document.getElementById('savingsModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openNoAdvisorModal(type) {
+            const modal = document.getElementById('noAdvisorModal');
+            const textEl = document.getElementById('noAdvisorModalText');
+            if (modal) {
+                if (textEl) {
+                    if (type === 'livret') {
+                        textEl.innerHTML = "Pour votre sécurité financière, l'ouverture d'un <strong>Livret Épargne</strong> nécessite la validation préalable d'un conseiller bancaire attitré.<br><br>Votre compte est en cours d'affectation auprès de notre agence. Un conseiller vous sera attribué très prochainement.";
+                    } else if (type === 'carte') {
+                        textEl.innerHTML = "Pour votre sécurité financière, la création d'une <strong>carte virtuelle</strong> requiert la supervision de votre conseiller attitré.<br><br>Un conseiller bancaire vous sera affecté très prochainement.";
+                    }
+                }
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeNoAdvisorModal() {
+            const modal = document.getElementById('noAdvisorModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Fermeture au clic sur le backdrop
+        document.getElementById('savingsModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeSavingsModal();
+        });
+        document.getElementById('noAdvisorModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeNoAdvisorModal();
+        });
+
+        // Fermeture à la touche Échap
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSavingsModal();
+                closeNoAdvisorModal();
+            }
+        });
 
         async function handleSavingsSubmit(event) {
             event.preventDefault();
@@ -518,7 +591,6 @@
 
             const sourceAccountId = document.getElementById('savingsSourceAccount')?.value;
             const initialDeposit = document.getElementById('savingsDeposit')?.value;
-            const notes = document.getElementById('savingsNotes')?.value || '';
 
             try {
                 const response = await fetch('/client/documents/savings', {
@@ -527,7 +599,7 @@
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ sourceAccountId, initialDeposit, notes })
+                    body: JSON.stringify({ sourceAccountId, initialDeposit, notes: '' })
                 });
 
                 const result = await response.json();

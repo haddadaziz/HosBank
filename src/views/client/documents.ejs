@@ -40,12 +40,12 @@
 </head>
 <body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
 
-<div class="flex min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
     <!-- Sidebar unifiée multi-rôles -->
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/documents', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- Messages de feedback (Succès / Erreur) -->
         <% if (success) { %>
@@ -80,11 +80,20 @@
                 <p class="text-sm text-gray-500 mt-1">Consultez et téléchargez vos coordonnées bancaires, et suivez vos démarches en direct.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
-                <button type="button" onclick="document.getElementById('savingsModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                    <span></span> Ouvrir un Livret Épargne
-                </button>
-                <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                    <span></span> Déposer une réclamation
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    <button type="button" onclick="openSavingsModal()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                        <span>✨</span> Ouvrir un Livret Épargne
+                    </button>
+                <% } else { %>
+                    <button type="button" onclick="openNoAdvisorModal('livret')" class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer" title="Un conseiller attitré est requis pour ouvrir un livret d'épargne">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        Conseiller requis (Livret)
+                    </button>
+                <% } %>
+                <button type="button" onclick="openReclamationModal()" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                    <span>💬</span> Déposer une réclamation
                 </button>
             </div>
         </header>
@@ -162,7 +171,6 @@
                                 Réclamations (<%= reclamations.length %>)
                             </button>
                         </div>
-                        <span class="text-[11px] text-gray-400 font-semibold">Temps réel</span>
                     </div>
 
                     <!-- Liste 1 : Mes Demandes Bancaires (HOS-37) -->
@@ -203,7 +211,7 @@
 
                                     <% if (d.advisorResponse) { %>
                                         <div class="text-xs text-gray-700 mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                                            💬 <span class="font-semibold text-hos-dark">Réponse conseiller :</span> <%= d.advisorResponse %>
+                                            <span class="font-semibold text-hos-dark">Réponse conseiller :</span> <%= d.advisorResponse %>
                                         </div>
                                     <% } else if (d.rejectionReason) { %>
                                         <div class="text-xs text-rose-700 mt-2 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
@@ -296,11 +304,11 @@
 </div>
 
 <!-- Modal Demande d'Ouverture de Compte Épargne (HOS-35) -->
-<div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+<div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-extrabold text-hos-dark">Demande d'ouverture d'un livret d'épargne</h3>
-            <button onclick="document.getElementById('savingsModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            <button type="button" onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
         <p class="text-xs text-gray-500 mb-6">
@@ -314,7 +322,7 @@
                     <select name="sourceAccountId" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold bg-white">
                         <% accounts.forEach(acc => { %>
                             <option value="<%= acc.id %>">
-                                <%= acc.accountNumber %> (<%= acc.type %>) - Solde : <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
+                                <%= (acc.accountNumber || '').replace(/^CPT-/, '') %> (<%= acc.type %>)
                             </option>
                         <% }) %>
                     </select>
@@ -325,31 +333,32 @@
                     <input type="number" step="0.01" min="10" name="initialDeposit" value="50.00" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-bold text-hos-dark">
                     <span class="text-[10px] text-gray-400 mt-1 block">Montant minimum requis : 10,00 €</span>
                 </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Remarques ou projet (optionnel)</label>
-                    <textarea name="notes" rows="2" placeholder="Ex: Épargne projet immobilier, vacances..." class="w-full px-4 py-2 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs text-gray-700"></textarea>
-                </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 mt-6">
-                <button type="button" onclick="document.getElementById('savingsModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                     Annuler
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-colors">
-                    Confirmer ma demande
-                </button>
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-colors cursor-pointer">
+                        Confirmer ma demande
+                    </button>
+                <% } else { %>
+                    <button type="button" disabled class="px-5 py-2.5 text-xs font-bold text-gray-400 bg-gray-200 rounded-xl cursor-not-allowed">
+                        Conseiller requis
+                    </button>
+                <% } %>
             </div>
         </form>
     </div>
 </div>
 
 <!-- Modal Réclamation (HOS-36) -->
-<div id="reclamationModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+<div id="reclamationModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-extrabold text-hos-dark">Déposer une réclamation</h3>
-            <button onclick="document.getElementById('reclamationModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            <button type="button" onclick="closeReclamationModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
         <p class="text-xs text-gray-500 mb-6">
@@ -380,10 +389,10 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 mt-6">
-                <button type="button" onclick="document.getElementById('reclamationModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                <button type="button" onclick="closeReclamationModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                     Annuler
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
                     Envoyer ma réclamation
                 </button>
             </div>
@@ -391,7 +400,100 @@
     </div>
 </div>
 
+<!-- Modal Information Conseiller Requis (HOS-Security) -->
+<div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl">
+            ⏳
+        </div>
+        <h3 class="text-lg font-extrabold text-hos-dark mb-2">Conseiller attitré requis</h3>
+        <p id="noAdvisorModalText" class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Pour des raisons de conformité et de sécurité bancaire, l'ouverture d'un <strong>Livret Épargne</strong> requiert la validation de votre conseiller dédié.<br><br>
+            Votre compte est actuellement en cours d'attribution. Un conseiller vous sera affecté dans les plus brefs délais.
+        </p>
+        <button type="button" onclick="closeNoAdvisorModal()" class="w-full py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
+            J'ai compris
+        </button>
+    </div>
+</div>
+
 <script>
+    function openSavingsModal() {
+        const modal = document.getElementById('savingsModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeSavingsModal() {
+        const modal = document.getElementById('savingsModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function openReclamationModal() {
+        const modal = document.getElementById('reclamationModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeReclamationModal() {
+        const modal = document.getElementById('reclamationModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function openNoAdvisorModal(type) {
+        const modal = document.getElementById('noAdvisorModal');
+        const textEl = document.getElementById('noAdvisorModalText');
+        if (modal) {
+            if (textEl) {
+                if (type === 'livret') {
+                    textEl.innerHTML = "Pour votre sécurité financière, l'ouverture d'un <strong>Livret Épargne</strong> nécessite la validation préalable d'un conseiller bancaire attitré.<br><br>Votre compte est en cours d'affectation auprès de notre agence. Un conseiller vous sera attribué très prochainement.";
+                } else if (type === 'carte') {
+                    textEl.innerHTML = "Pour votre sécurité financière, la création d'une <strong>carte virtuelle</strong> requiert la supervision de votre conseiller attitré.<br><br>Un conseiller bancaire vous sera affecté très prochainement.";
+                }
+            }
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeNoAdvisorModal() {
+        const modal = document.getElementById('noAdvisorModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Fermeture automatique au clic en dehors (backdrop)
+    document.getElementById('savingsModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeSavingsModal();
+    });
+    document.getElementById('reclamationModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeReclamationModal();
+    });
+    document.getElementById('noAdvisorModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeNoAdvisorModal();
+    });
+
+    // Fermeture avec la touche Échap
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSavingsModal();
+            closeReclamationModal();
+            closeNoAdvisorModal();
+        }
+    });
+
     function switchTrackTab(tab) {
         const btnDem = document.getElementById('tabDemandesBtn');
         const btnRec = document.getElementById('tabReclamationsBtn');

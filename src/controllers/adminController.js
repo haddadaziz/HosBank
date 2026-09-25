@@ -31,9 +31,17 @@ const adminController = {
 
     logout: async (req, res) => {
         if (req.session) {
-            req.session.destroy();
+            req.session.admin = null;
+            req.session.user = null;
+            req.session.advisor = null;
+            req.session.destroy(() => {
+                res.clearCookie("hosbank_session", { path: "/" });
+                res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
+            });
+        } else {
+            res.clearCookie("hosbank_session", { path: "/" });
+            res.redirect("/login");
         }
-        res.redirect("/login");
     },
 
     getDashboard: async (req, res) => {

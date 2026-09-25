@@ -64,7 +64,7 @@ class AdvisorService {
             FROM utilisateurs u
             LEFT JOIN comptes_bancaires cb ON u.id = cb.utilisateur_id AND cb.statut = 'ACTIF'
             LEFT JOIN cartes_bancaires card ON cb.id = card.compte_id AND card.statut = 'ACTIVE'
-            WHERE u.role = 'CLIENT' AND (u.conseiller_id = $1 OR u.conseiller_id IS NULL OR $1 = 2)
+            WHERE u.role = 'CLIENT' AND u.conseiller_id = $1
             GROUP BY u.id, u.civilite, u.nom, u.prenom, u.email, u.telephone, u.adresse_postale, u.date_creation, u.compte_verrouille
             ORDER BY u.id ASC
         `;
@@ -115,9 +115,10 @@ class AdvisorService {
                 u.email AS "clientEmail"
             FROM demandes d
             JOIN utilisateurs u ON d.utilisateur_id = u.id
+            WHERE u.conseiller_id = $1
             ORDER BY d.date_demande DESC
         `;
-        const { rows: demandRows } = await db.query(demandsQuery);
+        const { rows: demandRows } = await db.query(demandsQuery, [advisorId]);
 
         const demands = demandRows.map(d => {
             let typeLabel = d.type_demande;
@@ -190,9 +191,10 @@ class AdvisorService {
                 u.email AS "clientEmail"
             FROM reclamations r
             JOIN utilisateurs u ON r.utilisateur_id = u.id
+            WHERE u.conseiller_id = $1
             ORDER BY r.date_depot DESC
         `;
-        const { rows: claimRows } = await db.query(claimsQuery);
+        const { rows: claimRows } = await db.query(claimsQuery, [advisorId]);
 
         const claims = claimRows.map(c => {
             let statusLabel = "Ouverte";
@@ -225,7 +227,7 @@ class AdvisorService {
         const interactionsQuery = `
             SELECT 
                 ja.id,
-                TO_CHAR(ja.date_action, 'DD/MM/YYYY HH24:MI') AS date,
+                TO_CHAR(ja.date_action, 'DD/MM/YYYY à HH24:MI') AS date,
                 ja.action AS type,
                 CONCAT(u.prenom, ' ', u.nom) AS client,
                 ja.nouvelle_valeur AS summary
@@ -239,25 +241,6 @@ class AdvisorService {
             const auditRes = await db.query(interactionsQuery);
             interactions = auditRes.rows;
         } catch (e) {}
-
-        if (interactions.length === 0) {
-            demands.slice(0, 3).forEach(d => {
-                interactions.push({
-                    date: d.date,
-                    type: d.status === 'Validée' ? "Validation" : (d.priority === 'URGENT' ? "Alerte Urgente" : "Demande Client"),
-                    client: d.clientName,
-                    summary: `${d.type} (${d.id}) - Statut : ${d.status}. ${d.comment ? 'Note: ' + d.comment : ''}`
-                });
-            });
-            claims.slice(0, 3).forEach(c => {
-                interactions.push({
-                    date: c.date,
-                    type: c.status === 'Clôturée' ? "Résolution" : "Réclamation",
-                    client: c.clientName,
-                    summary: `Réclamation ${c.id} : ${c.object}. Statut : ${c.status}`
-                });
-            });
-        }
 
         const metrics = {
             assignedClients: clients.length,
@@ -414,7 +397,7 @@ class AdvisorService {
                     [demand.utilisateur_id]
                 );
                 if (checkAcc.rows.length === 0) {
-                    const accNum = `CPT-EPA-${Math.floor(100000 + Math.random() * 900000)}`;
+                    const accNum = String(Math.floor(10000000 + Math.random() * 90000000));
                     const ibanNum = `FR763000401234${Math.floor(10000000000 + Math.random() * 90000000000)}67`;
                     const initialDep = parseFloat(payload.initialDeposit) || 100.00;
 

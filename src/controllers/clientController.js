@@ -27,33 +27,6 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-exports.getAccountDetail = async (req, res) => {
-    try {
-        const rawId = req.session?.user?.id;
-        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
-        const accountId = parseInt(req.params.id, 10);
-
-        if (isNaN(accountId)) {
-            return res.redirect("/client/dashboard");
-        }
-
-        const accountData = await clientService.getAccountDetail(userId, accountId);
-
-        res.render("client/account-detail", {
-            title: `${accountData.account.accountNumber} - Détails du compte | HosBank`,
-            user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
-            account: accountData.account,
-            cards: accountData.cards,
-            stats: accountData.stats,
-            recentOperations: accountData.recentOperations,
-            currentPath: "/client/dashboard"
-        });
-    } catch (error) {
-        console.error("Erreur consultation détaillée compte :", error);
-        res.redirect("/client/dashboard?error=" + encodeURIComponent(error.message));
-    }
-};
-
 exports.getTransfers = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;
@@ -176,9 +149,10 @@ exports.postAddBeneficiary = async (req, res) => {
 exports.getCards = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
-        const [cards, accounts] = await Promise.all([
+        const [cards, accounts, advisor] = await Promise.all([
             clientService.getCards(userId),
-            clientService.getUserAccounts(userId)
+            clientService.getUserAccounts(userId),
+            clientService.getUserAdvisor(userId)
         ]);
 
         res.render("client/cards", {
@@ -186,6 +160,7 @@ exports.getCards = async (req, res) => {
             user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
             cards,
             accounts,
+            advisor,
             success: req.query.success || null,
             error: req.query.error || null,
             currentPath: "/client/cards"
@@ -252,11 +227,12 @@ exports.getDocuments = async (req, res) => {
         const userId = req.session?.user?.id || 3;
         const selectedAccountId = req.query.accountId ? parseInt(req.query.accountId, 10) : null;
 
-        const [accounts, ribData, demandes, reclamations] = await Promise.all([
+        const [accounts, ribData, demandes, reclamations, advisor] = await Promise.all([
             clientService.getUserAccounts(userId),
             clientService.getAccountRibData(userId, selectedAccountId),
             clientService.getUserDemandes(userId),
-            clientService.getUserReclamations(userId)
+            clientService.getUserReclamations(userId),
+            clientService.getUserAdvisor(userId)
         ]);
 
         res.render("client/documents", {
@@ -267,6 +243,7 @@ exports.getDocuments = async (req, res) => {
             rib: ribData,
             demandes,
             reclamations,
+            advisor,
             success: req.query.success || null,
             error: req.query.error || null,
             currentPath: "/client/documents"

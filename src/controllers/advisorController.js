@@ -8,7 +8,7 @@ exports.getDashboard = async (req, res) => {
         const data = await advisorService.getDashboardData(advisorId);
 
         res.render("advisor/dashboard", {
-            title: "Tableau de Bord Conseiller | HosBank",
+            title: "Vue d'ensemble | Conseiller HosBank",
             advisor: data.advisor,
             metrics: data.metrics,
             clients: data.clients,
@@ -25,6 +25,90 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
+exports.getClients = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+        const data = await advisorService.getDashboardData(advisorId);
+
+        res.render("advisor/clients", {
+            title: "Clients Affectés | Conseiller HosBank",
+            advisor: data.advisor,
+            metrics: data.metrics,
+            clients: data.clients,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/advisor/clients"
+        });
+    } catch (error) {
+        console.error("Erreur Clients Conseiller :", error);
+        res.status(500).send("Erreur lors du chargement des clients.");
+    }
+};
+
+exports.getDemands = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+        const data = await advisorService.getDashboardData(advisorId);
+
+        res.render("advisor/demands", {
+            title: "Demandes Bancaires | Conseiller HosBank",
+            advisor: data.advisor,
+            metrics: data.metrics,
+            demands: data.demands,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/advisor/demands"
+        });
+    } catch (error) {
+        console.error("Erreur Demandes Conseiller :", error);
+        res.status(500).send("Erreur lors du chargement des demandes.");
+    }
+};
+
+exports.getClaims = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+        const data = await advisorService.getDashboardData(advisorId);
+
+        res.render("advisor/claims", {
+            title: "Réclamations Clients | Conseiller HosBank",
+            advisor: data.advisor,
+            metrics: data.metrics,
+            claims: data.claims,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/advisor/claims"
+        });
+    } catch (error) {
+        console.error("Erreur Réclamations Conseiller :", error);
+        res.status(500).send("Erreur lors du chargement des réclamations.");
+    }
+};
+
+exports.getInteractions = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+        const data = await advisorService.getDashboardData(advisorId);
+
+        res.render("advisor/interactions", {
+            title: "Journal d'Interactions | Conseiller HosBank",
+            advisor: data.advisor,
+            metrics: data.metrics,
+            interactions: data.interactions,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/advisor/interactions"
+        });
+    } catch (error) {
+        console.error("Erreur Interactions Conseiller :", error);
+        res.status(500).send("Erreur lors du chargement du journal d'interactions.");
+    }
+};
+
 exports.getClient360 = async (req, res) => {
     try {
         const rawId = req.session?.user?.id || req.session?.advisor?.id;
@@ -32,7 +116,7 @@ exports.getClient360 = async (req, res) => {
         const clientId = parseInt(req.params.id, 10);
 
         if (isNaN(clientId)) {
-            return res.redirect("/advisor/dashboard");
+            return res.redirect("/advisor/clients");
         }
 
         const [clientData, advisor] = await Promise.all([
@@ -50,11 +134,11 @@ exports.getClient360 = async (req, res) => {
             demands: clientData.demands,
             claims: clientData.claims,
             advisor,
-            currentPath: "/advisor/dashboard"
+            currentPath: "/advisor/clients"
         });
     } catch (error) {
         console.error("Erreur Fiche 360° Client :", error);
-        res.redirect("/advisor/dashboard?error=" + encodeURIComponent(error.message));
+        res.redirect("/advisor/clients?error=" + encodeURIComponent(error.message));
     }
 };
 
@@ -97,3 +181,58 @@ exports.postResolveClaim = async (req, res) => {
         res.redirect("/advisor/dashboard?error=" + encodeURIComponent(error.message));
     }
 };
+
+exports.getProfile = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+
+        const advisor = await advisorService.getAdvisorProfile(advisorId);
+
+        res.render("advisor/profile", {
+            title: "Mon Profil Conseiller | HosBank",
+            advisor,
+            success: req.query.success || null,
+            error: req.query.error || null,
+            currentPath: "/advisor/profile"
+        });
+    } catch (error) {
+        console.error("Erreur consultation profil conseiller :", error);
+        res.redirect("/advisor/dashboard?error=" + encodeURIComponent(error.message));
+    }
+};
+
+exports.postUpdateProfile = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+        const { phone } = req.body;
+
+        const db = require("../config/db");
+        if (phone !== undefined) {
+            await db.query(`UPDATE utilisateurs SET telephone = $1 WHERE id = $2`, [phone.trim(), advisorId]);
+        }
+
+        res.redirect("/advisor/profile?success=" + encodeURIComponent("Vos coordonnées ont été mises à jour avec succès."));
+    } catch (error) {
+        console.error("Erreur mise à jour coordonnées conseiller :", error);
+        res.redirect("/advisor/profile?error=" + encodeURIComponent(error.message));
+    }
+};
+
+exports.postChangePassword = async (req, res) => {
+    try {
+        const rawId = req.session?.user?.id || req.session?.advisor?.id;
+        const advisorId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 2;
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        const clientService = require("../services/clientService");
+        await clientService.updateUserPassword(advisorId, { currentPassword, newPassword, confirmPassword });
+
+        res.redirect("/advisor/profile?success=" + encodeURIComponent("Votre mot de passe a été modifié avec succès."));
+    } catch (error) {
+        console.error("Erreur modification mot de passe conseiller :", error);
+        res.redirect("/advisor/profile?error=" + encodeURIComponent(error.message));
+    }
+};
+

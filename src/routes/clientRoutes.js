@@ -6,8 +6,7 @@ const { requireClientAuth } = require("../middlewares/authMiddleware");
 router.get("/", (req, res) => res.redirect("/client/dashboard"));
 
 router.get("/dashboard", requireClientAuth, clientController.getDashboard);
-router.get("/accounts", requireClientAuth, (req, res) => res.redirect("/client/dashboard"));
-router.get("/accounts/:id", requireClientAuth, clientController.getAccountDetail);
+router.get(["/accounts", "/accounts/:id"], requireClientAuth, (req, res) => res.redirect("/client/dashboard"));
 router.get("/transfers", requireClientAuth, clientController.getTransfers);
 
 // Gestion des bénéficiaires

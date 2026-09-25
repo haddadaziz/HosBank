@@ -1,298 +1,182 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
-    
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        theme: {
-                            purple: '#746B92',
-                            purpleHover: '#635B7E',
-                            purpleLight: '#8A81A5',
-                            cream: '#F6EFE0',
-                            creamDark: '#EFE7D4',
-                            borderLine: '#D8CEBB',
-                            placeholder: '#9D937F',
-                            textDark: '#282330',
-                            coralLogo: '#E97A7A',
-                            coralHover: '#D96565'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        brand: ['"Plus Jakarta Sans"', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #F6EFE0;
-            color: #282330;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        .font-num {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #EFE7D4;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #746B92;
-            border-radius: 3px;
-        }
-
-        .tab-pane {
-            display: none;
-            opacity: 0;
-            transition: opacity 0.25s ease-in-out;
-        }
-        .tab-pane.active {
-            display: block;
-            opacity: 1;
-        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-num { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased">
+<body class="bg-[#F8F9FA] text-[#282330] min-h-screen antialiased">
 
+    <div class="min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar unifiée HosBank pour Conseiller -->
+        <%- include('../partials/sidebar', { role: 'advisor', currentPath: '/advisor/dashboard', user: advisor, metrics: metrics }) %>
 
-    <header class="w-full bg-[#746B92] text-white px-4 sm:px-8 py-3.5 shadow-md flex items-center justify-between sticky top-0 z-40">
-        <div class="flex items-center gap-4">
-            <a href="/advisor/dashboard" class="flex items-center group select-none">
-                <svg class="h-7 sm:h-[30px] w-auto mr-[2px] transition-transform duration-200 group-hover:scale-105" viewBox="0 0 25 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="0" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
-                    <rect x="18.5" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
-                    <path d="M5.5 17.5 L18.5 10.5 L18.5 15.2 L5.5 22.2 Z" fill="#E97A7A"/>
-                </svg>
-                <div class="flex items-baseline font-brand">
-                    <span class="text-[25px] font-[800] tracking-[-0.04em] text-white leading-none">os</span>
-                    <span class="text-[25px] font-[800] tracking-[-0.03em] text-white/95 leading-none ml-[0.5px]">Bank</span>
-                    <span class="w-[6px] h-[6px] rounded-full bg-[#E97A7A] ml-1.5 self-end mb-1"></span>
+        <!-- Contenu Principal Conseiller -->
+        <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 space-y-8">
+
+            <!-- En-tête de bienvenue -->
+            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#282330] tracking-tight">
+                        Vue d'ensemble
+                    </h1>
+                    <p class="text-sm text-[#7A6F82] mt-1">
+                        Tableau de bord de gestion et supervision du portefeuille de <%= advisor.name %>
+                    </p>
                 </div>
-            </a>
+            </header>
 
-
-        </div>
-
-        <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
-                    <div class="w-7 h-7 rounded-lg bg-[#E97A7A] text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                        <%= advisor.avatar %>
-                    </div>
-                    <div class="hidden sm:flex flex-col text-left">
-                        <span class="text-xs font-semibold leading-tight text-white"><%= advisor.name %></span>
-                        <span class="text-[10px] text-[#DDD7EB]">Conseiller HosBank</span>
-                    </div>
+            <!-- Notifications -->
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>✅ Action enregistrée avec succès.</span>
                 </div>
+            <% } %>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>⚠️ <%= error %></span>
+                </div>
+            <% } %>
 
-                <a 
-                    href="/login" 
-                    title="Déconnexion" 
-                    class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
+            <!-- Grille des 4 Métriques Réelles -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                
+                <a href="/advisor/clients" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-[#7A6F82]">Clients Affectés</span>
+                        <div class="w-9 h-9 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-extrabold font-num text-[#282330]"><%= metrics.assignedClients %></span>
+                    </div>
+                    <p class="text-[11px] text-[#746B92] font-semibold mt-2 group-hover:underline flex items-center gap-1">
+                        <span>Consulter la liste</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </p>
                 </a>
-            </div>
-        </div>
-    </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            <div onclick="switchTab('tabClients')" class="bg-[#FFFFFF] border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-[#7A6F82]">Clients Affectés</span>
-                    <div class="w-8 h-8 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
+                <a href="/advisor/demands" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-[#7A6F82]">Demandes à Traiter</span>
+                        <div class="w-9 h-9 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold font-num text-[#282330]"><%= metrics.assignedClients %></span>
-                </div>
-                <p class="text-[11px] text-[#9D937F] mt-1">Clients particuliers & professionnels</p>
-            </div>
-
-            <div onclick="switchTab('tabDemands')" class="bg-[#FFFFFF] border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-[#7A6F82]">Demandes à Traiter</span>
-                    <div class="w-8 h-8 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                        </svg>
+                    <div class="mt-3">
+                        <span class="text-3xl font-extrabold font-num text-[#282330]"><%= metrics.pendingDemands %></span>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold font-num text-[#282330]"><%= metrics.pendingDemands %></span>
-                </div>
-                <p class="text-[11px] text-[#9D937F] mt-1">RIB, Épargne, PIN & Cartes</p>
-            </div>
+                    <p class="text-[11px] text-[#746B92] font-semibold mt-2 group-hover:underline flex items-center gap-1">
+                        <span>Traiter les demandes</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </p>
+                </a>
 
-            <div onclick="switchTab('tabDemands', 'Opposition Carte')" class="bg-[#FFFFFF] border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-[#7A6F82]">Oppositions Carte</span>
-                    <div class="w-8 h-8 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
+                <a href="/advisor/demands" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-[#7A6F82]">Oppositions Carte</span>
+                        <div class="w-9 h-9 rounded-xl bg-[#FAF0EE] text-[#E97A7A] flex items-center justify-center group-hover:bg-[#E97A7A] group-hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold font-num text-[#282330]"><%= metrics.cardOppositions %></span>
-                </div>
-                <p class="text-[11px] text-[#9D937F] mt-1">Perte ou vol déclaré par le client</p>
-            </div>
-
-            <div onclick="switchTab('tabClaims')" class="bg-[#FFFFFF] border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-sm transition-all duration-200 cursor-pointer group">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-medium text-[#7A6F82]">Réclamations Clients</span>
-                    <div class="w-8 h-8 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-                        </svg>
+                    <div class="mt-3">
+                        <span class="text-3xl font-extrabold font-num text-[#282330]"><%= metrics.cardOppositions %></span>
                     </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold font-num text-[#282330]"><%= metrics.openClaims %></span>
-                </div>
-                <p class="text-[11px] text-[#9D937F] mt-1">Contestations & demandes d'assistance</p>
+                    <p class="text-[11px] text-[#E97A7A] font-semibold mt-2 group-hover:underline flex items-center gap-1">
+                        <span>Urgences déclarées</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </p>
+                </a>
+
+                <a href="/advisor/claims" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-[#7A6F82]">Réclamations en cours</span>
+                        <div class="w-9 h-9 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center group-hover:bg-[#746B92] group-hover:text-white transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-extrabold font-num text-[#282330]"><%= metrics.openClaims %></span>
+                    </div>
+                    <p class="text-[11px] text-[#746B92] font-semibold mt-2 group-hover:underline flex items-center gap-1">
+                        <span>Répondre aux clients</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </p>
+                </a>
+
             </div>
 
-        </div>
-
-        <div class="bg-[#EFE7D4] p-1.5 rounded-2xl border border-[#D8CEBB] flex flex-wrap gap-1.5">
-            <button 
-                onclick="switchTab('tabOverview')" 
-                id="btn-tabOverview" 
-                class="tab-btn active px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 bg-[#746B92] text-white shadow-sm flex items-center gap-2"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-                Vue d'ensemble
-            </button>
-
-            <button 
-                onclick="switchTab('tabClients')" 
-                id="btn-tabClients" 
-                class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 text-[#7A6F82] hover:text-[#282330] flex items-center gap-2"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                Clients Affectés
-                <span class="w-5 h-5 rounded-full bg-[#E97A7A] text-white text-[10px] font-bold flex items-center justify-center">
-                    <%= clients.length %>
-                </span>
-            </button>
-
-            <button 
-                onclick="switchTab('tabDemands')" 
-                id="btn-tabDemands" 
-                class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 text-[#7A6F82] hover:text-[#282330] flex items-center gap-2"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                Demandes Bancaires
-                <% if (metrics.pendingDemands > 0) { %>
-                    <span class="w-5 h-5 rounded-full bg-[#E97A7A] text-white text-[10px] font-bold flex items-center justify-center">
-                        <%= metrics.pendingDemands %>
-                    </span>
-                <% } %>
-            </button>
-
-            <button 
-                onclick="switchTab('tabClaims')" 
-                id="btn-tabClaims" 
-                class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 text-[#7A6F82] hover:text-[#282330] flex items-center gap-2"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                Réclamations
-                <span class="w-5 h-5 rounded-full bg-[#E97A7A] text-white text-[10px] font-bold flex items-center justify-center">
-                    <%= claims.length %>
-                </span>
-            </button>
-
-            <button 
-                onclick="switchTab('tabInteractions')" 
-                id="btn-tabInteractions" 
-                class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 text-[#7A6F82] hover:text-[#282330] flex items-center gap-2"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Journal d'Interactions
-            </button>
-        </div>
-
-
-        <div id="tabOverview" class="tab-pane active space-y-6">
-            
-
-
-            <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
+            <!-- Section 1 : Demandes Clients Récentes en Attente -->
+            <div class="bg-white border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#EFE7D4]">
                     <div>
-                        <h2 class="text-base font-bold text-[#282330]">Demandes clients en attente</h2>
+                        <h2 class="text-base font-bold text-[#282330]">Demandes en attente d'instruction</h2>
                         <p class="text-xs text-[#7A6F82]">Validation requise par le chargé de clientèle</p>
                     </div>
-                    <button onclick="switchTab('tabDemands')" class="text-xs font-semibold text-[#746B92] hover:underline">
-                        Tout afficher →
-                    </button>
+                    <a href="/advisor/demands" class="text-xs font-bold text-[#746B92] hover:underline flex items-center gap-1">
+                        <span>Voir toutes les demandes</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
                 </div>
 
                 <div class="divide-y divide-[#EFE7D4]">
-                    <% const pendingList = demands.filter(d => d.status === 'En attente').slice(0, 5); %>
+                    <% const pendingList = demands.filter(d => d.status === 'En attente' || d.status === 'En instruction').slice(0, 5); %>
                     <% if (pendingList.length === 0) { %>
-                        <div class="py-8 text-center text-xs text-[#9D937F]">Aucune demande en attente actuellement.</div>
+                        <div class="py-10 text-center text-xs text-[#9D937F]">
+                            Aucune demande en attente
+                        </div>
                     <% } else { %>
                         <% pendingList.forEach(dem => { %>
-                            <div class="py-3.5 flex items-center justify-between gap-4">
+                            <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 <%= dem.priority === 'URGENT' ? 'bg-[#FAF0EE] text-[#E97A7A]' : 'bg-[#FAF5ED] text-[#746B92]' %>">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 <%= dem.priority === 'URGENT' ? 'bg-[#FAF0EE] text-[#E97A7A]' : 'bg-[#FAF5ED] text-[#746B92]' %>">
                                         <% if (dem.type === 'Opposition Carte') { %>
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                         <% } else if (dem.type === 'Carte Virtuelle') { %>
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
                                         <% } else if (dem.type === 'Compte d\'Épargne') { %>
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                         <% } else { %>
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                         <% } %>
                                     </div>
                                     <div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs font-bold text-[#282330]"><%= dem.type %></span>
                                             <% if (dem.priority === 'URGENT') { %>
-                                                <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#E97A7A] text-white">URGENT</span>
+                                                <span class="px-2 py-0.2 rounded-full text-[9px] font-bold bg-[#E97A7A] text-white">URGENT</span>
                                             <% } %>
                                         </div>
-                                        <p class="text-[11px] text-[#7A6F82]">Client : <span class="font-medium text-[#282330]"><%= dem.clientName %></span> • <%= dem.date %></p>
+                                        <p class="text-[11px] text-[#7A6F82]">Client : <span class="font-semibold text-[#282330]"><%= dem.clientName %></span> • <%= dem.date %></p>
                                     </div>
                                 </div>
 
                                 <button 
-                                    onclick="openDemandModal('<%= dem.id %>', '<%= dem.type %>', '<%= dem.clientName %>', '<%= dem.details %>')"
-                                    class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white transition-colors"
+                                    type="button"
+                                    class="btn-open-demand px-4 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors self-end sm:self-center cursor-pointer"
+                                    data-id="<%= dem.dbId || dem.id %>"
+                                    data-type="<%= dem.type %>"
+                                    data-client="<%= dem.clientName %>"
+                                    data-details="<%= dem.details %>"
                                 >
                                     Traiter
                                 </button>
@@ -302,347 +186,59 @@
                 </div>
             </div>
 
-        </div>
-
-
-        <div id="tabClients" class="tab-pane space-y-4">
-            
-            <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <!-- Section 2 : Activité Récente du Journal -->
+            <div class="bg-white border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#EFE7D4]">
                     <div>
-                        <h2 class="text-lg font-bold text-[#282330]">Portefeuille des Clients Affectés</h2>
-                        <p class="text-xs text-[#7A6F82]">Liste des clients sous la responsabilité de <%= advisor.name %></p>
+                        <h2 class="text-base font-bold text-[#282330]">Dernières interactions du portefeuille</h2>
+                        <p class="text-xs text-[#7A6F82]">Activités récentes et historique d'audit</p>
                     </div>
-
-                    <div class="flex items-center gap-3 w-full sm:w-auto">
-                        <input 
-                            type="text" 
-                            id="clientFilterInput"
-                            placeholder="Filtrer par nom, CIN, ville..." 
-                            class="w-full sm:w-64 bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl px-3 py-1.5 text-xs text-[#282330] placeholder-[#9D937F] focus:outline-none focus:border-[#746B92]"
-                            oninput="filterClientTable(this.value)"
-                        >
-                    </div>
+                    <a href="/advisor/interactions" class="text-xs font-bold text-[#746B92] hover:underline flex items-center gap-1">
+                        <span>Voir tout le journal</span>
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
                 </div>
 
-                <div id="clientsCardsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <% clients.forEach(cli => { %>
-                        <% 
-                            const totalBalance = cli.accounts.reduce((acc, a) => acc + a.balance, 0); 
-                        %>
-                        <div class="bg-[#FAF5ED] border border-[#D8CEBB] hover:border-[#746B92] rounded-2xl p-5 space-y-3.5 client-row shadow-xs transition-all duration-200 flex flex-col justify-between group">
-                            <div class="space-y-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-[#EFE7D4] text-[#746B92] font-bold text-sm flex items-center justify-center shrink-0 group-hover:bg-[#746B92] group-hover:text-white transition-colors">
-                                        <%= cli.name.charAt(0) %>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-sm text-[#282330] leading-tight"><%= cli.civilite %> <%= cli.name %></h4>
-                                        <span class="text-[11px] font-mono text-[#7A6F82]">CIN : <%= cli.cin %> • <%= cli.city %></span>
-                                    </div>
-                                </div>
-
-                                <div class="bg-white p-3 rounded-xl border border-[#D8CEBB]/80 flex items-baseline justify-between">
-                                    <span class="text-[11px] text-[#7A6F82]">Solde Cumulé</span>
-                                    <span class="text-base font-bold font-num text-[#746B92]">
-                                        <%= totalBalance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> MAD
-                                    </span>
-                                </div>
-
-                                <div class="text-xs text-[#7A6F82] space-y-0.5">
-                                    <div class="truncate text-[11px] text-[#282330]">
-                                        <span class="text-[#9D937F]">Email :</span> <%= cli.email %>
-                                    </div>
-                                    <div class="text-[11px] font-mono text-[#7A6F82]">
-                                        <span class="text-[#9D937F] font-sans">Tél :</span> <%= cli.phone %>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="pt-3 border-t border-[#D8CEBB] flex items-center justify-between gap-2">
-                                <span class="text-[10px] text-[#9D937F]">Client depuis <%= cli.joinedDate %></span>
-                                <div class="flex items-center gap-2">
-                                    <a 
-                                        href="/advisor/clients/<%= cli.id %>"
-                                        class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#FAF5ED] hover:bg-[#746B92] text-[#746B92] hover:text-white border border-[#D8CEBB] shadow-xs transition-all flex items-center gap-1 cursor-pointer"
-                                        title="Voir la Fiche 360° complète"
-                                    >
-                                        <span>Fiche 360°</span>
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                    </a>
-                                    <button 
-                                        type="button"
-                                        onclick='openClientDetailModal(<%= JSON.stringify(cli) %>)'
-                                        class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
-                                    >
-                                        <span>Aperçu</span>
-                                    </button>
-                                </div>
-                            </div>
+                <% const recentInteractions = interactions.slice(0, 6); %>
+                <% if (recentInteractions.length === 0) { %>
+                    <div class="py-12 px-4 text-center bg-[#FAF5ED]/50 rounded-2xl border border-dashed border-[#D8CEBB]">
+                        <div class="w-11 h-11 mx-auto mb-2.5 rounded-xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center border border-[#D8CEBB]">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </div>
-                    <% }) %>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-[#D8CEBB] flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span class="text-xs text-[#7A6F82]">
-                        Affichage de <span class="font-semibold text-[#282330]">1</span> à <span class="font-semibold text-[#282330]">6</span> sur <span class="font-semibold text-[#282330]"><%= clients.length %></span> clients
-                    </span>
-
-                    <div class="flex items-center gap-1.5 select-none">
-                        <button class="px-3 py-1.5 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer" disabled>
-                            Précédent
-                        </button>
-                        <button class="w-8 h-8 rounded-xl bg-[#746B92] text-white text-xs font-bold shadow-xs cursor-pointer">
-                            1
-                        </button>
-                        <button class="w-8 h-8 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            2
-                        </button>
-                        <button class="w-8 h-8 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            3
-                        </button>
-                        <span class="px-1 text-xs text-[#9D937F]">...</span>
-                        <button class="w-8 h-8 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            7
-                        </button>
-                        <button class="px-3 py-1.5 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            Suivant
-                        </button>
+                        <h3 class="text-xs font-bold text-[#282330]">Aucune interaction enregistrée</h3>
+                        <p class="text-[11px] text-[#7A6F82] mt-0.5">Toutes les actions et opérations de vos clients s'afficheront ici en temps réel.</p>
                     </div>
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div id="tabDemands" class="tab-pane space-y-4">
-            
-            <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-lg font-bold text-[#282330]">Traitement des Demandes Bancaires</h2>
-                        <p class="text-xs text-[#7A6F82]">Demandes de RIB, d'Épargne, de Cartes virtuelles, Recalcul PIN & Oppositions</p>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="filterDemands('ALL')" class="demand-filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#746B92] text-white">
-                            Toutes (<%= demands.length %>)
-                        </button>
-                        <button onclick="filterDemands('Opposition Carte')" class="demand-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB]">
-                            Oppositions
-                        </button>
-                        <button onclick="filterDemands('Compte d\'Épargne')" class="demand-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB]">
-                            Épargne
-                        </button>
-                        <button onclick="filterDemands('Carte Virtuelle')" class="demand-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB]">
-                            Carte Virtuelle
-                        </button>
-                        <button onclick="filterDemands('Demande de RIB')" class="demand-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB]">
-                            RIB
-                        </button>
-                        <button onclick="filterDemands('Recalcul PIN')" class="demand-filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] border border-[#D8CEBB]">
-                            PIN
-                        </button>
-                    </div>
-                </div>
-
-                <div id="demandsCardsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <% demands.forEach(d => { %>
-                        <div class="bg-[#FAF5ED] border border-[#D8CEBB] hover:border-[#746B92] rounded-2xl p-5 space-y-3.5 demand-row shadow-xs transition-all duration-200 flex flex-col justify-between group" data-type="<%= d.type %>">
-                            <div class="space-y-3">
-                                <!-- En-tête de carte : ID & Statut -->
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-mono text-xs font-bold text-[#746B92] bg-[#EFE7D4] px-2.5 py-1 rounded-lg"><%= d.id %></span>
+                <% } else { %>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <% recentInteractions.forEach(it => { %>
+                            <div class="bg-[#FAF5ED] border border-[#D8CEBB] hover:border-[#746B92] rounded-2xl p-4 space-y-3 transition-all duration-200 shadow-xs flex flex-col justify-between group">
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-7 h-7 rounded-lg bg-white border border-[#D8CEBB] text-[#746B92] flex items-center justify-center shrink-0">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </div>
+                                            <span class="text-xs font-bold text-[#282330] line-clamp-1"><%= it.type %></span>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <% if (d.status === 'En attente') { %>
-                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">
-                                                En attente
-                                            </span>
-                                        <% } else if (d.status === 'Validée') { %>
-                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
-                                                Validée
-                                            </span>
-                                        <% } else { %>
-                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-800">
-                                                Rejetée
-                                            </span>
-                                        <% } %>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 class="font-bold text-sm text-[#282330] group-hover:text-[#746B92] transition-colors"><%= d.type %></h4>
-                                    <div class="flex items-center justify-between mt-1 text-xs text-[#7A6F82]">
-                                        <span>Client : <strong class="text-[#282330] font-semibold"><%= d.clientName %></strong></span>
-                                        <span class="text-[11px] font-mono text-[#9D937F]"><%= d.date %></span>
-                                    </div>
-                                </div>
-
-                                <div class="bg-white p-3 rounded-xl border border-[#D8CEBB]/80 text-[#282330] text-xs leading-relaxed">
-                                    <span class="text-[10px] font-semibold text-[#9D937F] uppercase tracking-wider block mb-1">Détails de la requête</span>
-                                    <p class="text-[#282330] line-clamp-3"><%= d.details %></p>
-                                </div>
-                            </div>
-
-                            <div class="pt-3 border-t border-[#D8CEBB] flex items-center justify-between">
-                                <span class="text-[10px] text-[#9D937F]">Traitement conseiller</span>
-                                <button 
-                                    onclick="openDemandModal('<%= d.id %>', '<%= d.type.replace(/'/g, "\\'") %>', '<%= d.clientName.replace(/'/g, "\\'") %>', '<%= d.details.replace(/'/g, "\\'") %>')"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-                                >
-                                    <span>Traiter</span>
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-[#D8CEBB] flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span class="text-xs text-[#7A6F82]">
-                        Affichage de <span class="font-semibold text-[#282330]">1</span> à <span class="font-semibold text-[#282330]">6</span> sur <span class="font-semibold text-[#282330]"><%= demands.length %></span> demandes
-                    </span>
-
-                    <div class="flex items-center gap-1.5 select-none">
-                        <button class="px-3 py-1.5 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer" disabled>
-                            Précédent
-                        </button>
-                        <button class="w-8 h-8 rounded-xl bg-[#746B92] text-white text-xs font-bold shadow-xs cursor-pointer">
-                            1
-                        </button>
-                        <button class="w-8 h-8 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            2
-                        </button>
-                        <button class="w-8 h-8 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            3
-                        </button>
-                        <button class="px-3 py-1.5 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors cursor-pointer">
-                            Suivant
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div id="tabClaims" class="tab-pane space-y-4">
-            
-            <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-lg font-bold text-[#282330]">Gestion des Réclamations Clients</h2>
-                        <p class="text-xs text-[#7A6F82]">Suivi, réponses et résolutions des litiges clients</p>
-                    </div>
-                </div>
-
-                <div class="space-y-4">
-                    <% claims.forEach(c => { %>
-                        <div class="bg-[#FAF5ED] border border-[#D8CEBB] rounded-2xl p-5 hover:border-[#746B92] transition-colors">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#D8CEBB]">
-                                <div class="flex items-center gap-3">
-                                    <span class="font-mono text-xs font-bold text-[#746B92]"><%= c.id %></span>
-                                    <h3 class="text-sm font-bold text-[#282330]"><%= c.object %></h3>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="text-xs text-[#7A6F82]"><%= c.date %></span>
-                                    <% if (c.status === 'Ouverte') { %>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Ouverte</span>
-                                    <% } else if (c.status === 'En cours') { %>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">En cours</span>
-                                    <% } else { %>
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Clôturée</span>
+                                    <% if (it.client) { %>
+                                        <div class="text-[11px] text-[#7A6F82]">Client : <strong class="text-[#282330]"><%= it.client %></strong></div>
                                     <% } %>
+                                    <p class="text-xs text-[#282330] bg-white p-2.5 rounded-xl border border-[#D8CEBB]/80 line-clamp-2"><%= it.summary || 'Opération enregistrée' %></p>
+                                </div>
+                                <div class="pt-2 border-t border-[#D8CEBB]/60 text-[10px] font-mono text-[#9D937F]">
+                                    <%= it.date %>
                                 </div>
                             </div>
-
-                            <div class="mt-3 text-xs text-[#282330]">
-                                <p class="text-[#7A6F82] mb-1">Client : <span class="font-semibold text-[#282330]"><%= c.clientName %></span> (Réf: <%= c.clientId %>) • Catégorie : <%= c.category %></p>
-                                <p class="bg-white p-3 rounded-xl border border-[#D8CEBB] text-[#282330] font-normal leading-relaxed">
-                                    « <%= c.description %> »
-                                </p>
-                            </div>
-
-                            <% if (c.response) { %>
-                                <div class="mt-3 bg-[#EFE7D4]/50 p-3 rounded-xl border border-[#D8CEBB] text-xs">
-                                    <span class="font-semibold text-[#746B92]">Réponse enregistrée par le conseiller :</span>
-                                    <p class="text-[#282330] mt-0.5"><%= c.response %></p>
-                                </div>
-                            <% } %>
-
-                            <div class="mt-4 flex justify-end">
-                                <button 
-                                    onclick="openClaimModal('<%= c.id %>', '<%= c.clientName %>', '<%= c.object %>', '<%= c.status %>', '<%= c.response || '' %>')"
-                                    class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white transition-colors flex items-center gap-1.5"
-                                >
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    Répondre / Clôturer
-                                </button>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-
-                <div class="mt-6 pt-4 border-t border-[#D8CEBB] flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span class="text-xs text-[#7A6F82]">
-                        Affichage de <span class="font-semibold text-[#282330]">1</span> à <span class="font-semibold text-[#282330]"><%= claims.length %></span> sur <span class="font-semibold text-[#282330]"><%= claims.length %></span> réclamations
-                    </span>
-
-                    <div class="flex items-center gap-1.5 select-none">
-                        <button class="px-3 py-1.5 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer" disabled>
-                            Précédent
-                        </button>
-                        <button class="w-8 h-8 rounded-xl bg-[#746B92] text-white text-xs font-bold shadow-xs cursor-pointer">
-                            1
-                        </button>
-                        <button class="px-3 py-1.5 rounded-xl border border-[#D8CEBB] bg-[#FAF5ED] text-[#7A6F82] hover:text-[#282330] hover:border-[#746B92] text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer" disabled>
-                            Suivant
-                        </button>
+                        <% }) %>
                     </div>
-                </div>
-
+                <% } %>
             </div>
 
-        </div>
+        </main>
+    </div>
 
-        <div id="tabInteractions" class="tab-pane space-y-4">
-            
-            <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-lg font-bold text-[#282330]">Historique des Interactions Clients</h2>
-                        <p class="text-xs text-[#7A6F82]">Journal de traçabilité conforme aux exigences bancaires</p>
-                    </div>
-                </div>
-
-                <div class="relative pl-6 border-l-2 border-[#746B92] space-y-6">
-                    <% interactions.forEach(it => { %>
-                        <div class="relative">
-                            <div class="w-3.5 h-3.5 rounded-full bg-[#746B92] border-2 border-white absolute -left-[31px] top-1"></div>
-                            
-                            <div class="bg-[#FAF5ED] p-4 rounded-xl border border-[#D8CEBB]">
-                                <div class="flex items-center justify-between gap-2 mb-1">
-                                    <span class="text-xs font-bold text-[#282330]"><%= it.client %></span>
-                                    <span class="text-[11px] font-mono text-[#7A6F82]"><%= it.date %></span>
-                                </div>
-                                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-semibold bg-[#EFE7D4] text-[#746B92] mb-1.5">
-                                    <%= it.type %>
-                                </span>
-                                <p class="text-xs text-[#7A6F82] leading-relaxed"><%= it.summary %></p>
-                            </div>
-                        </div>
-                    <% }) %>
-                </div>
-
-            </div>
-
-        </div>
-
-    </main>
-
+    <!-- Modal Traitement Demande Rapide -->
     <div id="demandModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl max-w-lg w-full p-6 shadow-xl relative animate-fade">
             <button onclick="closeDemandModal()" class="absolute top-4 right-4 text-[#7A6F82] hover:text-[#282330] p-1">
@@ -674,7 +270,7 @@
                         name="advisorComment" 
                         id="modalDemandComment" 
                         rows="3" 
-                        placeholder="Ex: Demande validée avec succès. Le document sera disponible dans votre espace sous 24h."
+                        placeholder="Ex: Demande validée avec succès. Les informations ont été mises à jour dans votre espace."
                         class="w-full bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl p-3 text-xs text-[#282330] placeholder-[#9D937F] focus:outline-none focus:border-[#746B92]"
                     ></textarea>
                 </div>
@@ -691,225 +287,24 @@
         </div>
     </div>
 
-    <div id="clientDetailModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl max-w-xl w-full p-6 shadow-xl relative max-h-[90vh] overflow-y-auto">
-            <button onclick="closeClientDetailModal()" class="absolute top-4 right-4 text-[#7A6F82] hover:text-[#282330] p-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-
-            <div class="flex items-center gap-3 pb-4 border-b border-[#D8CEBB]">
-                <div class="w-12 h-12 rounded-2xl bg-[#746B92] text-white font-bold text-lg flex items-center justify-center shadow-xs" id="cliModalAvatar">
-                    M
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-[#282330]" id="cliModalName">Mehdi Alami</h3>
-                    <p class="text-xs text-[#7A6F82]">Client HosBank depuis <span id="cliModalJoined">2024</span> • CIN : <span class="font-mono" id="cliModalCin">BE849201</span></p>
-                </div>
-            </div>
-
-            <div class="my-4 grid grid-cols-2 gap-3 text-xs bg-[#FAF5ED] p-3.5 rounded-xl border border-[#D8CEBB]">
-                <div>
-                    <span class="text-[#7A6F82]">E-mail</span>
-                    <p class="font-semibold text-[#282330]" id="cliModalEmail">-</p>
-                </div>
-                <div>
-                    <span class="text-[#7A6F82]">Téléphone</span>
-                    <p class="font-semibold text-[#282330]" id="cliModalPhone">-</p>
-                </div>
-            </div>
-
-            <h4 class="text-xs font-bold text-[#282330] uppercase tracking-wider mb-2">Comptes Bancaires Actifs</h4>
-            <div id="cliModalAccountsList" class="space-y-2 mb-5"></div>
-
-            <h4 class="text-xs font-bold text-[#282330] uppercase tracking-wider mb-2">Cartes Bancaires Associées</h4>
-            <div id="cliModalCardsList" class="space-y-2 mb-5"></div>
-
-            <div class="flex justify-end pt-2">
-                <button onclick="closeClientDetailModal()" class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#746B92] text-white hover:bg-[#635B7E]">
-                    Fermer le dossier
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="claimModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl max-w-lg w-full p-6 shadow-xl relative">
-            <button onclick="closeClaimModal()" class="absolute top-4 right-4 text-[#7A6F82] hover:text-[#282330] p-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-
-            <h3 class="text-base font-bold text-[#282330]">Traiter la Réclamation</h3>
-            <p class="text-xs text-[#7A6F82] mt-0.5" id="modalClaimClient">Client : </p>
-
-            <form action="/advisor/claim/resolve" method="POST" class="mt-4 space-y-4">
-                <input type="hidden" name="claimId" id="modalClaimId">
-
-                <div>
-                    <label class="block text-xs font-semibold text-[#282330] mb-1.5">Objet de la réclamation</label>
-                    <input type="text" id="modalClaimObject" readonly class="w-full bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl px-3 py-2 text-xs text-[#282330] font-medium">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-[#282330] mb-1.5">Nouveau statut</label>
-                    <select name="newStatus" id="modalClaimStatusSelect" class="w-full bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl px-3 py-2 text-xs text-[#282330] focus:outline-none focus:border-[#746B92]">
-                        <option value="Clôturée">Clôturer la réclamation (Résolue)</option>
-                        <option value="En cours">Maintenir en cours d'instruction</option>
-                        <option value="Ouverte">Reclasser Ouverte</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-[#282330] mb-1.5">Réponse officielle transmise au client</label>
-                    <textarea 
-                        name="responseText" 
-                        id="modalClaimResponseText" 
-                        rows="4" 
-                        required
-                        placeholder="Rédigez la réponse détaillée et la solution apportée au client..."
-                        class="w-full bg-[#FAF5ED] border border-[#D8CEBB] rounded-xl p-3 text-xs text-[#282330] placeholder-[#9D937F] focus:outline-none focus:border-[#746B92]"
-                    ></textarea>
-                </div>
-
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeClaimModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-[#7A6F82] hover:bg-[#FAF5ED]">
-                        Annuler
-                    </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-sm">
-                        Envoyer la réponse
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        function switchTab(tabId, filterValue = null) {
-            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-[#746B92]', 'text-white', 'shadow-sm');
-                btn.classList.add('text-[#7A6F82]');
-            });
-
-            const activeTab = document.getElementById(tabId);
-            const activeBtn = document.getElementById('btn-' + tabId);
-
-            if (activeTab) activeTab.classList.add('active');
-            if (activeBtn) {
-                activeBtn.classList.add('bg-[#746B92]', 'text-white', 'shadow-sm');
-                activeBtn.classList.remove('text-[#7A6F82]');
-            }
-
-            if (filterValue && tabId === 'tabDemands') {
-                filterDemands(filterValue);
-            }
-        }
-
-        function filterDemands(type) {
-            const rows = document.querySelectorAll('.demand-row');
-            const buttons = document.querySelectorAll('.demand-filter-btn');
-
-            buttons.forEach(b => {
-                b.classList.remove('bg-[#746B92]', 'text-white');
-                b.classList.add('bg-[#FAF5ED]', 'text-[#7A6F82]');
-            });
-
-            if (event && event.target) {
-                event.target.classList.add('bg-[#746B92]', 'text-white');
-                event.target.classList.remove('bg-[#FAF5ED]', 'text-[#7A6F82]');
-            }
-
-            rows.forEach(row => {
-                if (type === 'ALL' || row.getAttribute('data-type') === type) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-
-        function filterClientTable(query) {
-            const q = query.toLowerCase();
-            const rows = document.querySelectorAll('.client-row');
-            rows.forEach(r => {
-                const text = r.textContent.toLowerCase();
-                r.style.display = text.includes(q) ? '' : 'none';
-            });
-        }
-
-
         function openDemandModal(id, type, clientName, details) {
             document.getElementById('modalDemandId').value = id;
-            document.getElementById('modalDemandTitle').textContent = `Traiter la demande : ${type} (${id})`;
-            document.getElementById('modalDemandClient').textContent = `Client : ${clientName}`;
+            document.getElementById('modalDemandTitle').textContent = 'Traiter la demande : ' + type;
+            document.getElementById('modalDemandClient').textContent = 'Client : ' + clientName;
             document.getElementById('modalDemandDetails').textContent = details;
             document.getElementById('demandModal').classList.remove('hidden');
         }
+
         function closeDemandModal() {
             document.getElementById('demandModal').classList.add('hidden');
         }
 
-        function openClientDetailModal(client) {
-            document.getElementById('cliModalAvatar').textContent = client.name.charAt(0);
-            document.getElementById('cliModalName').textContent = `${client.civilite} ${client.name}`;
-            document.getElementById('cliModalJoined').textContent = client.joinedDate;
-            document.getElementById('cliModalCin').textContent = client.cin;
-            document.getElementById('cliModalEmail').textContent = client.email;
-            document.getElementById('cliModalPhone').textContent = client.phone;
-
-            const accList = document.getElementById('cliModalAccountsList');
-            accList.innerHTML = '';
-            client.accounts.forEach(acc => {
-                accList.innerHTML += `
-                    <div class="bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between">
-                        <div>
-                            <span class="font-bold text-xs text-[#282330]">${acc.type}</span>
-                            <div class="text-[10px] font-mono text-[#7A6F82]">RIB : ${acc.rib}</div>
-                        </div>
-                        <span class="font-bold font-num text-xs text-[#746B92]">${acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} ${acc.currency}</span>
-                    </div>
-                `;
+        document.querySelectorAll('.btn-open-demand').forEach(btn => {
+            btn.addEventListener('click', function() {
+                openDemandModal(this.dataset.id, this.dataset.type, this.dataset.client, this.dataset.details);
             });
-
-            const cardsList = document.getElementById('cliModalCardsList');
-            cardsList.innerHTML = '';
-            if (client.cards.length === 0) {
-                cardsList.innerHTML = '<div class="text-xs text-[#9D937F] italic">Aucune carte active.</div>';
-            } else {
-                client.cards.forEach(card => {
-                    cardsList.innerHTML += `
-                        <div class="bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#746B92]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                <div>
-                                    <span class="font-bold text-xs text-[#282330]">${card.type}</span>
-                                    <div class="text-[10px] font-mono text-[#7A6F82]">${card.number} • Exp : ${card.expires}</div>
-                                </div>
-                            </div>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${card.status.includes('Opposition') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
-                                ${card.status}
-                            </span>
-                        </div>
-                    `;
-                });
-            }
-
-            document.getElementById('clientDetailModal').classList.remove('hidden');
-        }
-        function closeClientDetailModal() {
-            document.getElementById('clientDetailModal').classList.add('hidden');
-        }
-
-        function openClaimModal(id, clientName, object, currentStatus, currentResponse) {
-            document.getElementById('modalClaimId').value = id;
-            document.getElementById('modalClaimClient').textContent = `Client : ${clientName} (${id})`;
-            document.getElementById('modalClaimObject').value = object;
-            document.getElementById('modalClaimStatusSelect').value = currentStatus === 'Clôturée' ? 'Clôturée' : 'Clôturée';
-            document.getElementById('modalClaimResponseText').value = currentResponse;
-            document.getElementById('claimModal').classList.remove('hidden');
-        }
-        function closeClaimModal() {
-            document.getElementById('claimModal').classList.add('hidden');
-        }
+        });
     </script>
 </body>
 </html>

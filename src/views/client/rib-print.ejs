@@ -103,7 +103,7 @@
                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Domiciliation du compte</span>
                 <div class="font-extrabold text-sm text-hos-dark"><%= rib.account.agencyName %></div>
                 <div class="text-gray-600 mt-1">Conseiller référent : <span class="font-bold text-hos-dark"><%= rib.user.advisorName %></span></div>
-                <div class="text-gray-500 text-[11px]">N° de compte : <span class="font-bold text-hos-dark font-mono"><%= rib.account.number %></span></div>
+                <div class="text-gray-500 text-[11px]">N° de compte : <span class="font-bold text-hos-dark font-mono"><%= (rib.account.number || '').replace(/^CPT-/, '') %></span></div>
             </div>
         </div>
 

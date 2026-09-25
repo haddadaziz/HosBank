@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,7 +79,7 @@
 
                                 <div class="account-detail-row">
                                     <span class="account-detail-label">N° de Compte</span>
-                                    <span class="account-detail-value" style="font-family: monospace;"><%= acc.numeroCompte || acc.id %></span>
+                                    <span class="account-detail-value" style="font-family: monospace;"><%= (acc.numeroCompte || String(acc.id)).replace(/^CPT-/, '') %></span>
                                 </div>
 
                                 <div>
@@ -213,7 +214,7 @@
                                 <div class="card-controls-panel">
                                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
                                         <span style="color: var(--text-muted);">Compte rattaché :</span>
-                                        <strong style="color: var(--text-main); font-family: monospace;"><%= card.numeroCompte %></strong>
+                                        <strong style="color: var(--text-main); font-family: monospace;"><%= (card.numeroCompte || '').replace(/^CPT-/, '') %></strong>
                                     </div>
 
                                     <!-- Plafonds de la carte -->
@@ -303,7 +304,7 @@
                                             <div style="font-size: 0.75rem; color: var(--text-muted);"><%= card.clientId %></div>
                                         </td>
                                         <td>
-                                            <div style="font-weight: 600; font-size: 0.85rem;"><%= card.numeroCompte %></div>
+                                            <div style="font-weight: 600; font-size: 0.85rem;"><%= (card.numeroCompte || '').replace(/^CPT-/, '') %></div>
                                             <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);"><%= card.iban %></div>
                                         </td>
                                         <td>

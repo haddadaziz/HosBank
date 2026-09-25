@@ -37,12 +37,12 @@
 </head>
 <body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
 
-<div class="flex min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
     <!-- Sidebar unifiée multi-rôles -->
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/cards', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- Messages de Notification (Feedback Utilisateur) -->
         <% if (success === 'opposition') { %>
@@ -85,12 +85,21 @@
                 <p class="text-sm text-gray-500 mt-1">Gérez vos cartes physiques, cartes virtuelles et paramètres de sécurité en temps réel.</p>
             </div>
             <div>
-                <button type="button" onclick="document.getElementById('newCardModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Commander une carte virtuelle
-                </button>
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    <button type="button" onclick="openNewCardModal()" class="inline-flex items-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Commander une carte virtuelle
+                    </button>
+                <% } else { %>
+                    <button type="button" onclick="openNoAdvisorModal('carte')" class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer" title="Un conseiller attitré est requis pour commander une carte virtuelle">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        Conseiller requis (Carte Virtuelle)
+                    </button>
+                <% } %>
             </div>
         </header>
 
@@ -339,7 +348,7 @@
     <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-extrabold text-red-600 flex items-center gap-2">
-                <span>🚨</span> Mise en opposition d'urgence
+                <span></span> Mise en opposition d'urgence
             </h3>
             <button onclick="document.getElementById('oppositionModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
@@ -376,12 +385,54 @@
     </div>
 </div>
 
+<!-- Modal 1 : Opposition de Carte (HOS-31) -->
+<div id="oppositionModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-red-600 flex items-center gap-2">
+                <span>⚠️</span> Faire opposition
+            </h3>
+            <button type="button" onclick="closeOppositionModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-600 mb-4">
+            Carte concernée : <strong id="oppositionCardDisplay" class="font-mono text-hos-dark">•••• •••• •••• ----</strong>
+        </p>
+
+        <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Cette action est <strong>immédiate et irréversible</strong>. Votre carte sera définitivement verrouillée pour empêcher tout débit frauduleux.
+        </p>
+
+        <form action="/client/cards/opposition" method="POST">
+            <input type="hidden" name="cardId" id="oppositionCardId">
+            
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-hos-dark mb-1.5">Motif de l'opposition</label>
+                <select name="reason" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
+                    <option value="VOL">Vol de la carte</option>
+                    <option value="PERTE">Perte de la carte</option>
+                    <option value="FRAUDE">Utilisation frauduleuse suspectée</option>
+                </select>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeOppositionModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-sm transition-colors cursor-pointer">
+                    Confirmer l'opposition définitive
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal 2 : Recalcul code PIN (HOS-32) -->
-<div id="pinModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+<div id="pinModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-extrabold text-hos-dark">Demande de renouvellement PIN</h3>
-            <button onclick="document.getElementById('pinModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            <button type="button" onclick="closePinModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
         <p class="text-xs text-gray-600 mb-4">
@@ -395,15 +446,11 @@
         <form action="/client/cards/pin" method="POST">
             <input type="hidden" name="cardId" id="pinCardId">
 
-            <div class="p-3.5 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-600 mb-6">
-                🔒 Votre nouveau code secret vous sera envoyé sous pli confidentiel et confirmé par votre conseiller.
-            </div>
-
             <div class="flex items-center justify-end gap-3">
-                <button type="button" onclick="document.getElementById('pinModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                <button type="button" onclick="closePinModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                     Annuler
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
                     Confirmer la demande
                 </button>
             </div>
@@ -412,17 +459,21 @@
 </div>
 
 <!-- Modal 3 : Commander Carte Virtuelle (HOS-30) -->
-<div id="newCardModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+<div id="newCardModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-extrabold text-hos-dark">
                 Nouvelle Carte Virtuelle
             </h3>
-            <button onclick="document.getElementById('newCardModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            <button type="button" onclick="closeNewCardModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
         <p class="text-xs text-gray-500 mb-6 leading-relaxed">
-            Générez instantanément une carte bancaire virtuelle dédiée à vos achats sécurisés sur Internet.
+            <% if (typeof advisor !== 'undefined' && advisor) { %>
+                Générez instantanément une carte bancaire virtuelle dédiée à vos achats sécurisés sur Internet.
+            <% } else { %>
+                Un conseiller bancaire attitré est requis pour commander une carte virtuelle.
+            <% } %>
         </p>
 
         <form action="/client/cards/virtual" method="POST">
@@ -433,7 +484,7 @@
                     <% if (accounts && accounts.length > 0) { %>
                         <% accounts.forEach(acc => { %>
                             <option value="<%= acc.id %>">
-                                <%= acc.type === 'COURANT' ? 'Compte Courant' : 'Compte Épargne' %> (<%= acc.accountNumber %>) - Solde : <%= (acc.balance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> <%= acc.currency || 'EUR' %>
+                                <%= acc.type === 'COURANT' ? 'Compte Courant' : 'Compte Épargne' %> (<%= (acc.accountNumber || '').replace(/^CPT-/, '') %>)
                             </option>
                         <% }) %>
                     <% } else { %>
@@ -450,14 +501,37 @@
             </div>
 
             <div class="flex items-center justify-end gap-3 mt-6">
-                <button type="button" onclick="document.getElementById('newCardModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                <button type="button" onclick="closeNewCardModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                     Annuler
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
-                    Générer instantanément
-                </button>
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
+                        Générer instantanément
+                    </button>
+                <% } else { %>
+                    <button type="button" disabled class="px-5 py-2.5 text-xs font-bold text-gray-400 bg-gray-200 rounded-xl cursor-not-allowed">
+                        Conseiller requis
+                    </button>
+                <% } %>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal 4 : Information Conseiller Requis (HOS-Security) -->
+<div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl">
+            ⏳
+        </div>
+        <h3 class="text-lg font-extrabold text-hos-dark mb-2">Conseiller attitré requis</h3>
+        <p id="noAdvisorModalText" class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Pour des raisons de conformité et de sécurité bancaire, la commande d'une <strong>carte bancaire virtuelle</strong> requiert la supervision de votre conseiller dédié.<br><br>
+            Votre dossier est actuellement en cours d'attribution. Un conseiller vous sera affecté dans les plus brefs délais.
+        </p>
+        <button type="button" onclick="closeNoAdvisorModal()" class="w-full py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
+            J'ai compris
+        </button>
     </div>
 </div>
 
@@ -522,6 +596,12 @@
         document.getElementById('oppositionCardId').value = cardId;
         document.getElementById('oppositionCardDisplay').textContent = maskedPan;
         document.getElementById('oppositionModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeOppositionModal() {
+        document.getElementById('oppositionModal').classList.add('hidden');
+        document.body.style.overflow = '';
     }
 
     // 3. Ouverture modal PIN avec passage du cardId
@@ -529,7 +609,64 @@
         document.getElementById('pinCardId').value = cardId;
         document.getElementById('pinCardDisplay').textContent = maskedPan;
         document.getElementById('pinModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
+
+    function closePinModal() {
+        document.getElementById('pinModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    // 3.bis. Ouverture modal Nouvelle Carte Virtuelle
+    function openNewCardModal() {
+        document.getElementById('newCardModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeNewCardModal() {
+        document.getElementById('newCardModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function openNoAdvisorModal(type) {
+        const modal = document.getElementById('noAdvisorModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeNoAdvisorModal() {
+        const modal = document.getElementById('noAdvisorModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Fermeture automatique au clic en dehors (backdrop)
+    document.getElementById('oppositionModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeOppositionModal();
+    });
+    document.getElementById('pinModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closePinModal();
+    });
+    document.getElementById('newCardModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeNewCardModal();
+    });
+    document.getElementById('noAdvisorModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeNoAdvisorModal();
+    });
+
+    // Fermeture avec la touche Échap
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeOppositionModal();
+            closePinModal();
+            closeNewCardModal();
+            closeNoAdvisorModal();
+        }
+    });
 
     // 4. Révélation / Masquage du numéro avec bascule d'icône œil ouvert / œil barré
     const revealedState = {};

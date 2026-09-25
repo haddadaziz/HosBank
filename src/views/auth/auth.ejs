@@ -116,15 +116,66 @@
             }
             #purplePanel {
                 min-height: 220px !important;
-                height: 220px !important;
+                height: auto !important;
+                padding: 24px 20px 24px 20px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+            }
+            #logoContainer {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                width: 100% !important;
+                text-align: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            #logoContainer a {
+                margin: 0 auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             #textContainer {
-                min-height: 110px !important;
+                min-height: 90px !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
-                margin-top: auto !important;
-                margin-bottom: auto !important;
+                align-items: center !important;
+                text-align: center !important;
+                margin-top: 14px !important;
+                margin-bottom: 0 !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            #textRegister.hidden,
+            #textLogin.hidden {
+                display: none !important;
+            }
+            #textRegister:not(.hidden),
+            #textLogin:not(.hidden) {
+                text-align: center !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            #textContainer h1,
+            #textContainer h2 {
+                text-align: center !important;
+                width: 100% !important;
+            }
+            #textContainer p {
+                text-align: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                max-width: 320px !important;
             }
         }
     </style>

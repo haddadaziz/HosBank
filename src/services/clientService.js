@@ -217,7 +217,7 @@ class ClientService {
                 await client.query(`
                     INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie)
                     VALUES ($1, 'CREDIT', $2, $3, $4, 'Virement reçu')
-                `, [destAcc.id, parsedAmount, newDestBalance, `Virement reçu de ${sourceAcc.accountNumber} : ${label}`]);
+                `, [destAcc.id, parsedAmount, newDestBalance, `Virement reçu de ${(sourceAcc.accountNumber || '').replace(/^CPT-/, '')} : ${label}`]);
             }
 
             await client.query("COMMIT");
@@ -260,8 +260,8 @@ class ClientService {
             conditions.push(`o.date_operation >= date_trunc('month', CURRENT_DATE)`);
         } else if (period === '3months') {
             conditions.push(`o.date_operation >= CURRENT_DATE - INTERVAL '3 months'`);
-        } else if (period === 'year') {
-            conditions.push(`o.date_operation >= date_trunc('year', CURRENT_DATE)`);
+        } else if (period === '6months' || period === 'year') {
+            conditions.push(`o.date_operation >= CURRENT_DATE - INTERVAL '6 months'`);
         }
 
         if (search && search.trim() !== '') {
@@ -396,23 +396,19 @@ class ClientService {
             [cardId]
         );
 
-        const reference = "DEM-OPP-" + Date.now().toString().slice(-6);
-        const payload = JSON.stringify({
-            carte_id: cardId,
-            pan_masque: card.pan_masque,
-            motif,
-            date_opposition: new Date().toISOString()
-        });
-
-        await db.query(`
-            INSERT INTO demandes (utilisateur_id, reference, type_demande, statut, payload_json, reponse_conseiller, date_traitement)
-            VALUES ($1, $2, 'OPPOSITION_CARTE', 'APPROUVEE', $3, 'Opposition enregistrée avec succès. Carte verrouillée.', CURRENT_TIMESTAMP)
-        `, [userId, reference, payload]);
-
-        return { cardId, reference };
+        return { cardId };
     }
 
     async createVirtualCard(userId, accountId, monthlyLimit = 1000) {
+        // Sécurité : Vérifier que le client a un conseiller attitré
+        const advCheck = await db.query(
+            "SELECT conseiller_id FROM utilisateurs WHERE id = $1",
+            [userId]
+        );
+        if (advCheck.rows.length === 0 || !advCheck.rows[0].conseiller_id) {
+            throw new Error("Vous devez disposer d'un conseiller bancaire attitré pour commander une carte virtuelle. Un conseiller vous sera prochainement affecté.");
+        }
+
         const accountRes = await db.query(
             "SELECT id FROM comptes_bancaires WHERE id = $1 AND utilisateur_id = $2 AND statut = 'ACTIF'",
             [accountId, userId]
@@ -567,6 +563,21 @@ class ClientService {
         const hasSavingsAccount = accounts.some(a => a.type === 'EPARGNE');
 
         // Récupérer le conseiller attitré au client (s'il lui a été assigné par l'admin)
+        const advisor = await this.getUserAdvisor(userId);
+
+        return { 
+            accounts, 
+            cards, 
+            transactions, 
+            totalBalance, 
+            currentBalance, 
+            savingsBalance, 
+            hasSavingsAccount,
+            advisor
+        };
+    }
+
+    async getUserAdvisor(userId) {
         const advisorQuery = `
             SELECT 
                 c.id,
@@ -578,29 +589,16 @@ class ClientService {
             JOIN utilisateurs c ON u.conseiller_id = c.id
             WHERE u.id = $1
         `;
-        const { rows: advisorRows } = await db.query(advisorQuery, [userId]);
-        let advisor = null;
-        if (advisorRows.length > 0) {
-            const adv = advisorRows[0];
-            advisor = {
-                id: adv.id,
-                name: `${adv.prenom} ${adv.nom}`,
-                email: adv.email || "conseiller@hosbank.fr",
-                phone: adv.telephone || "+33 1 42 68 55 00",
-                agency: "Agence Centrale HosBank Paris",
-                avatar: `${(adv.prenom[0] || '').toUpperCase()}${(adv.nom[0] || '').toUpperCase()}`
-            };
-        }
-
-        return { 
-            accounts, 
-            cards, 
-            transactions, 
-            totalBalance, 
-            currentBalance, 
-            savingsBalance, 
-            hasSavingsAccount,
-            advisor
+        const { rows } = await db.query(advisorQuery, [userId]);
+        if (rows.length === 0) return null;
+        const adv = rows[0];
+        return {
+            id: adv.id,
+            name: `${adv.prenom} ${adv.nom}`,
+            email: adv.email || "conseiller@hosbank.fr",
+            phone: adv.telephone || "+33 1 42 68 55 00",
+            agency: "Agence Centrale HosBank Paris",
+            avatar: `${(adv.prenom[0] || '').toUpperCase()}${(adv.nom[0] || '').toUpperCase()}`
         };
     }
 
@@ -692,9 +690,13 @@ class ClientService {
                 d.reponse_conseiller AS "advisorResponse",
                 d.date_demande AS "dateDemande",
                 TO_CHAR(d.date_demande, 'DD/MM/YYYY') AS "dateFormatted",
-                TO_CHAR(d.date_traitement, 'DD/MM/YYYY') AS "dateProcessed"
+                TO_CHAR(d.date_traitement, 'DD/MM/YYYY') AS "dateProcessed",
+                c.prenom AS "advisorPrenom",
+                c.nom AS "advisorNom"
             FROM demandes d
-            WHERE d.utilisateur_id = $1
+            JOIN utilisateurs u ON d.utilisateur_id = u.id
+            LEFT JOIN utilisateurs c ON u.conseiller_id = c.id
+            WHERE d.utilisateur_id = $1 AND d.type_demande != 'OPPOSITION_CARTE'
             ORDER BY d.date_demande DESC
         `;
         const { rows } = await db.query(query, [userId]);
@@ -705,8 +707,10 @@ class ClientService {
             } catch (e) {
                 details = {};
             }
+            const advisorName = (r.advisorPrenom && r.advisorNom) ? `${r.advisorPrenom} ${r.advisorNom}` : null;
             return {
                 ...r,
+                advisorName,
                 details
             };
         });
@@ -734,6 +738,18 @@ class ClientService {
     }
 
     async createSavingsAccountDemand(userId, { initialDeposit, sourceAccountId, notes = "" }) {
+        // Sécurité : Vérifier que le client a un conseiller attitré
+        const userRes = await db.query(
+            `SELECT u.id, u.conseiller_id, c.nom, c.prenom, c.email 
+             FROM utilisateurs u 
+             LEFT JOIN utilisateurs c ON u.conseiller_id = c.id 
+             WHERE u.id = $1`,
+            [userId]
+        );
+        if (userRes.rows.length === 0 || !userRes.rows[0].conseiller_id) {
+            throw new Error("Vous devez disposer d'un conseiller bancaire attitré pour effectuer une demande d'ouverture de Livret Épargne. Un conseiller vous sera prochainement affecté.");
+        }
+
         const deposit = parseFloat(initialDeposit);
         if (isNaN(deposit) || deposit < 10) {
             throw new Error("Le versement initial pour l'ouverture d'un livret d'épargne doit être d'au moins 10,00 €.");
@@ -769,19 +785,12 @@ class ClientService {
         const { rows } = await db.query(query, [userId, reference, payload]);
         const demand = rows[0];
 
-        // Vérifier si le client dispose d'un conseiller attitré
-        const advQuery = `
-            SELECT c.id, c.nom, c.prenom, c.email
-            FROM utilisateurs u
-            JOIN utilisateurs c ON u.conseiller_id = c.id
-            WHERE u.id = $1
-        `;
-        const { rows: advRows } = await db.query(advQuery, [userId]);
-        const advisor = advRows.length > 0 ? {
-            id: advRows[0].id,
-            name: `${advRows[0].prenom} ${advRows[0].nom}`,
-            email: advRows[0].email
-        } : null;
+        const adv = userRes.rows[0];
+        const advisor = {
+            id: adv.conseiller_id,
+            name: `${adv.prenom} ${adv.nom}`,
+            email: adv.email
+        };
 
         return {
             ...demand,
@@ -790,6 +799,15 @@ class ClientService {
     }
 
     async createReclamation(userId, { sujet, description, priorite = "MOYENNE" }) {
+        // Sécurité : Vérifier que le client dispose d'un conseiller attitré
+        const advCheck = await db.query(
+            "SELECT conseiller_id FROM utilisateurs WHERE id = $1",
+            [userId]
+        );
+        if (advCheck.rows.length === 0 || !advCheck.rows[0].conseiller_id) {
+            throw new Error("Vous devez disposer d'un conseiller bancaire attitré pour déposer une réclamation.");
+        }
+
         if (!sujet || !sujet.trim()) {
             throw new Error("Le sujet de la réclamation est obligatoire.");
         }

@@ -56,15 +56,15 @@ function buildUrl(targetPage, overrides = {}) {
 
 // URL d'export CSV
 const exportUrl = buildUrl(1) + '&export=csv';
-const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.direction !== 'ALL') || (filters.period && filters.period !== 'all') || filters.search);
+const hasActiveFilters = !!((filters.direction && filters.direction !== 'ALL') || (filters.period && filters.period !== 'all') || filters.search);
 %>
 
-<div class="flex min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
     <!-- Sidebar unifiée multi-rôles -->
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transactions', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 pt-20 lg:pt-10 max-w-[1400px] w-full min-w-0">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -103,13 +103,20 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
 
         </div>
 
-        <!-- Formulaire de recherche et filtres multicritères (HOS-28) -->
+        <!-- Formulaire de recherche et filtre par date (HOS-28) -->
         <form method="GET" action="/client/transactions" class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm mb-6">
+            <% if (filters.direction && filters.direction !== 'ALL') { %>
+                <input type="hidden" name="direction" value="<%= filters.direction %>">
+            <% } %>
             <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
                 
                 <!-- Recherche textuelle -->
-                <div class="md:col-span-4 relative">
-                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></span>
+                <div class="md:col-span-6 relative">
+                    <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
                     <input 
                         type="text" 
                         name="search" 
@@ -119,39 +126,18 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
                     >
                 </div>
 
-                <!-- Sélecteur de compte -->
-                <div class="md:col-span-3">
-                    <select name="accountId" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-hos-primary outline-none text-xs text-gray-700 bg-white cursor-pointer">
-                        <option value="">Tous les comptes bancaires</option>
-                        <% accounts.forEach(acc => { %>
-                            <option value="<%= acc.id %>" <%= String(filters.accountId) === String(acc.id) ? 'selected' : '' %>>
-                                <%= acc.accountNumber %> (<%= acc.type %>) - <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €
-                            </option>
-                        <% }) %>
-                    </select>
-                </div>
-
-                <!-- Sélecteur de période -->
-                <div class="md:col-span-2">
+                <!-- Sélecteur de période (seul select) -->
+                <div class="md:col-span-4">
                     <select name="period" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-hos-primary outline-none text-xs text-gray-700 bg-white cursor-pointer">
                         <option value="all" <%= filters.period === 'all' ? 'selected' : '' %>>Toutes les dates</option>
                         <option value="month" <%= filters.period === 'month' ? 'selected' : '' %>>Ce mois-ci</option>
                         <option value="3months" <%= filters.period === '3months' ? 'selected' : '' %>>3 derniers mois</option>
-                        <option value="year" <%= filters.period === 'year' ? 'selected' : '' %>>Année 2026</option>
-                    </select>
-                </div>
-
-                <!-- Sélecteur de sens (Débit / Crédit) -->
-                <div class="md:col-span-2">
-                    <select name="direction" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-hos-primary outline-none text-xs text-gray-700 bg-white cursor-pointer">
-                        <option value="ALL" <%= (!filters.direction || filters.direction === 'ALL') ? 'selected' : '' %>>Tous flux (±)</option>
-                        <option value="CREDIT" <%= filters.direction === 'CREDIT' ? 'selected' : '' %>>Crédits (+)</option>
-                        <option value="DEBIT" <%= filters.direction === 'DEBIT' ? 'selected' : '' %>>Débits (-)</option>
+                        <option value="6months" <%= (filters.period === '6months' || filters.period === 'year') ? 'selected' : '' %>>6 mois max</option>
                     </select>
                 </div>
 
                 <!-- Boutons d'action -->
-                <div class="md:col-span-1 flex items-center gap-2">
+                <div class="md:col-span-2 flex items-center gap-2">
                     <button type="submit" class="w-full py-2.5 px-3 bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold rounded-xl shadow-sm transition-all text-center">
                         Filtrer
                     </button>
@@ -240,8 +226,10 @@ const hasActiveFilters = !!(filters.accountId || (filters.direction && filters.d
             <% } else { %>
                 <!-- État vide -->
                 <div class="py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
-                    <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl text-gray-400">
-                        💸
+                    <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-gray-400">
+                        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
                     </div>
                     <div class="font-bold text-sm text-hos-dark mb-1">Aucune opération trouvée</div>
                     <p class="text-xs text-gray-500 max-w-sm mx-auto">
