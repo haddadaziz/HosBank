@@ -44,6 +44,68 @@
                     <div style="font-size: 1.8rem; font-weight: 800; color: #746B92;"><%= summary.currentAccountsCount %></div>
                     <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Opérations quotidiennes</div>
                 </div>
+                <!-- Grille des Cartes de Comptes Modernes -->
+                <div class="accounts-cards-grid">
+                    <% accounts.forEach(acc => { %>
+                        <div class="account-modern-card">
+                            <!-- En-tête : Type de Compte & Statut -->
+                            <div class="account-card-header">
+                                <div class="account-type-pill">
+                                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                                    </svg>
+                                    <%= acc.type %>
+                                </div>
+
+                                <div>
+                                    <% if (acc.status === 'Actif') { %>
+                                        <span class="badge success"><span class="badge-dot"></span> Actif</span>
+                                    <% } else { %>
+                                        <span class="badge danger"><span class="badge-dot"></span> Bloqué</span>
+                                    <% } %>
+                                </div>
+                            </div>
+
+                            <!-- Bloc Solde Principal -->
+                            <div class="account-balance-section">
+                                <div class="account-balance-label">Solde Disponible</div>
+                                <div class="account-balance-val">
+                                    <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> <span style="font-size: 0.95rem; font-weight: 700; color: var(--primary);"><%= acc.currency %></span>
+                                </div>
+                            </div>
+
+                            <!-- Détails Titulaire & Numéro de compte -->
+                            <div class="account-details-list">
+                                <div class="account-detail-row">
+                                    <span class="account-detail-label">Titulaire</span>
+                                    <div style="text-align: right;">
+                                        <span class="account-detail-value"><%= acc.clientName %></span>
+                                        <span class="badge" style="font-size: 0.68rem; margin-left: 4px;"><%= acc.clientId %></span>
+                                    </div>
+                                </div>
+
+                                <div class="account-detail-row">
+                                    <span class="account-detail-label">N° de Compte</span>
+                                    <span class="account-detail-value" style="font-family: monospace;"><%= (acc.numeroCompte || String(acc.id)).replace(/^CPT-/, '') %></span>
+                                </div>
+
+                                <div>
+                                    <div class="account-detail-label" style="margin-bottom: 5px; font-size: 0.76rem;">IBAN du Compte</div>
+                                    <div class="account-iban-box">
+                                        <span class="account-iban-text"><%= acc.iban %></span>
+                                        <button type="button" onclick="copyIban('<%= acc.iban %>')" title="Copier l'IBAN" style="background: none; border: none; cursor: pointer; color: var(--primary); padding: 4px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700;">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                            Copier
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pied de carte : Action Administrateur -->
+                            <div class="account-card-footer">
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                                    BIC: <strong><%= acc.bic || 'HOSBFR2P' %></strong>
+                                </div>
 
                 <!-- Comptes Épargne -->
                 <div class="card" style="padding: 18px 20px;">
@@ -72,6 +134,121 @@
                         <span class="card-title" style="font-size: 1.05rem;">Liste exhaustive des comptes</span>
                         <span class="badge purple" style="font-size: 0.8rem;"><%= accounts.length %> affiché(s)</span>
                     </div>
+                <!-- 2.A. Grille des Cartes Bancaires 3D Ultra-Réalistes -->
+                <div id="cardsRealisticView" class="cards-realistic-grid">
+                    <% if (typeof cards !== 'undefined' && cards && cards.length > 0) { %>
+                        <% cards.forEach(card => { 
+                            let themeClass = 'card-theme-premier';
+                            if (card.statut === 'OPPOSEE') {
+                                themeClass = 'card-theme-opposed';
+                            } else if (card.statut !== 'ACTIVE') {
+                                themeClass = 'card-theme-blocked';
+                            } else if (card.typeCarte === 'VIRTUELLE') {
+                                themeClass = 'card-theme-virtual';
+                            }
+                        %>
+                            <div class="realistic-card-wrapper">
+                                <!-- Objet Carte Physique -->
+                                <div class="physical-credit-card <%= themeClass %>">
+                                    <!-- Statut Flottant sur la Carte -->
+                                    <div class="card-floating-badge">
+                                        <% if (card.statut === 'ACTIVE') { %>
+                                            <span class="badge success" style="background: rgba(16, 185, 129, 0.25); color: #A7F3D0; border: 1px solid rgba(16, 185, 129, 0.5); backdrop-filter: blur(4px);">
+                                                <span class="badge-dot"></span> Active
+                                            </span>
+                                        <% } else if (card.statut === 'OPPOSEE') { %>
+                                            <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
+                                                <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
+                                                <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                            </span>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- En-tête de carte avec le Logo Officiel HosBank -->
+                                    <div class="card-top-row">
+                                        <div class="card-logo-container">
+                                            <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+                                        </div>
+                                    </div>
+
+                                    <!-- Puce EMV & Sans-Contact -->
+                                    <div class="card-chip-row">
+                                        <div class="emv-chip"></div>
+                                        <div class="nfc-icon">
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                                <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                                <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+
+                                    <!-- Numéro PAN embossé -->
+                                    <div class="card-pan-number">
+                                        <%= card.panMasque %>
+                                    </div>
+
+                                    <!-- Bas de carte : Titulaire & Expiration -->
+                                    <div class="card-bottom-row">
+                                        <div>
+                                            <div class="card-holder-label">Titulaire de la carte</div>
+                                            <div class="card-holder-name"><%= card.clientName %></div>
+                                        </div>
+                                        <div class="card-expiry-box">
+                                            <div class="card-holder-label">Expire Fin</div>
+                                            <div class="card-expiry-val"><%= card.dateExpiration || '12/28' %></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Panneau de Contrôle & Plafonds sous la carte -->
+                                <div class="card-controls-panel">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+                                        <span style="color: var(--text-muted);">Compte rattaché :</span>
+                                        <strong style="color: var(--text-main); font-family: monospace;"><%= (card.numeroCompte || '').replace(/^CPT-/, '') %></strong>
+                                    </div>
+
+                                    <!-- Plafonds de la carte -->
+                                    <div class="card-limits-strip">
+                                        <div>
+                                            <div class="limit-item-title">Plafond Paiement</div>
+                                            <div class="limit-item-val"><%= card.plafondPaiement ? card.plafondPaiement.toLocaleString('fr-FR') : '3 000' %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ mois</span></div>
+                                        </div>
+                                        <div>
+                                            <div class="limit-item-title">Plafond Retrait</div>
+                                            <div class="limit-item-val"><%= card.plafondRetrait ? card.plafondRetrait.toLocaleString('fr-FR') : '1 000' %> € <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">/ sem.</span></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Boutons d'Action Administrateur -->
+                                    <div class="card-actions-toolbar">
+                                        <% if (card.statut !== 'OPPOSEE') { %>
+                                            <!-- Bouton Ajuster Plafonds -->
+                                            <button type="button" class="btn-sm btn-secondary btn-edit-limits"
+                                                data-id="<%= card.id %>"
+                                                data-pan="<%= card.panMasque %>"
+                                                data-client="<%= card.clientName %>"
+                                                data-paiement="<%= card.plafondPaiement || 3000 %>"
+                                                data-retrait="<%= card.plafondRetrait || 1000 %>">
+                                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 4px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                                                Plafonds
+                                            </button>
+
+                                            <!-- Bouton Bloquer / Débloquer temporaire -->
+                                            <form action="/admin/cards/<%= card.id %>/toggle-block" method="POST" style="display: inline-block;">
+                                                <% if (card.statut === 'ACTIVE') { %>
+                                                    <button type="submit" class="btn-sm btn-danger-outline" data-confirm="Voulez-vous bloquer temporairement cette carte ?">
+                                                        Bloquer
+                                                    </button>
+                                                <% } else { %>
+                                                    <button type="submit" class="btn-sm btn-secondary" style="color: var(--status-success); border-color: rgba(16, 185, 129, 0.3);">
+                                                        Débloquer
+                                                    </button>
+                                                <% } %>
+                                            </form>
 
                     <!-- Filtres par Type de compte & Découvert -->
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -159,6 +336,8 @@
                                                     Compte Épargne
                                                 </span>
                                             <% } %>
+                                            <div style="font-weight: 600; font-size: 0.85rem;"><%= (card.numeroCompte || '').replace(/^CPT-/, '') %></div>
+                                            <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);"><%= card.iban %></div>
                                         </td>
 
                                         <!-- Solde Actuel -->

@@ -183,7 +183,7 @@ const userRepository = {
     },
 
     async createDefaultAccount(userId) {
-        const numCompte = 'CPT-' + Math.floor(10000000 + Math.random() * 90000000);
+        const numCompte = String(Math.floor(10000000 + Math.random() * 90000000));
         const iban = 'FR76 3000 4012 ' + Math.floor(1000 + Math.random() * 9000) + ' ' + Math.floor(1000 + Math.random() * 9000) + ' 123';
         
         const query = `
@@ -192,7 +192,26 @@ const userRepository = {
             RETURNING *
         `;
         const result = await db.query(query, [userId, numCompte, iban]);
-        return result.rows[0];
+        const account = result.rows[0];
+
+        try {
+            await db.query(`
+                INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie, date_valeur, date_operation)
+                VALUES ($1, 'CREDIT', 100.00, 100.00, 'Dépôt initial d''ouverture de compte', 'Revenus', CURRENT_DATE, CURRENT_TIMESTAMP)
+            `, [account.id]);
+        } catch (opErr) {
+            console.warn("Opération initiale non créée :", opErr.message);
+        }
+
+        // Création automatique de la carte bancaire physique attitrée au nouveau compte
+        try {
+            const cardRepository = require("./cardRepository");
+            await cardRepository.createPhysicalCard(account.id);
+        } catch (cardErr) {
+            console.warn("Carte bancaire initiale non créée :", cardErr.message);
+        }
+
+        return account;
     },
 
     async verifyEmail(id) {

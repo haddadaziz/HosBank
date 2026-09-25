@@ -116,15 +116,66 @@
             }
             #purplePanel {
                 min-height: 220px !important;
-                height: 220px !important;
+                height: auto !important;
+                padding: 24px 20px 24px 20px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                text-align: center !important;
+            }
+            #logoContainer {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                width: 100% !important;
+                text-align: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            #logoContainer a {
+                margin: 0 auto !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
             #textContainer {
-                min-height: 110px !important;
+                min-height: 90px !important;
                 display: flex !important;
                 flex-direction: column !important;
                 justify-content: center !important;
-                margin-top: auto !important;
-                margin-bottom: auto !important;
+                align-items: center !important;
+                text-align: center !important;
+                margin-top: 14px !important;
+                margin-bottom: 0 !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            #textRegister.hidden,
+            #textLogin.hidden {
+                display: none !important;
+            }
+            #textRegister:not(.hidden),
+            #textLogin:not(.hidden) {
+                text-align: center !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            #textContainer h1,
+            #textContainer h2 {
+                text-align: center !important;
+                width: 100% !important;
+            }
+            #textContainer p {
+                text-align: center !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+                max-width: 320px !important;
             }
         }
     </style>
@@ -356,6 +407,22 @@
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                         <span><%= message %></span>
+                    </div>
+                <% } %>
+
+                <% if (typeof devToken !== 'undefined' && devToken) { %>
+                    <div class="mb-6 p-4 rounded-2xl bg-[#FAF5ED] border-2 border-[#746B92]/30 text-[#282330] text-xs sm:text-sm shadow-xs">
+                        <div class="font-extrabold flex items-center gap-1.5 mb-1.5 text-[#746B92]">
+                            <svg class="w-4 h-4 text-[#746B92]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>Activation Locale Rapide :</span>
+                        </div>
+                        <p class="text-xs text-[#7A6F82] mb-3 leading-relaxed">
+                            Votre compte vient d'être créé. Pour valider votre e-mail immédiatement sur votre PC sans passer par une boîte mail :
+                        </p>
+                        <a href="/verify-email?token=<%= devToken %>" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#746B92] hover:bg-[#635B7E] text-white font-bold text-xs shadow-xs transition-all hover:-translate-y-0.5">
+                            <span>👉 Valider et activer mon compte</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </a>
                     </div>
                 <% } %>
 

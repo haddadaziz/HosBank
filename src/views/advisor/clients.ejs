@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-num { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#282330] min-h-screen antialiased">
+
+    <div class="min-h-screen flex flex-col lg:flex-row">
+        <!-- Sidebar unifiée HosBank pour Conseiller -->
+        <%- include('../partials/sidebar', { role: 'advisor', currentPath: '/advisor/clients', user: advisor, metrics: metrics }) %>
+
+        <!-- Contenu Principal -->
+        <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 space-y-6">
+
+            <!-- En-tête de page -->
+            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#282330] tracking-tight">Clients Affectés</h1>
+                    <p class="text-sm text-[#7A6F82] mt-1">Portefeuille des clients sous la responsabilité de <%= advisor.name %></p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="relative w-full sm:w-72">
+                        <input 
+                            type="text" 
+                            id="clientFilterInput"
+                            placeholder="Rechercher par nom, ville, email..." 
+                            class="w-full bg-white border border-[#D8CEBB] rounded-xl pl-9 pr-3 py-2 text-xs text-[#282330] placeholder-[#9D937F] focus:outline-none focus:border-[#746B92] shadow-xs"
+                            oninput="filterClientTable(this.value)"
+                        >
+                        <svg class="w-4 h-4 text-[#9D937F] absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Feedback notifications -->
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>✅ Action enregistrée avec succès.</span>
+                </div>
+            <% } %>
+
+            <!-- Grille des clients -->
+            <div class="bg-white border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-[#EFE7D4]">
+                    <div class="text-sm font-bold text-[#282330]">
+                        <span id="clientCountBadge"><%= clients.length %></span> clients dans votre portefeuille
+                    </div>
+                </div>
+
+                <% if (clients.length === 0) { %>
+                    <div class="py-16 px-4 text-center bg-[#FAF5ED]/50 rounded-2xl border border-dashed border-[#D8CEBB]">
+                        <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[#FAF5ED] text-[#746B92] flex items-center justify-center border border-[#D8CEBB]">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <h3 class="text-sm font-bold text-[#282330]">Aucun client affecté</h3>
+                        <p class="text-xs text-[#7A6F82] mt-1 max-w-sm mx-auto">Vous n'avez aucun client assigné à votre portefeuille pour le moment.</p>
+                    </div>
+                <% } else { %>
+                    <div id="clientsCardsContainer" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        <% clients.forEach(cli => { %>
+                            <% 
+                                const totalBalance = (cli.accounts && cli.accounts.length) ? cli.accounts.reduce((acc, a) => acc + (a.balance || 0), 0) : (cli.totalBalance || 0); 
+                            %>
+                            <div class="bg-[#FAF5ED] border border-[#D8CEBB] hover:border-[#746B92] rounded-2xl p-5 space-y-4 client-row shadow-xs transition-all duration-200 flex flex-col justify-between group">
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-11 h-11 rounded-2xl bg-[#EFE7D4] text-[#746B92] font-extrabold text-base flex items-center justify-center shrink-0 group-hover:bg-[#746B92] group-hover:text-white transition-colors">
+                                            <%= (cli.prenom ? cli.prenom.charAt(0) : cli.name.charAt(0)).toUpperCase() %><%= (cli.nom ? cli.nom.charAt(0) : '').toUpperCase() %>
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="font-bold text-sm text-[#282330] leading-tight truncate">
+                                                <%= cli.civilite || 'M.' %> <%= cli.name %>
+                                            </h4>
+                                            <p class="text-[11px] text-[#7A6F82] truncate mt-0.5">
+                                                <%= cli.city || 'Paris' %>
+                                            </p>
+                                        </div>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold <%= cli.status === 'Bloqué' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800' %>">
+                                            <%= cli.status || 'Actif' %>
+                                        </span>
+                                    </div>
+
+                                    <div class="bg-white p-3 rounded-xl border border-[#D8CEBB]/80 flex items-baseline justify-between shadow-2xs">
+                                        <span class="text-[11px] font-medium text-[#7A6F82]">Solde Cumulé</span>
+                                        <span class="text-base font-bold font-num text-[#746B92]">
+                                            <%= Number(totalBalance).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
+                                        </span>
+                                    </div>
+
+                                    <div class="text-xs text-[#7A6F82] space-y-1">
+                                        <div class="truncate text-[11px]">
+                                            <span class="text-[#9D937F]">Email :</span> <span class="text-[#282330] font-medium"><%= cli.email %></span>
+                                        </div>
+                                        <div class="text-[11px] font-mono">
+                                            <span class="text-[#9D937F] font-sans">Tél :</span> <span class="text-[#282330]"><%= cli.phone || 'Non renseigné' %></span>
+                                        </div>
+                                        <div class="text-[11px] text-[#7A6F82]">
+                                            <span class="text-[#9D937F]">Comptes :</span> <span class="text-[#282330] font-medium"><%= (cli.accounts && cli.accounts.length) || cli.accountsCount || 1 %></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 border-t border-[#D8CEBB] flex items-center justify-between gap-2">
+                                    <span class="text-[10px] text-[#9D937F]">Client depuis <%= cli.joinedDate || '2024' %></span>
+                                    <a 
+                                        href="/advisor/clients/<%= cli.id %>"
+                                        class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                                        title="Consulter la Fiche 360°"
+                                    >
+                                        <span>Fiche 360°</span>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } %>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function filterClientTable(query) {
+            const q = query.toLowerCase().trim();
+            const rows = document.querySelectorAll('.client-row');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if (text.includes(q)) {
+                    row.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            const badge = document.getElementById('clientCountBadge');
+            if (badge) badge.textContent = visibleCount;
+        }
+    </script>
+</body>
+</html>

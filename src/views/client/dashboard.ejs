@@ -42,7 +42,7 @@
 
 <body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
 
-    <div class="flex min-h-screen">
+    <div class="min-h-screen flex flex-col lg:flex-row">
         <!-- Sidebar unifiée HosBank -->
         <%- include('../partials/sidebar', { role: 'client' , currentPath: '/client/dashboard' , user: user }) %>
 
@@ -63,6 +63,8 @@
                         <%= (user && user.name) ? user.name.split(' ').map(n=>n[0]).join('') : 'CL' %>
                     </div>
                 </div>
+            <!-- Contenu Principal (responsive mobile à part au-dessus, avec marge desktop) -->
+            <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
 
                 <!-- En-tête Client -->
                 <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -76,20 +78,27 @@
                     </div>
                 </header>
 
-                <% const currentAccounts=accounts.filter(a=> a.type === 'COURANT');
-                    const currentBalance = currentAccounts.reduce((sum, a) => sum + a.balance, 0);
-                    %>
-
                     <!-- Hero Solde Cumulé (Revolut / Wise Style) -->
                     <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm flex flex-wrap justify-between items-center gap-6 mb-8">
                         <div>
                             <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">
-                                Solde total disponible
+                                Solde total combiné
                             </div>
                             <div class="text-4xl lg:text-5xl font-extrabold text-hos-dark tracking-tight flex items-baseline">
-                                <%= Number(currentBalance).toLocaleString('fr-FR', { minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2 }) %>
-                                    <span class="text-2xl font-bold text-hos-primary ml-1.5">€</span>
+                                <%= Number(totalBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                                <span class="text-2xl font-bold text-hos-primary ml-1.5">€</span>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mt-3">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700">
+                                    <span class="w-2 h-2 rounded-full bg-hos-primary"></span>
+                                    Courant : <strong><%= Number(currentBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</strong>
+                                </span>
+                                <% if (hasSavingsAccount) { %>
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200/50">
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                        Épargne (3%) : <strong><%= Number(savingsBalance || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) %> €</strong>
+                                    </span>
+                                <% } %>
                             </div>
                         </div>
 
@@ -126,15 +135,36 @@
                             <div>
                                 <h2 class="text-lg font-bold text-hos-dark mb-4">Mes Comptes Bancaires</h2>
 
-                                <!-- Compte Courant Actif -->
-                                <% currentAccounts.forEach(account=> { %>
-                                    <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all mb-4">
-                                        <div class="flex items-center justify-between mb-4">
+                                <!-- Liste de tous les comptes (Courant & Épargne) HOS-18 -->
+                                <% accounts.forEach(account => { %>
+                                    <div
+                                        class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all mb-4">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                             <div class="flex items-center gap-3">
-                                                <span class="font-bold text-hos-dark text-base">Compte Courant</span>
-                                                <span class="text-xs bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-md font-semibold">
-                                                    Découvert: <%= Number(account.overdraft).toFixed(0) %>€
-                                                </span>
+                                                <div class="w-10 h-10 rounded-xl flex items-center justify-center <%= account.type === 'EPARGNE' ? 'bg-amber-50 text-amber-600' : 'bg-hos-cream text-hos-dark' %>">
+                                                    <% if (account.type === 'EPARGNE') { %>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    <% } else { %>
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                    <% } %>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-bold text-hos-dark text-base">
+                                                            <%= account.type === 'EPARGNE' ? "Livret d'Épargne HosBank" : "Compte Courant" %>
+                                                        </span>
+                                                        <% if (account.type === 'EPARGNE') { %>
+                                                            <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-md font-semibold">
+                                                                Taux <%= Number(account.interestRate || 3).toFixed(2) %>% / an
+                                                            </span>
+                                                        <% } %>
+                                                    </div>
+                                                    <div class="text-xs text-gray-400 mt-0.5 font-mono">N° : <%= (account.accountNumber || '').replace(/^CPT-/, '') %></div>
+                                                </div>
                                             </div>
                                             <div class="text-xl lg:text-2xl font-extrabold text-hos-dark">
                                                 <%= Number(account.balance).toLocaleString('fr-FR', {
@@ -145,6 +175,11 @@
                                         <!-- IBAN avec copie en 1 clic -->
                                         <div>
                                             <span class="inline-flex items-center gap-2 font-mono text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-transparent hover:border-hos-primary cursor-pointer transition-all" onclick="copierIban(this, '<%= account.iban %>')"
+                                        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+                                            <!-- IBAN avec copie en 1 clic -->
+                                            <span
+                                                class="inline-flex items-center gap-2 font-mono text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-lg border border-transparent hover:border-hos-primary cursor-pointer transition-all"
+                                                onclick="navigator.clipboard.writeText('<%= account.iban %>'); this.classList.add('border-emerald-500', 'text-emerald-700'); setTimeout(() => this.classList.remove('border-emerald-500', 'text-emerald-700'), 1500);"
                                                 title="Cliquez pour copier l'IBAN">
                                                 <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -172,6 +207,29 @@
                                             </div>
                                             <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
                                                 <button type="button" onclick="ouvrirModaleEpargne()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5">
+                                <% }) %>
+
+                                <% if (!hasSavingsAccount) { %>
+                                    <!-- CTA Demande d'ouverture de Livret Épargne (HOS-35) -->
+                                    <div
+                                        class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/40 to-white border-2 border-dashed border-hos-primary/30 hover:border-hos-primary rounded-2xl p-6 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
+                                        <div class="max-w-md">
+                                            <span
+                                                class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full inline-flex items-center gap-1.5 mb-2.5">
+                                                Taux rémunéré à 3,00% / an
+                                            </span>
+                                            <h3 class="text-base font-extrabold text-hos-dark mb-1">Livret d'Épargne
+                                                HosBank</h3>
+                                            <p class="text-xs text-gray-600 leading-relaxed">
+                                                Faites fructifier vos liquidités en toute sécurité. 0€ de frais de
+                                                gestion, retraits libres et capital garanti par le FGDR.
+                                            </p>
+                                        </div>
+                                        <div class="shrink-0 w-full sm:w-auto text-center sm:text-right">
+                                            <% if (typeof advisor !== 'undefined' && advisor) { %>
+                                                <button type="button"
+                                                    onclick="openSavingsModal()"
+                                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-hos-dark hover:bg-hos-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
                                                     Demander l'ouverture
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
@@ -179,8 +237,20 @@
                                                             stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                                     </svg>
                                                 </button>
-                                            </div>
+                                            <% } else { %>
+                                                <button type="button"
+                                                    onclick="openNoAdvisorModal('livret')"
+                                                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer"
+                                                    title="Un conseiller attitré est requis pour ouvrir un livret">
+                                                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                                    </svg>
+                                                    Conseiller requis
+                                                </button>
+                                            <% } %>
                                         </div>
+                                    </div>
+                                <% } %>
                             </div>
 
                             <!-- Dernières Opérations (Revolut Feed) -->
@@ -230,47 +300,113 @@
                         <!-- Colonne Droite : Carte & Conseiller (4 colonnes) -->
                         <div class="lg:col-span-4 space-y-8">
 
-                            <!-- Widget Carte Bancaire -->
-                            <div>
+                            <!-- Widget Carte Bancaire Réaliste 3D (Design HosBank Officiel) -->
+                            <div class="max-w-[340px] sm:max-w-[370px] lg:max-w-none mx-auto lg:mx-0">
                                 <div class="flex items-center justify-between mb-4">
                                     <h2 class="text-lg font-bold text-hos-dark">Carte Principale</h2>
-                                    <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer →</a>
+                                    <a href="/client/cards" class="text-xs font-bold text-hos-primary hover:underline">Gérer mes cartes →</a>
                                 </div>
 
-                                <% const primaryCard=(cards && cards.length> 0) ? cards[0] : null; %>
-                                    <!-- Visuel Carte Noire Titanium HosBank -->
-                                    <div class="bg-gradient-to-br from-[#2D253D] to-[#171320] rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
-                                        <!-- Reflet violet subtil -->
-                                        <div class="absolute -top-16 -right-16 w-48 h-48 bg-hos-primary/20 rounded-full blur-2xl pointer-events-none">
-                                        </div>
+                                <% 
+                                    const primaryCard = (cards && cards.length > 0) ? cards[0] : null;
+                                    const cardStatus = primaryCard ? (primaryCard.status || primaryCard.statut || 'ACTIVE') : 'ACTIVE';
+                                    const cardType = primaryCard ? (primaryCard.type || primaryCard.typeCarte || 'PHYSIQUE') : 'PHYSIQUE';
+                                    const cardPan = primaryCard ? (primaryCard.maskedPan || primaryCard.panMasque || '•••• •••• •••• ••••') : '•••• •••• •••• ••••';
+                                    const cardExpiry = primaryCard ? (primaryCard.expiry || primaryCard.dateExpiration || '12/29') : '12/29';
 
-                                        <div class="flex justify-between items-center mb-8">
-                                            <!-- Puce EMV dorée -->
-                                            <div class="w-10 h-7 rounded-md bg-gradient-to-br from-[#F9DF7B] via-[#E0AA3E] to-[#B8860B] shadow-inner">
+                                    let themeClass = 'card-theme-premier';
+                                    if (cardStatus === 'OPPOSEE') {
+                                        themeClass = 'card-theme-opposed';
+                                    } else if (cardStatus !== 'ACTIVE') {
+                                        themeClass = 'card-theme-blocked';
+                                    } else if (cardType === 'VIRTUELLE') {
+                                        themeClass = 'card-theme-virtual';
+                                    }
+
+                                    const linkedAccount = (primaryCard && accounts) ? accounts.find(a => a.id === primaryCard.accountId) : (accounts && accounts[0] ? accounts[0] : null);
+                                    const linkedAccountNumber = linkedAccount ? (linkedAccount.accountNumber || '').replace(/^CPT-/, '') : (accounts && accounts[0] ? (accounts[0].accountNumber || '').replace(/^CPT-/, '') : '—');
+                                    const cardHolderName = (user && user.name) ? user.name.toUpperCase() : 'TITULAIRE DE COMPTE';
+                                %>
+
+                                <div class="realistic-card-wrapper">
+                                    <!-- Objet Carte Physique -->
+                                    <div class="physical-credit-card <%= themeClass %>">
+                                        <!-- Statut Flottant sur la Carte (uniquement si Opposée ou Bloquée) -->
+                                        <% if (cardStatus === 'OPPOSEE') { %>
+                                            <div class="card-floating-badge">
+                                                <span class="badge danger" style="background: rgba(220, 38, 38, 0.35); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                                </span>
                                             </div>
-                                            <img src="/images/logo-white.svg" alt="HosBank" class="h-5 opacity-90">
+                                        <% } else if (cardStatus !== 'ACTIVE') { %>
+                                            <div class="card-floating-badge">
+                                                <span class="badge warning" style="background: rgba(217, 119, 6, 0.35); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px);">
+                                                    <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                                </span>
+                                            </div>
+                                        <% } %>
+
+                                        <!-- En-tête de carte avec le Logo Officiel HosBank -->
+                                        <div class="card-top-row">
+                                            <div class="card-logo-container">
+                                                <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+                                            </div>
                                         </div>
 
-                                        <div class="font-mono text-lg tracking-widest mb-6 drop-shadow">
-                                            <%= primaryCard ? primaryCard.maskedPan : '•••• •••• •••• 4289' %>
+                                        <!-- Puce EMV & Sans-Contact -->
+                                        <div class="card-chip-row">
+                                            <div class="emv-chip"></div>
+                                            <div class="nfc-icon">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                    <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                                    <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                                    <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                                </svg>
+                                            </div>
                                         </div>
 
-                                        <div class="flex justify-between items-end text-xs">
+                                        <!-- Numéro PAN embossé avec bouton toggle œil -->
+                                        <div class="card-pan-number" style="display: flex; align-items: center; justify-content: space-between;">
+                                            <span id="pan-display-dash"><%= cardPan %></span>
+                                            <% if (cardStatus !== 'OPPOSEE') { %>
+                                            <button type="button" 
+                                                    onclick="toggleRevealPanDash('<%= cardPan %>')" 
+                                                    title="Afficher / Masquer les numéros"
+                                                    class="p-1 sm:p-1.5 rounded-lg bg-white/10 hover:bg-white/25 active:scale-95 text-white/90 hover:text-white transition-all focus:outline-none cursor-pointer">
+                                                <!-- Œil Ouvert -->
+                                                <svg id="eye-open-dash" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                <!-- Œil Barré -->
+                                                <svg id="eye-closed-dash" class="w-3.5 h-3.5 sm:w-4 sm:h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                                </svg>
+                                            </button>
+                                            <% } %>
+                                        </div>
+
+                                        <!-- Bas de carte : Titulaire & Expiration -->
+                                        <div class="card-bottom-row">
                                             <div>
-                                                <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Titulaire</span>
-                                                <span class="font-bold text-white text-sm">
-                                                    <%= (user && user.name) ? user.name : 'Alexandre Moreau' %>
-                                                </span>
+                                                <div class="card-holder-label">Titulaire de la carte</div>
+                                                <div class="card-holder-name"><%= cardHolderName %></div>
                                             </div>
-                                            <div class="text-right">
-                                                <span class="text-gray-400 uppercase tracking-wider block text-[10px]">Expire
-                                                    fin</span>
-                                                <span class="font-semibold text-gray-200 text-xs">
-                                                    <%= primaryCard ? primaryCard.expiry : '08/27' %>
-                                                </span>
+                                            <div class="card-expiry-box">
+                                                <div class="card-holder-label">Expire Fin</div>
+                                                <div class="card-expiry-val"><%= cardExpiry %></div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Lien rapide de gestion -->
+                                    <div class="mt-3 sm:mt-4">
+                                        <a href="/client/cards" class="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-hos-dark font-semibold text-xs py-2 sm:py-2.5 px-3 rounded-xl transition-all border border-gray-200 shadow-sm hover:border-hos-primary">
+                                            <svg class="w-3.5 h-3.5 text-hos-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                            Gérer ma carte
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Widget Mon Conseiller Dédié -->
@@ -334,15 +470,20 @@
     </div>
 
     <!-- Modale Interactive de Demande de Livret Épargne (HOS-35) -->
-    <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out]">
+    <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] my-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-extrabold text-hos-dark">Ouvrir un Livret Épargne</h3>
                 <button type="button" onclick="fermerModaleEpargne()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+                <button type="button" onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
             </div>
 
             <p class="text-xs text-gray-500 mb-6 leading-relaxed">
-                Votre demande sera directement instruite et validée par votre conseiller <strong>Karim Bennani</strong> sous 24h ouvrées.
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    Votre demande sera directement instruite et validée par votre conseiller <strong><%= advisor.name %></strong> sous 24h ouvrées.
+                <% } else { %>
+                    Votre demande nécessite la validation préalable d'un conseiller bancaire attitré.
+                <% } %>
             </p>
 
             <form onsubmit="soumettreDemandeEpargne(event)">
@@ -351,26 +492,53 @@
                         <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité (€)</label>
                         <input type="number" min="10" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
                         <span class="text-[11px] text-gray-400 mt-1 block">Débité immédiatement depuis votre Compte Courant.</span>
+            <form id="savingsDemandForm" onsubmit="handleSavingsSubmit(event)">
+                <div id="savingsFormBody">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Compte de prélèvement</label>
+                        <select name="sourceAccountId" id="savingsSourceAccount" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-xs font-semibold bg-white">
+                            <% (accounts || []).forEach(acc => { %>
+                                <option value="<%= acc.id %>">
+                                    N° : <%= (acc.accountNumber || '').replace(/^CPT-/, '') %> (<%= acc.type === 'COURANT' ? 'Compte Courant' : acc.type %>)
+                                </option>
+                            <% }) %>
+                        </select>
                     </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-hos-dark mb-1.5">Premier versement souhaité (€)</label>
+                        <input type="number" step="0.01" min="10" name="initialDeposit" id="savingsDeposit" value="500" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary focus:ring-1 focus:ring-hos-primary outline-none text-sm font-semibold">
+                        <span class="text-[11px] text-gray-400 mt-1 block">Débité lors de l'activation depuis votre compte (Min. 10,00 €).</span>
+                    </div>
+
+                    <div id="savingsError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium"></div>
 
                     <div class="flex items-center justify-end gap-3 mt-6">
                         <button type="button" onclick="fermerModaleEpargne()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                        <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                             Annuler
                         </button>
-                        <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
-                            Envoyer ma demande
-                        </button>
+                        <% if (typeof advisor !== 'undefined' && advisor) { %>
+                            <button type="submit" id="savingsSubmitBtn" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors flex items-center gap-2 cursor-pointer">
+                                <span>Envoyer ma demande</span>
+                            </button>
+                        <% } else { %>
+                            <button type="button" disabled class="px-5 py-2.5 text-xs font-bold text-gray-400 bg-gray-200 rounded-xl cursor-not-allowed">
+                                Conseiller requis
+                            </button>
+                        <% } %>
                     </div>
                 </div>
 
-                <!-- Message de succès après envoi -->
+                <!-- Message de succès dynamique après envoi -->
                 <div id="savingsSuccess" class="hidden text-center py-4">
                     <div class="text-4xl mb-3">🎉</div>
                     <h4 class="text-base font-bold text-emerald-600 mb-1">Demande transmise avec succès !</h4>
-                    <p class="text-xs text-gray-500 mb-5 leading-relaxed">
-                        Référence : <strong>DEM-2026-003</strong>. Votre conseiller Karim Bennani a reçu votre requête et vous notifiera dès son activation.
+                    <p id="savingsSuccessMsg" class="text-xs text-gray-500 mb-5 leading-relaxed">
+                        <!-- Rempli dynamiquement avec la référence et le conseiller réel -->
                     </p>
                     <button type="button" onclick="fermerModaleEpargne()" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
+                    <button type="button" onclick="closeSavingsModal(); window.location.reload();" class="px-6 py-2 text-xs font-bold text-white bg-hos-dark rounded-xl">
                         Fermer
                     </button>
                 </div>
@@ -418,6 +586,165 @@
     </script>
 
     <script src="/js/admin.js"></script>
+    <!-- Modale d'Information : Conseiller requis (HOS-Security) -->
+    <div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl">
+                ⏳
+            </div>
+            <h3 class="text-lg font-extrabold text-hos-dark mb-2">Conseiller attitré requis</h3>
+            <p id="noAdvisorModalText" class="text-xs text-gray-500 mb-6 leading-relaxed">
+                Pour des raisons de conformité et de sécurité bancaire, l'ouverture d'un <strong>Livret Épargne</strong> requiert la validation de votre conseiller dédié.<br><br>
+                Votre compte est actuellement en cours d'attribution. Un conseiller vous sera affecté dans les plus brefs délais.
+            </p>
+            <button type="button" onclick="closeNoAdvisorModal()" class="w-full py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
+                J'ai compris
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function openSavingsModal() {
+            const modal = document.getElementById('savingsModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeSavingsModal() {
+            const modal = document.getElementById('savingsModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function openNoAdvisorModal(type) {
+            const modal = document.getElementById('noAdvisorModal');
+            const textEl = document.getElementById('noAdvisorModalText');
+            if (modal) {
+                if (textEl) {
+                    if (type === 'livret') {
+                        textEl.innerHTML = "Pour votre sécurité financière, l'ouverture d'un <strong>Livret Épargne</strong> nécessite la validation préalable d'un conseiller bancaire attitré.<br><br>Votre compte est en cours d'affectation auprès de notre agence. Un conseiller vous sera attribué très prochainement.";
+                    } else if (type === 'carte') {
+                        textEl.innerHTML = "Pour votre sécurité financière, la création d'une <strong>carte virtuelle</strong> requiert la supervision de votre conseiller attitré.<br><br>Un conseiller bancaire vous sera affecté très prochainement.";
+                    }
+                }
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeNoAdvisorModal() {
+            const modal = document.getElementById('noAdvisorModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Fermeture au clic sur le backdrop
+        document.getElementById('savingsModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeSavingsModal();
+        });
+        document.getElementById('noAdvisorModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeNoAdvisorModal();
+        });
+
+        // Fermeture à la touche Échap
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSavingsModal();
+                closeNoAdvisorModal();
+            }
+        });
+
+        async function handleSavingsSubmit(event) {
+            event.preventDefault();
+            const btn = document.getElementById('savingsSubmitBtn');
+            const errBox = document.getElementById('savingsError');
+            if (errBox) {
+                errBox.classList.add('hidden');
+                errBox.innerText = '';
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="inline-block animate-spin mr-1">↻</span> Envoi en cours...';
+            }
+
+            const sourceAccountId = document.getElementById('savingsSourceAccount')?.value;
+            const initialDeposit = document.getElementById('savingsDeposit')?.value;
+
+            try {
+                const response = await fetch('/client/documents/savings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ sourceAccountId, initialDeposit, notes: '' })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    document.getElementById('savingsFormBody').classList.add('hidden');
+                    const successBox = document.getElementById('savingsSuccess');
+                    const msgEl = document.getElementById('savingsSuccessMsg');
+
+                    const advisorText = result.advisor 
+                        ? `Votre conseiller <strong>${result.advisor.name}</strong> a reçu votre requête et vous notifiera dès son activation.`
+                        : `Votre requête a bien été enregistrée et sera instruite par nos équipes bancaires sous 24h ouvrées.`;
+
+                    msgEl.innerHTML = `Référence : <strong>${result.reference}</strong>. ${advisorText}`;
+                    successBox.classList.remove('hidden');
+                } else {
+                    if (errBox) {
+                        errBox.innerText = result.error || "Une erreur est survenue lors de l'envoi de la demande.";
+                        errBox.classList.remove('hidden');
+                    }
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerText = 'Envoyer ma demande';
+                    }
+                }
+            } catch (err) {
+                if (errBox) {
+                    errBox.innerText = "Erreur de connexion. Veuillez réessayer.";
+                    errBox.classList.remove('hidden');
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Envoyer ma demande';
+                }
+            }
+        }
+
+        // Révélation / Masquage du numéro de carte bancaire
+        let dashRevealed = false;
+        function toggleRevealPanDash(originalMasked) {
+            const el = document.getElementById('pan-display-dash');
+            const eyeOpen = document.getElementById('eye-open-dash');
+            const eyeClosed = document.getElementById('eye-closed-dash');
+            if (!el) return;
+
+            if (!dashRevealed) {
+                const last4 = originalMasked.slice(-4);
+                el.textContent = '4970 8219 0318 ' + last4;
+                if (eyeOpen) eyeOpen.classList.add('hidden');
+                if (eyeClosed) eyeClosed.classList.remove('hidden');
+                dashRevealed = true;
+            } else {
+                el.textContent = originalMasked;
+                if (eyeOpen) eyeOpen.classList.remove('hidden');
+                if (eyeClosed) eyeClosed.classList.add('hidden');
+                dashRevealed = false;
+            }
+        }
+    </script>
+
 </body>
 
 </html>

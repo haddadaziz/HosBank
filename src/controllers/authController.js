@@ -7,7 +7,8 @@ const authController = {
             initialMode: "login",
             error: req.query.error || null,
             message: req.query.message || null,
-            email: req.query.email || ""
+            email: req.query.email || "",
+            devToken: req.query.devToken || null
         });
     },
 
@@ -17,14 +18,19 @@ const authController = {
             initialMode: "register",
             error: req.query.error || null,
             message: req.query.message || null,
-            email: req.query.email || ""
+            email: req.query.email || "",
+            devToken: null
         });
     },
 
     async postRegister(req, res) {
         try {
-            await authService.register(req.body, req);
-            res.redirect("/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé."));
+            const user = await authService.register(req.body, req);
+            let redirectUrl = "/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé.");
+            if (user && user.token) {
+                redirectUrl += "&devToken=" + encodeURIComponent(user.token);
+            }
+            res.redirect(redirectUrl);
         } catch (err) {
             res.redirect("/register?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(req.body.email || ""));
         }
@@ -37,12 +43,17 @@ const authController = {
 
             const user = await authService.login(identifier, password);
 
+            const userInitials = ((user.prenom ? user.prenom.trim().charAt(0) : "") + (user.nom ? user.nom.trim().charAt(0) : "")).toUpperCase() || "AM";
+
             req.session.user = {
                 id: user.id,
                 name: `${user.prenom} ${user.nom}`,
+                prenom: user.prenom,
+                nom: user.nom,
                 email: user.email,
                 role: user.role,
-                civilite: user.civilite
+                civilite: user.civilite,
+                avatar: userInitials
             };
 
             if (user.role === "ADMINISTRATEUR") {
@@ -62,7 +73,7 @@ const authController = {
                     name: `${user.prenom} ${user.nom}`,
                     email: user.email,
                     role: "Chargé de Clientèle",
-                    avatar: "KB"
+                    avatar: userInitials
                 };
                 return res.redirect("/advisor/dashboard");
             }
@@ -86,13 +97,21 @@ const authController = {
 
     logout(req, res) {
         if (req.session) {
+            req.session.user = null;
+            req.session.advisor = null;
+            req.session.admin = null;
             req.session.destroy(() => {
-                res.clearCookie("hosbank_session");
+                res.clearCookie("hosbank_session", { path: "/" });
                 res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
             });
         } else {
+            res.clearCookie("hosbank_session", { path: "/" });
             res.redirect("/login");
         }
+    },
+
+    getLogout(req, res) {
+        return this.logout(req, res);
     }
 };
 

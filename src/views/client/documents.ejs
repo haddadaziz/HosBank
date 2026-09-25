@@ -8,7 +8,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     
     <!-- Style Sidebar -->
     <link rel="stylesheet" href="/css/admin.css">
@@ -19,7 +19,10 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
                     colors: {
                         hos: {
                             dark: '#29223A',
@@ -37,7 +40,7 @@
 </head>
 <body class="font-sans text-gray-900 bg-[#F8F9FA] min-h-screen antialiased">
 
-<div class="flex min-h-screen">
+<div class="min-h-screen flex flex-col lg:flex-row">
     <!-- Sidebar unifiée multi-rôles -->
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/documents', user: user }) %>
 
@@ -58,18 +61,55 @@
                 <%= (user && user.name) ? user.name.split(' ').map(n=>n[0]).join('') : 'CL' %>
             </div>
         </div>
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
+        <!-- Messages de feedback (Succès / Erreur) -->
+        <% if (success) { %>
+            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-sm animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shrink-0">✔</span>
+                    <div><%= success %></div>
+                </div>
+                <a href="/client/documents" class="text-emerald-700 hover:text-emerald-900 font-bold ml-4">✕</a>
+            </div>
+        <% } %>
+
+        <% if (error) { %>
+            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center justify-between shadow-sm animate-fade-in">
+                <div class="flex items-center gap-3">
+                    <span class="w-7 h-7 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm shrink-0">✕</span>
+                    <div><%= error %></div>
+                </div>
+                <a href="/client/documents" class="text-rose-700 hover:text-rose-900 font-bold ml-4">✕</a>
+            </div>
+        <% } %>
+
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <a href="/client/dashboard" class="text-xs text-gray-400 hover:text-hos-primary font-bold transition-colors">← Tableau de bord</a>
+                </div>
                 <h1 class="text-2xl lg:text-3xl font-extrabold text-hos-dark tracking-tight">
                     RIB & Démarches
                 </h1>
-                <p class="text-sm text-gray-500 mt-1">Téléchargez vos attestations bancaires et suivez l'avancement de vos demandes.</p>
+                <p class="text-sm text-gray-500 mt-1">Consultez et téléchargez vos coordonnées bancaires, et suivez vos démarches en direct.</p>
             </div>
-            <div>
-                <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5">
-                    ✉️ Déposer une réclamation
+            <div class="flex items-center gap-3 flex-wrap">
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    <button type="button" onclick="openSavingsModal()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                        <span>✨</span> Ouvrir un Livret Épargne
+                    </button>
+                <% } else { %>
+                    <button type="button" onclick="openNoAdvisorModal('livret')" class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer" title="Un conseiller attitré est requis pour ouvrir un livret d'épargne">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        Conseiller requis (Livret)
+                    </button>
+                <% } %>
+                <button type="button" onclick="openReclamationModal()" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                    <span>💬</span> Déposer une réclamation
                 </button>
             </div>
         </header>
@@ -77,83 +117,53 @@
         <!-- Grille 2 Colonnes -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
             
-            <!-- Colonne Gauche : RIB Officiel Imprimable (7 colonnes) -->
+            <!-- Colonne Gauche : RIB Officiel Imprimable (HOS-34) (7 colonnes) -->
             <div class="lg:col-span-7">
                 <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
                     
                     <!-- En-tête du document RIB -->
                     <div class="flex justify-between items-start border-b border-gray-100 pb-6 mb-6">
                         <div>
-                            <img src="/images/logo.svg" alt="HosBank" class="h-7 mb-2">
+                            <div class="mb-1.5">
+                                <img src="/images/logo.svg" alt="HosBank" class="h-7 w-auto" />
+                            </div>
                             <span class="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Relevé d'Identité Bancaire (RIB)</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button onclick="window.print()" class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-hos-dark text-xs font-bold px-3 py-2 rounded-lg transition-colors">
-                                🖨️ Imprimer
-                            </button>
-                            <button onclick="alert('Téléchargement du RIB au format PDF certifié.');" class="inline-flex items-center gap-1.5 bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors">
-                                ⬇️ Télécharger PDF
-                            </button>
+                            <a href="/client/documents/rib/print?accountId=<%= rib.account.id %>&autoprint=1" target="_blank" class="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-hos-dark text-xs font-bold px-3.5 py-2 rounded-xl transition-colors">
+                                <span></span> Imprimer
+                            </a>
+                            <a href="/client/documents/rib/print?accountId=<%= rib.account.id %>" target="_blank" class="inline-flex items-center gap-1.5 bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors shadow-sm">
+                                <span></span> Format PDF
+                            </a>
                         </div>
                     </div>
 
                     <!-- Informations Titulaire & Domiciliation -->
-                    <div class="grid grid-cols-2 gap-6 text-xs mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs mb-6">
                         <div>
                             <span class="text-gray-400 font-semibold uppercase tracking-wider block mb-1">Titulaire du compte</span>
-                            <div class="font-extrabold text-sm text-hos-dark"><%= user ? user.name : 'Alexandre Moreau' %></div>
-                            <div class="text-gray-500 mt-0.5">14 Rue de la République, 75001 Paris</div>
+                            <div class="font-extrabold text-sm text-hos-dark"><%= rib.user.fullName %></div>
+                            <div class="text-gray-500 mt-0.5 leading-relaxed"><%= rib.user.address %></div>
                         </div>
                         <div>
-                            <span class="text-gray-400 font-semibold uppercase tracking-wider block mb-1">Domiciliation de l'agence</span>
-                            <div class="font-extrabold text-sm text-hos-dark">HosBank Agence Centrale</div>
-                            <div class="text-gray-500 mt-0.5">Paris Opéra • Code BIC : HOSBFR2P</div>
+                            <span class="text-gray-400 font-semibold uppercase tracking-wider block mb-1">Domiciliation bancaire</span>
+                            <div class="font-extrabold text-sm text-hos-dark"><%= rib.account.agencyName %></div>
+                            <div class="text-gray-500 mt-0.5">Conseiller : <span class="font-bold text-hos-dark"><%= rib.user.advisorName %></span></div>
                         </div>
                     </div>
 
-                    <!-- Cartouche IBAN / BIC International -->
-                    <div class="p-5 rounded-2xl bg-gray-50/80 border border-gray-200 mb-6 space-y-4">
+                    <!-- Cartouche IBAN International -->
+                    <div class="p-5 rounded-2xl bg-[#29223A] text-white shadow-md">
                         <div>
-                            <span class="text-[11px] text-gray-400 font-bold uppercase tracking-wider block mb-1">IBAN (International Bank Account Number)</span>
-                            <div class="font-mono text-base font-extrabold text-hos-dark tracking-wider flex items-center justify-between">
-                                <span>FR76 3000 4012 3456 7890 1234 567</span>
-                                <button onclick="navigator.clipboard.writeText('FR76 3000 4012 3456 7890 1234 567'); alert('IBAN copié !');" class="text-xs text-hos-primary hover:underline font-sans font-bold">
+                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest block mb-1">
+                                IBAN (International Bank Account Number)
+                            </span>
+                            <div class="font-mono text-base font-extrabold text-white tracking-wider flex items-center justify-between">
+                                <span id="ibanText"><%= rib.account.iban %></span>
+                                <button type="button" onclick="navigator.clipboard.writeText('<%= rib.account.cleanIban %>'); alert('IBAN copié dans le presse-papier !');" class="text-xs text-[#F6EFE0] hover:underline font-sans font-bold bg-white/10 px-2.5 py-1 rounded-lg">
                                     Copier
                                 </button>
-                            </div>
-                        </div>
-
-                        <div class="pt-3 border-t border-gray-200 flex justify-between items-center text-xs">
-                            <div>
-                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Code BIC / SWIFT</span>
-                                <span class="font-mono font-bold text-hos-dark">HOSBFR2P</span>
-                            </div>
-                            <div>
-                                <span class="text-gray-400 block text-[10px] uppercase font-bold">Devise</span>
-                                <span class="font-bold text-hos-dark">Euro (EUR)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Découpage RIB National Français -->
-                    <div>
-                        <span class="text-[11px] text-gray-400 font-bold uppercase tracking-wider block mb-2">Identifiant Bancaire National (RIB)</span>
-                        <div class="grid grid-cols-4 gap-2 text-center font-mono">
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">Code Banque</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">30004</div>
-                            </div>
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">Code Guichet</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">01234</div>
-                            </div>
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">N° de Compte</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">56789012345</div>
-                            </div>
-                            <div class="bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                                <div class="text-[10px] text-gray-400 font-sans">Clé RIB</div>
-                                <div class="font-extrabold text-xs text-hos-dark mt-0.5">67</div>
                             </div>
                         </div>
                     </div>
@@ -161,52 +171,141 @@
                 </div>
             </div>
 
-            <!-- Colonne Droite : Suivi des demandes en direct (HOS-37) (5 colonnes) -->
-            <div class="lg:col-span-5 space-y-8">
+            <!-- Colonne Droite : Suivi des démarches en direct (HOS-37) (5 colonnes) -->
+            <div class="lg:col-span-5 space-y-6">
                 
-                <!-- Carte Suivi des Demandes -->
+                <!-- Carte Suivi des Demandes et Réclamations -->
                 <div class="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-sm text-hos-dark">Suivi de mes demandes en cours</h3>
-                        <span class="text-xs text-gray-400">2 dossiers</span>
-                    </div>
-
-                    <div class="space-y-3">
-                        <!-- Demande 1 -->
-                        <div class="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                            <div class="flex justify-between items-start mb-1.5">
-                                <span class="font-bold text-xs text-hos-dark">Ouverture Livret d'Épargne</span>
-                                <span class="text-[11px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-md border border-amber-200">
-                                    En attente
-                                </span>
-                            </div>
-                            <div class="text-[11px] text-gray-400">Réf : DEM-2026-003 • Déposée le 18/09/2026</div>
-                            <div class="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded-lg">
-                                💬 En cours d'instruction par votre conseiller Karim Bennani.
-                            </div>
-                        </div>
-
-                        <!-- Demande 2 -->
-                        <div class="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                            <div class="flex justify-between items-start mb-1.5">
-                                <span class="font-bold text-xs text-hos-dark">Carte Virtuelle E-Commerce</span>
-                                <span class="text-[11px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-md border border-emerald-200">
-                                    Approuvée
-                                </span>
-                            </div>
-                            <div class="text-[11px] text-gray-400">Réf : DEM-2026-001 • Validée le 15/09/2026</div>
-                            <div class="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded-lg">
-                                💬 Carte activée et utilisable immédiatement.
-                            </div>
+                    
+                    <!-- Sélecteur d'onglets pour le suivi -->
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="tabDemandesBtn" onclick="switchTrackTab('demandes')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-hos-dark text-white transition-all">
+                                Demandes (<%= demandes.length %>)
+                            </button>
+                            <button type="button" id="tabReclamationsBtn" onclick="switchTrackTab('reclamations')" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">
+                                Réclamations (<%= reclamations.length %>)
+                            </button>
                         </div>
                     </div>
+
+                    <!-- Liste 1 : Mes Demandes Bancaires (HOS-37) -->
+                    <div id="trackDemandesList" class="space-y-3">
+                        <% if (demandes && demandes.length > 0) { %>
+                            <% demandes.forEach(d => { 
+                                // Label et badges adaptés au type de demande
+                                let typeLabel = d.type;
+                                if (d.type === 'OUVERTURE_EPARGNE') typeLabel = "Ouverture Livret d'Épargne";
+                                else if (d.type === 'CARTE_VIRTUELLE') typeLabel = "Carte Virtuelle E-Commerce";
+                                else if (d.type === 'OPPOSITION_CARTE') typeLabel = "Opposition Carte Bancaire";
+                                else if (d.type === 'RECALCUL_PIN') typeLabel = "Recalcul Code PIN";
+                                else if (d.type === 'DEMANDE_RIB') typeLabel = "Édition du RIB";
+
+                                let statusBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                                let statusText = 'En attente';
+                                if (d.status === 'APPROUVEE') {
+                                    statusBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                    statusText = 'Approuvée';
+                                } else if (d.status === 'EN_INSTRUCTION') {
+                                    statusBadge = 'bg-blue-50 text-blue-700 border-blue-200';
+                                    statusText = 'En instruction';
+                                } else if (d.status === 'REJETEE') {
+                                    statusBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                                    statusText = 'Rejetée';
+                                }
+                            %>
+                                <div class="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <div class="flex justify-between items-start mb-1.5">
+                                        <span class="font-bold text-xs text-hos-dark"><%= typeLabel %></span>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border <%= statusBadge %>">
+                                            <%= statusText %>
+                                        </span>
+                                    </div>
+                                    <div class="text-[11px] text-gray-400 font-mono">
+                                        Réf : <%= d.reference %> • <%= d.dateFormatted %>
+                                    </div>
+
+                                    <% if (d.advisorResponse) { %>
+                                        <div class="text-xs text-gray-700 mt-2 bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                                            <span class="font-semibold text-hos-dark">Réponse conseiller :</span> <%= d.advisorResponse %>
+                                        </div>
+                                    <% } else if (d.rejectionReason) { %>
+                                        <div class="text-xs text-rose-700 mt-2 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                                            ⚠️ <span class="font-semibold">Motif de refus :</span> <%= d.rejectionReason %>
+                                        </div>
+                                    <% } else { %>
+                                        <div class="text-[11px] text-gray-500 mt-2 bg-gray-50/70 p-2 rounded-lg">
+                                            ⏳ Dossier en cours de revue par votre conseiller référent.
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="text-center py-8 text-gray-400 text-xs">
+                                Aucune demande déposée pour l'instant.
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <!-- Liste 2 : Mes Réclamations (HOS-37) -->
+                    <div id="trackReclamationsList" class="space-y-3 hidden">
+                        <% if (reclamations && reclamations.length > 0) { %>
+                            <% reclamations.forEach(r => { 
+                                let statusBadge = 'bg-blue-50 text-blue-700 border-blue-200';
+                                let statusText = 'Ouverte';
+                                if (r.status === 'RESOLUE') {
+                                    statusBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                    statusText = 'Résolue';
+                                } else if (r.status === 'EN_COURS') {
+                                    statusBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                                    statusText = 'En cours';
+                                } else if (r.status === 'REJETEE') {
+                                    statusBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                                    statusText = 'Rejetée';
+                                }
+
+                                let prioBadge = 'bg-gray-100 text-gray-600';
+                                if (r.priority === 'URGENTE') prioBadge = 'bg-rose-100 text-rose-700';
+                                else if (r.priority === 'HAUTE') prioBadge = 'bg-amber-100 text-amber-800';
+                            %>
+                                <div class="p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-bold text-xs text-hos-dark"><%= r.subject %></span>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded <%= prioBadge %>"><%= r.priority %></span>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border <%= statusBadge %>">
+                                                <%= statusText %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-[11px] text-gray-400 font-mono">
+                                        Réf : <%= r.reference %> • <%= r.dateFormatted %>
+                                    </div>
+                                    <p class="text-xs text-gray-600 mt-2 bg-gray-50/70 p-2 rounded-lg">
+                                        <%= r.description %>
+                                    </p>
+
+                                    <% if (r.advisorResponse) { %>
+                                        <div class="text-xs text-gray-700 mt-2 bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-100">
+                                            💬 <span class="font-semibold text-hos-dark">Réponse service client :</span> <%= r.advisorResponse %>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="text-center py-8 text-gray-400 text-xs">
+                                Aucune réclamation enregistrée.
+                            </div>
+                        <% } %>
+                    </div>
+
                 </div>
 
                 <!-- Assistance & Réclamations -->
-                <div class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/30 to-white border border-hos-primary/20 rounded-3xl p-6">
+                <div class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/30 to-white border border-hos-primary/20 rounded-3xl p-6 shadow-sm">
                     <h4 class="font-bold text-xs uppercase tracking-wider text-hos-dark mb-2">Besoin d'aide ou un litige ?</h4>
                     <p class="text-xs text-gray-600 leading-relaxed mb-4">
-                        Une opération suspecte ou un prélèvement contesté ? Déposez une réclamation directement en ligne pour une prise en charge prioritaire.
+                        Une opération suspecte ou un litige sur votre compte ? Déposez une réclamation directement en ligne pour une prise en charge prioritaire par votre conseiller.
                     </p>
                     <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="w-full text-center bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
                         Déposer une réclamation
@@ -220,45 +319,96 @@
     </main>
 </div>
 
-<!-- Modal Réclamation (HOS-36) -->
-<div id="reclamationModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl">
+<!-- Modal Demande d'Ouverture de Compte Épargne (HOS-35) -->
+<div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-extrabold text-hos-dark">Déposer une réclamation</h3>
-            <button onclick="document.getElementById('reclamationModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+            <h3 class="text-lg font-extrabold text-hos-dark">Demande d'ouverture d'un livret d'épargne</h3>
+            <button type="button" onclick="closeSavingsModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
         </div>
 
         <p class="text-xs text-gray-500 mb-6">
-            Votre réclamation sera assignée à un gestionnaire sous 24 heures ouvrées.
+            Ouvrez un <strong>Livret HosBank Épargne +</strong> rémunéré à 3,00% brut avec disponibilité totale de vos fonds.
         </p>
 
-        <form onsubmit="event.preventDefault(); document.getElementById('reclamationModal').classList.add('hidden'); alert('Réclamation REC-2026-002 enregistrée avec succès.');">
+        <form action="/client/documents/savings" method="POST">
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Sujet de la réclamation</label>
-                    <input type="text" placeholder="Ex: Frais bancaires non reconnus..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Priorité</label>
-                    <select required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-semibold">
-                        <option value="MOYENNE">Moyenne</option>
-                        <option value="HAUTE">Haute</option>
-                        <option value="URGENTE">Urgente</option>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Compte de prélèvement pour le versement initial</label>
+                    <select name="sourceAccountId" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold bg-white">
+                        <% accounts.forEach(acc => { %>
+                            <option value="<%= acc.id %>">
+                                <%= (acc.accountNumber || '').replace(/^CPT-/, '') %> (<%= acc.type %>)
+                            </option>
+                        <% }) %>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Description détaillée</label>
-                    <textarea rows="4" placeholder="Expliquez la situation, le montant et la date de l'opération contestée..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm"></textarea>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Montant du premier versement (€)</label>
+                    <input type="number" step="0.01" min="10" name="initialDeposit" value="50.00" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-sm font-bold text-hos-dark">
+                    <span class="text-[10px] text-gray-400 mt-1 block">Montant minimum requis : 10,00 €</span>
                 </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 mt-6">
-                <button type="button" onclick="document.getElementById('reclamationModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                <button type="button" onclick="closeSavingsModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
                     Annuler
                 </button>
-                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors">
+                <% if (typeof advisor !== 'undefined' && advisor) { %>
+                    <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition-colors cursor-pointer">
+                        Confirmer ma demande
+                    </button>
+                <% } else { %>
+                    <button type="button" disabled class="px-5 py-2.5 text-xs font-bold text-gray-400 bg-gray-200 rounded-xl cursor-not-allowed">
+                        Conseiller requis
+                    </button>
+                <% } %>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Réclamation (HOS-36) -->
+<div id="reclamationModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl my-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-extrabold text-hos-dark">Déposer une réclamation</h3>
+            <button type="button" onclick="closeReclamationModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-6">
+            Votre réclamation sera assignée à un conseiller clientèle et prise en charge sous 24 heures ouvrées.
+        </p>
+
+        <form action="/client/documents/reclamations" method="POST">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Sujet de la réclamation</label>
+                    <input type="text" name="sujet" placeholder="Ex: Frais bancaires non reconnus, Litige carte..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Niveau de priorité</label>
+                    <select name="priorite" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold bg-white">
+                        <option value="MOYENNE">Moyenne (Sous 48h)</option>
+                        <option value="HAUTE">Haute (Sous 24h)</option>
+                        <option value="URGENTE">Urgente (Immédiate)</option>
+                        <option value="FAIBLE">Faible (Information)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Description détaillée de votre situation</label>
+                    <textarea name="description" rows="4" placeholder="Précisez la situation, la date et le montant concerné le cas échéant..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs"></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeReclamationModal()" class="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+                    Annuler
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
                     Envoyer ma réclamation
                 </button>
             </div>
@@ -267,5 +417,119 @@
 </div>
 
     <script src="/js/admin.js"></script>
+<!-- Modal Information Conseiller Requis (HOS-Security) -->
+<div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl">
+            ⏳
+        </div>
+        <h3 class="text-lg font-extrabold text-hos-dark mb-2">Conseiller attitré requis</h3>
+        <p id="noAdvisorModalText" class="text-xs text-gray-500 mb-6 leading-relaxed">
+            Pour des raisons de conformité et de sécurité bancaire, l'ouverture d'un <strong>Livret Épargne</strong> requiert la validation de votre conseiller dédié.<br><br>
+            Votre compte est actuellement en cours d'attribution. Un conseiller vous sera affecté dans les plus brefs délais.
+        </p>
+        <button type="button" onclick="closeNoAdvisorModal()" class="w-full py-2.5 text-xs font-bold text-white bg-hos-dark hover:bg-hos-hover rounded-xl shadow-sm transition-colors cursor-pointer">
+            J'ai compris
+        </button>
+    </div>
+</div>
+
+<script>
+    function openSavingsModal() {
+        const modal = document.getElementById('savingsModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeSavingsModal() {
+        const modal = document.getElementById('savingsModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function openReclamationModal() {
+        const modal = document.getElementById('reclamationModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeReclamationModal() {
+        const modal = document.getElementById('reclamationModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function openNoAdvisorModal(type) {
+        const modal = document.getElementById('noAdvisorModal');
+        const textEl = document.getElementById('noAdvisorModalText');
+        if (modal) {
+            if (textEl) {
+                if (type === 'livret') {
+                    textEl.innerHTML = "Pour votre sécurité financière, l'ouverture d'un <strong>Livret Épargne</strong> nécessite la validation préalable d'un conseiller bancaire attitré.<br><br>Votre compte est en cours d'affectation auprès de notre agence. Un conseiller vous sera attribué très prochainement.";
+                } else if (type === 'carte') {
+                    textEl.innerHTML = "Pour votre sécurité financière, la création d'une <strong>carte virtuelle</strong> requiert la supervision de votre conseiller attitré.<br><br>Un conseiller bancaire vous sera affecté très prochainement.";
+                }
+            }
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeNoAdvisorModal() {
+        const modal = document.getElementById('noAdvisorModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Fermeture automatique au clic en dehors (backdrop)
+    document.getElementById('savingsModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeSavingsModal();
+    });
+    document.getElementById('reclamationModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeReclamationModal();
+    });
+    document.getElementById('noAdvisorModal')?.addEventListener('click', function(e) {
+        if (e.target === this) closeNoAdvisorModal();
+    });
+
+    // Fermeture avec la touche Échap
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSavingsModal();
+            closeReclamationModal();
+            closeNoAdvisorModal();
+        }
+    });
+
+    function switchTrackTab(tab) {
+        const btnDem = document.getElementById('tabDemandesBtn');
+        const btnRec = document.getElementById('tabReclamationsBtn');
+        const listDem = document.getElementById('trackDemandesList');
+        const listRec = document.getElementById('trackReclamationsList');
+
+        if (tab === 'demandes') {
+            btnDem.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-hos-dark text-white transition-all";
+            btnRec.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all";
+            listDem.classList.remove('hidden');
+            listRec.classList.add('hidden');
+        } else {
+            btnRec.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-hos-dark text-white transition-all";
+            btnDem.className = "text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all";
+            listRec.classList.remove('hidden');
+            listDem.classList.add('hidden');
+        }
+    }
+</script>
+
 </body>
 </html>
