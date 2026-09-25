@@ -1,79 +1,115 @@
 const db = require("../config/db");
 
 const accountRepository = {
+    // Récupérer tous les comptes bancaires avec les informations du client
     async findAll() {
         const query = `
             SELECT 
                 cb.id,
-                cb.numero_compte AS "numeroCompte",
+                cb.numero_compte,
                 cb.iban,
                 cb.bic,
-                CASE 
-                    WHEN cb.type_compte = 'COURANT' THEN 'Compte Courant'
-                    WHEN cb.type_compte = 'EPARGNE' THEN 'Compte Épargne'
-                    ELSE cb.type_compte::text
-                END AS "type",
-                cb.solde::float AS "balance",
-                cb.devise AS "currency",
-                CASE 
-                    WHEN cb.statut = 'ACTIF' THEN 'Actif'
-                    WHEN cb.statut = 'BLOQUE' THEN 'Bloqué'
-                    WHEN cb.statut = 'CLOTURE' THEN 'Clôturé'
-                    ELSE cb.statut::text
-                END AS "status",
-                ('CLI-' || cb.utilisateur_id) AS "clientId",
-                (u.prenom || ' ' || u.nom) AS "clientName",
-                u.email AS "clientEmail",
-                COALESCE((
-                    SELECT card.type_carte || ' (' || card.pan_masque || ')'
-                    FROM cartes_bancaires card 
-                    WHERE card.compte_id = cb.id 
-                    ORDER BY card.id DESC LIMIT 1
-                ), '-') AS "cardType",
-                COALESCE((
-                    SELECT CASE 
-                        WHEN card.statut = 'ACTIVE' THEN 'Active'
-                        ELSE 'Bloquée'
-                    END
-                    FROM cartes_bancaires card 
-                    WHERE card.compte_id = cb.id 
-                    ORDER BY card.id DESC LIMIT 1
-                ), '-') AS "cardStatus",
-                (SELECT COUNT(*)::int FROM cartes_bancaires card WHERE card.compte_id = cb.id) AS "cardsCount"
+                cb.type_compte,
+                cb.solde,
+                cb.decouvert_autorise,
+                cb.devise,
+                cb.statut,
+                cb.utilisateur_id,
+                u.nom,
+                u.prenom,
+                u.email
             FROM comptes_bancaires cb
             JOIN utilisateurs u ON cb.utilisateur_id = u.id
             ORDER BY cb.id ASC
         `;
         const result = await db.query(query);
-        return result.rows;
+
+        // Transformation simple et lisible en JavaScript
+        return result.rows.map(row => {
+            const balance = parseFloat(row.solde);
+            const overdraftLimit = parseFloat(row.decouvert_autorise || 0);
+
+            return {
+                id: row.id,
+                numeroCompte: row.numero_compte,
+                iban: row.iban,
+                bic: row.bic,
+                rawType: row.type_compte, // 'COURANT' ou 'EPARGNE'
+                type: row.type_compte === "COURANT" ? "Compte Courant" : "Compte Épargne",
+                balance: balance,
+                overdraftLimit: overdraftLimit,
+                isOverdrawn: balance < 0, // Indicateur de situation de découvert
+                currency: row.devise,
+                status: row.statut === "ACTIF" ? "Actif" : "Bloqué",
+                clientId: "CLI-" + row.utilisateur_id,
+                clientName: `${row.prenom} ${row.nom}`,
+                clientEmail: row.email
+            };
+        });
     },
 
+    // Trouver un compte par son ID
     async findById(id) {
-        const query = `SELECT * FROM comptes_bancaires WHERE id = $1`;
+        const query = "SELECT * FROM comptes_bancaires WHERE id = $1";
         const result = await db.query(query, [id]);
         return result.rows[0] || null;
     },
 
+    // Activer ou bloquer un compte bancaire
     async toggleAccountStatus(accountId) {
+        // Étape 1 : Récupérer le compte
+        const account = await this.findById(accountId);
+        if (!account) {
+            return null;
+        }
+
+        // Étape 2 : Inverser le statut (si ACTIF on bloque, sinon on active)
+        let newStatus = "ACTIF";
+        if (account.statut === "ACTIF") {
+            newStatus = "BLOQUE";
+        } else {
+            newStatus = "ACTIF";
+        }
+
+        // Étape 3 : Mettre à jour dans la base de données
         const query = `
             UPDATE comptes_bancaires
-            SET statut = CASE WHEN statut = 'ACTIF' THEN 'BLOQUE'::statut_compte ELSE 'ACTIF'::statut_compte END
-            WHERE id = $1
+            SET statut = $1
+            WHERE id = $2
             RETURNING *
         `;
-        const result = await db.query(query, [accountId]);
-        return result.rows[0] || null;
+        const result = await db.query(query, [newStatus, accountId]);
+        return result.rows[0];
     },
 
+    // Activer ou bloquer la carte bancaire
     async toggleCardStatus(accountId) {
-        const query = `
+        // Étape 1 : Récupérer la carte du compte
+        const cardQuery = "SELECT * FROM cartes_bancaires WHERE compte_id = $1 LIMIT 1";
+        const cardResult = await db.query(cardQuery, [accountId]);
+        const card = cardResult.rows[0];
+
+        if (!card) {
+            return null;
+        }
+
+        // Étape 2 : Inverser le statut de la carte
+        let newStatus = "ACTIVE";
+        if (card.statut === "ACTIVE") {
+            newStatus = "BLOQUEE_TEMPORAIREMENT";
+        } else {
+            newStatus = "ACTIVE";
+        }
+
+        // Étape 3 : Sauvegarder le nouveau statut
+        const updateQuery = `
             UPDATE cartes_bancaires
-            SET statut = CASE WHEN statut = 'ACTIVE' THEN 'BLOQUEE_TEMPORAIREMENT'::statut_carte ELSE 'ACTIVE'::statut_carte END
-            WHERE compte_id = $1
+            SET statut = $1
+            WHERE id = $2
             RETURNING *
         `;
-        const result = await db.query(query, [accountId]);
-        return result.rows[0] || null;
+        const result = await db.query(updateQuery, [newStatus, card.id]);
+        return result.rows[0];
     }
 };
 

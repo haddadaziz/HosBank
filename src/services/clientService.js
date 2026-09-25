@@ -113,40 +113,47 @@ class ClientService {
         return await beneficiaryRepo.delete(id, userId);
     }
 
-    /**
-     * Récupère les comptes d'un client
-     */
+    // 1. Récupérer les comptes bancaires actifs d'un client
     async getUserAccounts(userId) {
         const query = `
             SELECT 
-                id, numero_compte AS "accountNumber", iban, bic, devise AS "currency",
-                type_compte AS "type", solde::float AS "balance", 
+                id, 
+                numero_compte AS "accountNumber", 
+                iban, 
+                bic, 
+                devise AS "currency",
+                type_compte AS "type", 
+                solde::float AS "balance", 
                 decouvert_autorise::float AS "overdraft", 
-                taux_interet::float AS "interestRate", statut AS "status"
+                taux_interet::float AS "interestRate", 
+                statut AS "status"
             FROM comptes_bancaires
             WHERE utilisateur_id = $1 AND statut = 'ACTIF'
             ORDER BY type_compte ASC
         `;
-        const { rows } = await db.query(query, [userId]);
-        return rows;
+        const result = await db.query(query, [userId]);
+        return result.rows;
     }
 
-    /**
-     * Récupère les données du tableau de bord client
-     */
+    // 2. Récupérer les données du tableau de bord client (comptes, cartes, 5 dernières opérations)
     async getDashboardData(userId = 3) {
+        // Étape 1 : Récupérer les comptes actifs
         const accounts = await this.getUserAccounts(userId);
 
         let cards = [];
         let transactions = [];
 
+        // Étape 2 : Si le client a des comptes, charger ses cartes et ses opérations
         if (accounts.length > 0) {
-            const accountIds = accounts.map(a => a.id);
+            const accountIds = accounts.map(account => account.id);
 
             const cardsQuery = `
                 SELECT 
-                    id, compte_id AS "accountId", pan_masque AS "maskedPan",
-                    type_carte AS "type", statut AS "status",
+                    id, 
+                    compte_id AS "accountId", 
+                    pan_masque AS "maskedPan",
+                    type_carte AS "type", 
+                    statut AS "status",
                     TO_CHAR(date_expiration, 'MM/YY') AS "expiry",
                     plafond_paiement_mensuel::float AS "monthlyLimit",
                     plafond_retrait_hebdo::float AS "weeklyLimit"
@@ -154,27 +161,45 @@ class ClientService {
                 WHERE compte_id = ANY($1::int[])
                 ORDER BY type_carte ASC
             `;
-            const cardsRes = await db.query(cardsQuery, [accountIds]);
-            cards = cardsRes.rows;
 
             const txQuery = `
                 SELECT 
-                    id, reference_unique AS "reference", sens AS "direction",
-                    montant::float AS "amount", solde_apres_operation::float AS "balanceAfter",
-                    motif_libelle AS "label", categorie AS "category",
+                    id, 
+                    reference_unique AS "reference", 
+                    sens AS "direction",
+                    montant::float AS "amount", 
+                    solde_apres_operation::float AS "balanceAfter",
+                    motif_libelle AS "label", 
+                    categorie AS "category",
                     TO_CHAR(date_operation, 'DD/MM/YYYY HH24:MI') AS "dateFormatted"
                 FROM operations
                 WHERE compte_id = ANY($1::int[])
                 ORDER BY date_operation DESC
                 LIMIT 5
             `;
-            const txRes = await db.query(txQuery, [accountIds]);
-            transactions = txRes.rows;
+
+            // Exécution parallèle rapide pour un temps de réponse instantané
+            const [cardsResult, txResult] = await Promise.all([
+                db.query(cardsQuery, [accountIds]),
+                db.query(txQuery, [accountIds])
+            ]);
+
+            cards = cardsResult.rows;
+            transactions = txResult.rows;
         }
 
-        const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+        // Étape 3 : Calcul simple du solde total disponible
+        let totalBalance = 0;
+        for (const account of accounts) {
+            totalBalance += account.balance;
+        }
 
-        return { accounts, cards, transactions, totalBalance };
+        return { 
+            accounts, 
+            cards, 
+            transactions, 
+            totalBalance 
+        };
     }
 }
 

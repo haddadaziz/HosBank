@@ -69,7 +69,7 @@ const authController = {
 
             return res.redirect("/client/dashboard");
         } catch (err) {
-            const emailInput = req.body.email || req.body.name || "";
+            const emailInput = (req.body && (req.body.email || req.body.name)) || "";
             res.redirect("/login?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(emailInput));
         }
     },

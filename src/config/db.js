@@ -6,8 +6,9 @@ const pool = new Pool({
     user: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || "hosbank",
-    max: 10,
-    idleTimeoutMillis: 30000
+    max: 20, // Pool élargi à 20 connexions pour supporter les montées en charge
+    idleTimeoutMillis: 30000, // Fermer les connexions inactives après 30s
+    connectionTimeoutMillis: 3000 // Timeout rapide à 3s pour éviter les blocages
 });
 
 pool.on("error", (err) => {

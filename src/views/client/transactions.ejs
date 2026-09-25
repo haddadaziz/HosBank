@@ -42,7 +42,22 @@
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transactions', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-[275px] flex-1 p-6 lg:p-10 max-w-[1400px]">
+    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 transition-all">
+
+        <!-- Mobile Top Bar (< lg screens) -->
+        <div class="lg:hidden flex items-center justify-between bg-white border border-gray-200/80 px-4 py-3 mb-6 rounded-2xl shadow-sm">
+            <button type="button" class="mobile-menu-toggle p-2 text-hos-dark hover:bg-gray-100 rounded-xl" id="mobileMenuToggle" aria-label="Menu de navigation">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+            <div class="flex items-center gap-2">
+                <img src="/images/logo-white.svg" alt="HosBank" class="h-6 w-auto" style="filter: brightness(0) saturate(100%) invert(14%) sepia(18%) saturate(1450%) hue-rotate(217deg) brightness(93%) contrast(92%);">
+            </div>
+            <div class="w-8 h-8 rounded-full bg-hos-dark text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                <%= (user && user.name) ? user.name.split(' ').map(n=>n[0]).join('') : 'CL' %>
+            </div>
+        </div>
         
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -144,5 +159,6 @@
     </main>
 </div>
 
+    <script src="/js/admin.js"></script>
 </body>
 </html>

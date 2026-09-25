@@ -30,65 +30,10 @@ router.post(
 );
 
 router.get("/accounts", requireAdminAuth, adminController.getAccounts);
-router.post(
-    "/accounts/:id/toggle-card",
-    requireAdminAuth,
-    adminController.postToggleCardStatus
-);
-router.post(
-    "/accounts/:id/toggle-status",
-    requireAdminAuth,
-    adminController.postToggleAccountStatus
-);
-
-router.post(
-    "/cards/:id/toggle-block",
-    requireAdminAuth,
-    adminController.postToggleCardBlock
-);
-router.post(
-    "/cards/:id/oppose",
-    requireAdminAuth,
-    adminController.postOpposeCard
-);
-router.post(
-    "/cards/:id/limits",
-    requireAdminAuth,
-    adminController.postUpdateCardLimits
-);
+router.get("/cards", requireAdminAuth, adminController.getCards);
 
 router.get("/transactions", requireAdminAuth, adminController.getTransactions);
-router.post(
-    "/transactions/:id/approve",
-    requireAdminAuth,
-    adminController.postApproveTransaction
-);
-router.post(
-    "/transactions/:id/reject",
-    requireAdminAuth,
-    adminController.postRejectTransaction
-);
-
-router.get("/kyc", requireAdminAuth, adminController.getKyc);
-router.post(
-    "/kyc/:id/status",
-    requireAdminAuth,
-    adminController.postUpdateKyc
-);
-
-router.get("/settings", requireAdminAuth, adminController.getSettings);
-
-router.get("/requests", requireAdminAuth, adminController.getRequests);
-router.post(
-    "/demandes/:id/status",
-    requireAdminAuth,
-    adminController.postUpdateDemandeStatus
-);
-router.post(
-    "/reclamations/:id/status",
-    requireAdminAuth,
-    adminController.postUpdateReclamationStatus
-);
+router.get("/transactions/export", requireAdminAuth, adminController.exportTransactionsCsv);
 
 router.get("/advisors-workload", requireAdminAuth, adminController.getAdvisorsWorkload);
 router.post("/advisors/:id/remind", requireAdminAuth, adminController.postSendReminder);

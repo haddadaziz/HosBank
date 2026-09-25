@@ -298,50 +298,71 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 5. Drawer Mobile Navigation
-    const mobileToggle = document.getElementById("mobileMenuToggle");
-    const adminSidebar = document.querySelector(".admin-sidebar");
-    const sidebarClose = document.getElementById("sidebarMobileClose");
-    let sidebarOverlay = document.getElementById("sidebarMobileOverlay");
+    // =========================================================================
+    // 5. GESTION DU MENU MOBILE (DRAWER) - CODE JUNIOR CLAIR ET COMMENTÉ
+    // =========================================================================
 
-    if (!sidebarOverlay) {
-        sidebarOverlay = document.createElement("div");
-        sidebarOverlay.id = "sidebarMobileOverlay";
-        sidebarOverlay.className = "sidebar-mobile-overlay";
-        document.body.appendChild(sidebarOverlay);
+    // Étape 1 : Récupérer les éléments du DOM
+    const boutonMenuMobile = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector(".admin-sidebar");
+    const boutonFermer = document.getElementById("sidebarMobileClose");
+    let voileFond = document.getElementById("sidebarMobileOverlay");
+
+    // Étape 2 : Créer le fond semi-transparent s'il n'existe pas encore
+    if (!voileFond) {
+        voileFond = document.createElement("div");
+        voileFond.id = "sidebarMobileOverlay";
+        voileFond.className = "sidebar-mobile-overlay";
+        document.body.appendChild(voileFond);
     }
 
-    const openDrawer = () => {
-        if (adminSidebar) adminSidebar.classList.add("mobile-open");
-        if (sidebarOverlay) sidebarOverlay.classList.add("active");
+    // Étape 3 : Fonction simple pour ouvrir le menu
+    function ouvrirMenu() {
+        if (sidebar) {
+            sidebar.classList.add("mobile-open");
+        }
+        if (voileFond) {
+            voileFond.classList.add("active");
+        }
+        // Empêcher le scroll de la page quand le menu est ouvert
         document.body.style.overflow = "hidden";
-    };
+    }
 
-    const closeDrawer = () => {
-        if (adminSidebar) adminSidebar.classList.remove("mobile-open");
-        if (sidebarOverlay) sidebarOverlay.classList.remove("active");
+    // Étape 4 : Fonction simple pour fermer le menu
+    function fermerMenu() {
+        if (sidebar) {
+            sidebar.classList.remove("mobile-open");
+        }
+        if (voileFond) {
+            voileFond.classList.remove("active");
+        }
+        // Réactiver le scroll normal
         document.body.style.overflow = "";
-    };
+    }
 
-    if (mobileToggle) {
-        mobileToggle.addEventListener("click", (e) => {
-            e.stopPropagation();
-            openDrawer();
+    // Étape 5 : Écouteurs d'événements (clic sur le bouton, la croix ou le fond)
+    if (boutonMenuMobile) {
+        boutonMenuMobile.addEventListener("click", function(event) {
+            event.stopPropagation();
+            ouvrirMenu();
         });
     }
 
-    if (sidebarClose) {
-        sidebarClose.addEventListener("click", closeDrawer);
+    if (boutonFermer) {
+        boutonFermer.addEventListener("click", fermerMenu);
     }
 
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener("click", closeDrawer);
+    if (voileFond) {
+        voileFond.addEventListener("click", fermerMenu);
     }
 
-    document.querySelectorAll(".sidebar-nav .nav-item").forEach(item => {
-        item.addEventListener("click", () => {
+    // Étape 6 : Fermer le menu automatiquement quand l'utilisateur clique sur un lien de navigation
+    const liensMenu = document.querySelectorAll(".sidebar-nav .nav-item");
+    liensMenu.forEach(function(lien) {
+        lien.addEventListener("click", function() {
+            // Si on est sur un petit écran (mobile ou tablette), on ferme le menu
             if (window.innerWidth <= 1024) {
-                closeDrawer();
+                fermerMenu();
             }
         });
     });

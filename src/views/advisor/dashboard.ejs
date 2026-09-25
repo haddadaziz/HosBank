@@ -108,7 +108,7 @@
                 </div>
 
                 <a 
-                    href="/login" 
+                    href="/logout" 
                     title="Déconnexion" 
                     class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
                 >
@@ -772,44 +772,67 @@
         </div>
     </div>
 
+    <!-- ===================================================================== -->
+    <!-- SCRIPTS JAVASCRIPT DU DASHBOARD CONSEILLER (STYLE JUNIOR CLAIR) -->
+    <!-- ===================================================================== -->
     <script>
-        function switchTab(tabId, filterValue = null) {
-            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
+        // 1. Changer d'onglet (Clients, Demandes, Réclamations)
+        function switchTab(tabId, filterValue) {
+            // Cacher tous les onglets
+            const allTabs = document.querySelectorAll('.tab-pane');
+            allTabs.forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+
+            // Réinitialiser le style de tous les boutons d'onglets
+            const allButtons = document.querySelectorAll('.tab-btn');
+            allButtons.forEach(function(btn) {
                 btn.classList.remove('bg-[#746B92]', 'text-white', 'shadow-sm');
                 btn.classList.add('text-[#7A6F82]');
             });
 
-            const activeTab = document.getElementById(tabId);
-            const activeBtn = document.getElementById('btn-' + tabId);
+            // Activer l'onglet demandé
+            const targetTab = document.getElementById(tabId);
+            const targetBtn = document.getElementById('btn-' + tabId);
 
-            if (activeTab) activeTab.classList.add('active');
-            if (activeBtn) {
-                activeBtn.classList.add('bg-[#746B92]', 'text-white', 'shadow-sm');
-                activeBtn.classList.remove('text-[#7A6F82]');
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            if (targetBtn) {
+                targetBtn.classList.add('bg-[#746B92]', 'text-white', 'shadow-sm');
+                targetBtn.classList.remove('text-[#7A6F82]');
             }
 
+            // Si un filtre spécifique est demandé
             if (filterValue && tabId === 'tabDemands') {
                 filterDemands(filterValue);
             }
         }
 
+        // 2. Filtrer les demandes bancaires par type
         function filterDemands(type) {
             const rows = document.querySelectorAll('.demand-row');
             const buttons = document.querySelectorAll('.demand-filter-btn');
 
-            buttons.forEach(b => {
-                b.classList.remove('bg-[#746B92]', 'text-white');
-                b.classList.add('bg-[#FAF5ED]', 'text-[#7A6F82]');
+            // Réinitialiser les boutons de filtre
+            buttons.forEach(function(btn) {
+                btn.classList.remove('bg-[#746B92]', 'text-white');
+                btn.classList.add('bg-[#FAF5ED]', 'text-[#7A6F82]');
             });
 
-            if (event && event.target) {
-                event.target.classList.add('bg-[#746B92]', 'text-white');
-                event.target.classList.remove('bg-[#FAF5ED]', 'text-[#7A6F82]');
+            // Mettre en surbrillance le bouton cliqué
+            if (window.event && window.event.target) {
+                const clickedBtn = window.event.target.closest('.demand-filter-btn') || window.event.target;
+                if (clickedBtn && clickedBtn.classList) {
+                    clickedBtn.classList.add('bg-[#746B92]', 'text-white');
+                    clickedBtn.classList.remove('bg-[#FAF5ED]', 'text-[#7A6F82]');
+                }
             }
 
-            rows.forEach(row => {
-                if (type === 'ALL' || row.getAttribute('data-type') === type) {
+            // Afficher ou masquer les lignes selon le type choisi
+            rows.forEach(function(row) {
+                const rowType = row.getAttribute('data-type');
+                if (type === 'ALL' || rowType === type) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -817,88 +840,128 @@
             });
         }
 
+        // 3. Recherche instantanée dans la liste des clients
         function filterClientTable(query) {
-            const q = query.toLowerCase();
+            const searchTerm = query.toLowerCase().trim();
             const rows = document.querySelectorAll('.client-row');
-            rows.forEach(r => {
-                const text = r.textContent.toLowerCase();
-                r.style.display = text.includes(q) ? '' : 'none';
+
+            rows.forEach(function(row) {
+                const rowContent = row.textContent.toLowerCase();
+                if (rowContent.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
             });
         }
 
-
+        // 4. Modale de traitement d'une demande bancaire
         function openDemandModal(id, type, clientName, details) {
             document.getElementById('modalDemandId').value = id;
-            document.getElementById('modalDemandTitle').textContent = `Traiter la demande : ${type} (${id})`;
-            document.getElementById('modalDemandClient').textContent = `Client : ${clientName}`;
+            document.getElementById('modalDemandTitle').textContent = 'Traiter la demande : ' + type + ' (' + id + ')';
+            document.getElementById('modalDemandClient').textContent = 'Client : ' + clientName;
             document.getElementById('modalDemandDetails').textContent = details;
-            document.getElementById('demandModal').classList.remove('hidden');
-        }
-        function closeDemandModal() {
-            document.getElementById('demandModal').classList.add('hidden');
+
+            const modal = document.getElementById('demandModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
         }
 
+        function closeDemandModal() {
+            const modal = document.getElementById('demandModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 5. Modale des détails d'un client (Comptes et Cartes)
         function openClientDetailModal(client) {
             document.getElementById('cliModalAvatar').textContent = client.name.charAt(0);
-            document.getElementById('cliModalName').textContent = `${client.civilite} ${client.name}`;
+            document.getElementById('cliModalName').textContent = client.civilite + ' ' + client.name;
             document.getElementById('cliModalJoined').textContent = client.joinedDate;
             document.getElementById('cliModalCin').textContent = client.cin;
             document.getElementById('cliModalEmail').textContent = client.email;
             document.getElementById('cliModalPhone').textContent = client.phone;
 
+            // Remplir la liste des comptes
             const accList = document.getElementById('cliModalAccountsList');
             accList.innerHTML = '';
-            client.accounts.forEach(acc => {
-                accList.innerHTML += `
-                    <div class="bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between">
-                        <div>
-                            <span class="font-bold text-xs text-[#282330]">${acc.type}</span>
-                            <div class="text-[10px] font-mono text-[#7A6F82]">RIB : ${acc.rib}</div>
-                        </div>
-                        <span class="font-bold font-num text-xs text-[#746B92]">${acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} ${acc.currency}</span>
+            client.accounts.forEach(function(acc) {
+                const balanceFormatted = acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 });
+                const item = document.createElement('div');
+                item.className = 'bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between';
+                item.innerHTML = `
+                    <div>
+                        <span class="font-bold text-xs text-[#282330]">${acc.type}</span>
+                        <div class="text-[10px] font-mono text-[#7A6F82]">RIB : ${acc.rib}</div>
                     </div>
+                    <span class="font-bold font-num text-xs text-[#746B92]">${balanceFormatted} ${acc.currency}</span>
                 `;
+                accList.appendChild(item);
             });
 
+            // Remplir la liste des cartes
             const cardsList = document.getElementById('cliModalCardsList');
             cardsList.innerHTML = '';
             if (client.cards.length === 0) {
                 cardsList.innerHTML = '<div class="text-xs text-[#9D937F] italic">Aucune carte active.</div>';
             } else {
-                client.cards.forEach(card => {
-                    cardsList.innerHTML += `
-                        <div class="bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#746B92]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                <div>
-                                    <span class="font-bold text-xs text-[#282330]">${card.type}</span>
-                                    <div class="text-[10px] font-mono text-[#7A6F82]">${card.number} • Exp : ${card.expires}</div>
-                                </div>
+                client.cards.forEach(function(card) {
+                    const isOpposition = card.status.includes('Opposition');
+                    const badgeClass = isOpposition ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800';
+                    const item = document.createElement('div');
+                    item.className = 'bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#746B92]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                            </svg>
+                            <div>
+                                <span class="font-bold text-xs text-[#282330]">${card.type}</span>
+                                <div class="text-[10px] font-mono text-[#7A6F82]">${card.number} • Exp : ${card.expires}</div>
                             </div>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${card.status.includes('Opposition') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'}">
-                                ${card.status}
-                            </span>
                         </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${badgeClass}">
+                            ${card.status}
+                        </span>
                     `;
+                    cardsList.appendChild(item);
                 });
             }
 
-            document.getElementById('clientDetailModal').classList.remove('hidden');
-        }
-        function closeClientDetailModal() {
-            document.getElementById('clientDetailModal').classList.add('hidden');
+            const modal = document.getElementById('clientDetailModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
         }
 
+        function closeClientDetailModal() {
+            const modal = document.getElementById('clientDetailModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 6. Modale de réponse à une réclamation client
         function openClaimModal(id, clientName, object, currentStatus, currentResponse) {
             document.getElementById('modalClaimId').value = id;
-            document.getElementById('modalClaimClient').textContent = `Client : ${clientName} (${id})`;
+            document.getElementById('modalClaimClient').textContent = 'Client : ' + clientName + ' (' + id + ')';
             document.getElementById('modalClaimObject').value = object;
-            document.getElementById('modalClaimStatusSelect').value = currentStatus === 'Clôturée' ? 'Clôturée' : 'Clôturée';
-            document.getElementById('modalClaimResponseText').value = currentResponse;
-            document.getElementById('claimModal').classList.remove('hidden');
+            document.getElementById('modalClaimStatusSelect').value = currentStatus || 'Clôturée';
+            document.getElementById('modalClaimResponseText').value = currentResponse || '';
+
+            const modal = document.getElementById('claimModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
         }
+
         function closeClaimModal() {
-            document.getElementById('claimModal').classList.add('hidden');
+            const modal = document.getElementById('claimModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
         }
     </script>
 </body>

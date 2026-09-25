@@ -29,11 +29,15 @@ const adminController = {
         res.redirect("/login?error=invalid_credentials");
     },
 
-    logout: async (req, res) => {
+    logout(req, res) {
         if (req.session) {
-            req.session.destroy();
+            req.session.destroy(() => {
+                res.clearCookie("hosbank_session");
+                res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
+            });
+        } else {
+            res.redirect("/login");
         }
-        res.redirect("/login");
     },
 
     getDashboard: async (req, res) => {
@@ -62,256 +66,146 @@ const adminController = {
         });
     },
 
+    // 1. Créer un nouvel utilisateur
     postAddClient: async (req, res) => {
-        const { gender, firstName, lastName, email, phone, city, role, password } = req.body;
-        if (firstName && lastName && email) {
-            await adminService.addClient({ gender, firstName, lastName, email, phone, city, role, password });
+        try {
+            const { gender, firstName, lastName, email, phone, city, role, password } = req.body;
+
+            // Vérification basique des champs requis
+            if (!firstName || !lastName || !email) {
+                return res.redirect("/admin/clients");
+            }
+
+            await adminService.addClient({
+                gender,
+                firstName,
+                lastName,
+                email,
+                phone,
+                city,
+                role,
+                password
+            });
+
             await adminService.logAction(
                 req.session?.admin?.email || "Admin",
                 `Création de l'utilisateur ${firstName} ${lastName} (${email})`,
                 req.ip || "127.0.0.1",
                 "Info"
             );
+        } catch (error) {
+            console.error("Erreur lors de la création de l'utilisateur :", error.message);
         }
+
         res.redirect("/admin/clients");
     },
 
+    // 2. Modifier un utilisateur existant
     postEditClient: async (req, res) => {
         try {
             const { id } = req.params;
             const { gender, firstName, lastName, email, phone, city, role } = req.body;
-            if (firstName && lastName && email) {
-                await adminService.updateClient(id, { gender, firstName, lastName, email, phone, city, role });
+
+            // Vérification basique des champs requis
+            if (!firstName || !lastName || !email) {
+                return res.redirect("/admin/clients");
+            }
+
+            await adminService.updateClient(id, {
+                gender,
+                firstName,
+                lastName,
+                email,
+                phone,
+                city,
+                role
+            });
+
+            await adminService.logAction(
+                req.session?.admin?.email || "Admin",
+                `Mise à jour de l'utilisateur #${id} (${firstName} ${lastName})`,
+                req.ip || "127.0.0.1",
+                "Info"
+            );
+        } catch (error) {
+            console.error("Erreur lors de la modification de l'utilisateur :", error.message);
+        }
+
+        res.redirect("/admin/clients");
+    },
+
+    // 3. Modifier le rôle d'un utilisateur
+    postUpdateUserRole: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { role } = req.body;
+
+            // Liste des 3 rôles autorisés par le cahier des charges
+            const rolesAutorises = ["CLIENT", "CHARGE_CLIENT", "ADMINISTRATEUR"];
+
+            if (role && rolesAutorises.includes(role)) {
+                await adminService.updateUserRole(id, role);
+
                 await adminService.logAction(
                     req.session?.admin?.email || "Admin",
-                    `Mise à jour de l'utilisateur #${id} (${firstName} ${lastName})`,
+                    `Attribution du rôle ${role} à l'utilisateur #${id}`,
                     req.ip || "127.0.0.1",
-                    "Info"
+                    "Avertissement"
                 );
             }
         } catch (error) {
-            console.error("Erreur mise à jour utilisateur:", error);
+            console.error("Erreur mise à jour rôle :", error.message);
         }
+
         res.redirect("/admin/clients");
     },
 
-    postUpdateUserRole: async (req, res) => {
-        const { id } = req.params;
-        const { role } = req.body;
-        if (role && ["CLIENT", "CHARGE_CLIENT", "ADMINISTRATEUR"].includes(role)) {
-            await adminService.updateUserRole(id, role);
+    // 4. Affecter ou réaffecter un client à un conseiller
+    postAssignAdvisor: async (req, res) => {
+        try {
+            const clientId = req.params.id;
+            const advisorIdInput = req.body.advisorId;
+
+            // Si un conseiller est sélectionné, on convertit son ID en nombre, sinon null (Non affecté)
+            let advisorId = null;
+            if (advisorIdInput && !isNaN(advisorIdInput)) {
+                advisorId = parseInt(advisorIdInput, 10);
+            }
+
+            // 1. Mise à jour de l'affectation en base de données
+            await adminService.assignClientAdvisor(clientId, advisorId);
+
+            // 2. Journaliser l'opération
             await adminService.logAction(
                 req.session?.admin?.email || "Admin",
-                `Attribution du rôle ${role} à l'utilisateur #${id}`,
+                `Affectation du client #${clientId} au conseiller #${advisorId || 'aucun'}`,
+                req.ip || "127.0.0.1",
+                "Info"
+            );
+        } catch (error) {
+            console.error("Erreur lors de l'affectation du conseiller :", error.message);
+        }
+
+        res.redirect("/admin/clients");
+    },
+
+    // 5. Activer ou désactiver immédiatement un utilisateur
+    postToggleClientStatus: async (req, res) => {
+        try {
+            const { id } = req.params;
+            await adminService.toggleClientStatus(id);
+
+            await adminService.logAction(
+                req.session?.admin?.email || "Admin",
+                `Changement de statut (activation/désactivation) de l'utilisateur #${id}`,
                 req.ip || "127.0.0.1",
                 "Avertissement"
             );
+        } catch (error) {
+            console.error("Erreur activation/désactivation utilisateur :", error.message);
         }
+
         res.redirect("/admin/clients");
-    },
-
-    postAssignAdvisor: async (req, res) => {
-        const { id } = req.params;
-        const { advisorId } = req.body;
-        const assignedId = advisorId && !isNaN(advisorId) ? parseInt(advisorId, 10) : null;
-        await adminService.assignClientAdvisor(id, assignedId);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Affectation du client #${id} au conseiller #${assignedId || 'aucun'}`,
-            req.ip || "127.0.0.1",
-            "Info"
-        );
-        res.redirect("/admin/clients");
-    },
-
-    postToggleClientStatus: async (req, res) => {
-        const { id } = req.params;
-        await adminService.toggleClientStatus(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Changement de statut (verrouillage/activation) de l'utilisateur #${id}`,
-            req.ip || "127.0.0.1",
-            "Avertissement"
-        );
-        res.redirect("/admin/clients");
-    },
-
-    getAccounts: async (req, res) => {
-        const accounts = await adminService.getAccounts();
-        const cards = await adminService.getCards();
-        res.render("admin/accounts", {
-            currentPath: "/admin/accounts",
-            admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
-            accounts: accounts,
-            cards: cards,
-            title: "Comptes & Cartes - Administration HosBank"
-        });
-    },
-
-    postToggleCardStatus: async (req, res) => {
-        const { id } = req.params;
-        await adminService.toggleCardStatus(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Changement d'état de la carte bancaire pour le compte ${id}`,
-            req.ip || "127.0.0.1",
-            "Avertissement"
-        );
-        res.redirect("/admin/accounts");
-    },
-
-    postToggleCardBlock: async (req, res) => {
-        const { id } = req.params;
-        await adminService.toggleCardBlock(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Changement d'état pour la carte bancaire ID ${id}`,
-            req.ip || "127.0.0.1",
-            "Avertissement"
-        );
-        res.redirect("/admin/accounts");
-    },
-
-    postOpposeCard: async (req, res) => {
-        const { id } = req.params;
-        await adminService.opposeCard(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Mise en opposition d'urgence de la carte bancaire ID ${id}`,
-            req.ip || "127.0.0.1",
-            "Alerte"
-        );
-        res.redirect("/admin/accounts");
-    },
-
-    postUpdateCardLimits: async (req, res) => {
-        const { id } = req.params;
-        const { plafondPaiement, plafondRetrait } = req.body;
-        await adminService.updateCardLimits(id, parseFloat(plafondPaiement), parseFloat(plafondRetrait));
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Mise à jour des plafonds pour la carte ID ${id}`,
-            req.ip || "127.0.0.1",
-            "Info"
-        );
-        res.redirect("/admin/accounts");
-    },
-
-    postToggleAccountStatus: async (req, res) => {
-        const { id } = req.params;
-        await adminService.toggleAccountStatus(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Changement de statut du compte bancaire N° ${id}`,
-            req.ip || "127.0.0.1",
-            "Avertissement"
-        );
-        res.redirect("/admin/accounts");
-    },
-
-    getTransactions: async (req, res) => {
-        const transactions = await adminService.getTransactions();
-        res.render("admin/transactions", {
-            currentPath: "/admin/transactions",
-            admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
-            transactions: transactions,
-            title: "Surveillance des Virements - Administration HosBank"
-        });
-    },
-
-    postApproveTransaction: async (req, res) => {
-        const { id } = req.params;
-        await adminService.approveTransaction(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Approbation manuelle de la transaction ${id}`,
-            req.ip || "127.0.0.1",
-            "Info"
-        );
-        res.redirect("/admin/transactions");
-    },
-
-    postRejectTransaction: async (req, res) => {
-        const { id } = req.params;
-        await adminService.rejectTransaction(id);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Rejet et blocage de la transaction ${id}`,
-            req.ip || "127.0.0.1",
-            "Alerte"
-        );
-        res.redirect("/admin/transactions");
-    },
-
-    getKyc: async (req, res) => {
-        const kycRequests = await adminService.getKycRequests();
-        res.render("admin/kyc", {
-            currentPath: "/admin/kyc",
-            admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
-            kycRequests: kycRequests,
-            title: "Conformité & Vérification KYC - Administration HosBank"
-        });
-    },
-
-    postUpdateKyc: async (req, res) => {
-        const { id } = req.params;
-        const { status } = req.body;
-        await adminService.updateKycStatus(id, status);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Mise à jour du dossier KYC ${id} -> ${status}`,
-            req.ip || "127.0.0.1",
-            "Info"
-        );
-        res.redirect("/admin/kyc");
-    },
-
-    getSettings: async (req, res) => {
-        const auditLogs = await adminService.getAuditLogs();
-        res.render("admin/settings", {
-            currentPath: "/admin/settings",
-            admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
-            auditLogs: auditLogs,
-            title: "Paramètres & Audit - Administration HosBank"
-        });
-    },
-
-    getRequests: async (req, res) => {
-        const demandes = await adminService.getDemandes();
-        const reclamations = await adminService.getReclamations();
-        res.render("admin/requests", {
-            currentPath: "/admin/requests",
-            admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
-            demandes: demandes,
-            reclamations: reclamations,
-            title: "Demandes & Réclamations - Administration HosBank"
-        });
-    },
-
-    postUpdateDemandeStatus: async (req, res) => {
-        const { id } = req.params;
-        const { statut, reponse } = req.body;
-        await adminService.updateDemandeStatus(id, statut, reponse);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Traitement de la demande N° ${id} -> ${statut}`,
-            req.ip || "127.0.0.1",
-            "Info"
-        );
-        res.redirect("/admin/requests");
-    },
-
-    postUpdateReclamationStatus: async (req, res) => {
-        const { id } = req.params;
-        const { statut, reponse } = req.body;
-        await adminService.updateReclamationStatus(id, statut, reponse);
-        await adminService.logAction(
-            req.session?.admin?.email || "Admin",
-            `Mise à jour de la réclamation N° ${id} -> ${statut}`,
-            req.ip || "127.0.0.1",
-            "Info"
-        );
-        res.redirect("/admin/requests");
     },
 
     getAdvisorsWorkload: async (req, res) => {
@@ -353,6 +247,116 @@ const adminController = {
         } catch (error) {
             console.error("Erreur postSendReminder :", error);
             res.redirect(`/admin/advisors-workload?error=${encodeURIComponent(error.message)}`);
+        }
+    },
+
+    // 6. Supervision et gestion de l'ensemble des comptes bancaires
+    getAccounts: async (req, res) => {
+        try {
+            // Étape 1 : Récupérer le filtre choisi dans l'URL (ALL, COURANT, EPARGNE ou OVERDRAWN)
+            const typeFilter = req.query.type || "ALL";
+
+            // Étape 2 : Récupérer la liste des comptes et les statistiques
+            const data = await adminService.getAccounts(typeFilter);
+
+            // Étape 3 : Rendre la page avec toutes les données nécessaires
+            res.render("admin/accounts", {
+                currentPath: "/admin/accounts",
+                admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
+                accounts: data.accounts,
+                summary: data.summary,
+                currentFilter: typeFilter,
+                title: "Supervision des Comptes Bancaires - Administration HosBank"
+            });
+        } catch (error) {
+            console.error("Erreur getAccounts :", error);
+            res.status(500).send("Erreur lors de la récupération des comptes bancaires.");
+        }
+    },
+
+    // 7. Audit centralisé de l'ensemble des virements et flux financiers
+    getTransactions: async (req, res) => {
+        try {
+            // Étape 1 : Récupérer les filtres de recherche saisis par l'administrateur
+            const filters = {
+                searchQuery: req.query.q || "",
+                minAmount: req.query.minAmount || "",
+                maxAmount: req.query.maxAmount || "",
+                dateStart: req.query.dateStart || "",
+                dateEnd: req.query.dateEnd || ""
+            };
+
+            // Étape 2 : Récupérer les transactions et les statistiques via le service
+            const data = await adminService.getTransactionsAudit(filters);
+
+            // Étape 3 : Rendre la page EJS avec les données
+            res.render("admin/transactions", {
+                currentPath: "/admin/transactions",
+                admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
+                transactions: data.transactions,
+                summary: data.summary,
+                filters: filters,
+                title: "Audit des Virements & Flux Financiers - Administration HosBank"
+            });
+        } catch (error) {
+            console.error("Erreur getTransactions :", error);
+            res.status(500).send("Erreur lors du chargement de l'audit des virements.");
+        }
+    },
+
+    // 8. Exportation des flux financiers au format CSV (Critère 3)
+    exportTransactionsCsv: async (req, res) => {
+        try {
+            // Étape 1 : Récupérer les mêmes filtres que l'écran actuel
+            const filters = {
+                searchQuery: req.query.q || "",
+                minAmount: req.query.minAmount || "",
+                maxAmount: req.query.maxAmount || "",
+                dateStart: req.query.dateStart || "",
+                dateEnd: req.query.dateEnd || ""
+            };
+
+            // Étape 2 : Générer le contenu du fichier CSV
+            const csvContent = await adminService.exportTransactionsCsv(filters);
+            const dateStr = new Date().toISOString().slice(0, 10);
+
+            // Étape 3 : Configurer les en-têtes HTTP pour déclencher le téléchargement
+            res.setHeader("Content-Type", "text/csv; charset=utf-8");
+            res.setHeader("Content-Disposition", `attachment; filename="audit_virements_hosbank_${dateStr}.csv"`);
+
+            // Étape 4 : Envoyer le fichier au navigateur
+            res.send(csvContent);
+        } catch (error) {
+            console.error("Erreur exportTransactionsCsv :", error);
+            res.status(500).send("Erreur lors de l'exportation des flux financiers.");
+        }
+    },
+
+    // 9. Supervision de l'ensemble des cartes bancaires (Critères 1, 2 et 3)
+    getCards: async (req, res) => {
+        try {
+            // Étape 1 : Récupérer les filtres de type, statut et recherche
+            const filters = {
+                typeFilter: req.query.type || "ALL",
+                statusFilter: req.query.status || "ALL",
+                searchQuery: req.query.q || ""
+            };
+
+            // Étape 2 : Récupérer les cartes et les statistiques
+            const data = await adminService.getCardsSupervision(filters);
+
+            // Étape 3 : Rendre la page EJS
+            res.render("admin/cards", {
+                currentPath: "/admin/cards",
+                admin: req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" },
+                cards: data.cards,
+                summary: data.summary,
+                filters: filters,
+                title: "Supervision des Cartes Bancaires - Administration HosBank"
+            });
+        } catch (error) {
+            console.error("Erreur getCards :", error);
+            res.status(500).send("Erreur lors du chargement des cartes bancaires.");
         }
     }
 };
