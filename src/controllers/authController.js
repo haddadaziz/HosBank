@@ -23,16 +23,21 @@ const authController = {
         });
     },
 
+    // Traitement du formulaire d'inscription
     async postRegister(req, res) {
         try {
-            const user = await authService.register(req.body, req);
-            let redirectUrl = "/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé.");
-            if (user && user.token) {
-                redirectUrl += "&devToken=" + encodeURIComponent(user.token);
+            const donneesFormulaire = req.body;
+            const nouveauClient = await authService.register(donneesFormulaire, req);
+
+            let urlRedirection = "/login?message=" + encodeURIComponent("Compte créé avec succès ! Un e-mail d'activation vous a été envoyé.");
+            if (nouveauClient && nouveauClient.token) {
+                urlRedirection = urlRedirection + "&devToken=" + encodeURIComponent(nouveauClient.token);
             }
-            res.redirect(redirectUrl);
-        } catch (err) {
-            res.redirect("/register?error=" + encodeURIComponent(err.message) + "&email=" + encodeURIComponent(req.body.email || ""));
+            return res.redirect(urlRedirection);
+        } catch (erreur) {
+            const messageErreur = erreur.message;
+            const emailSaisi = req.body.email || "";
+            return res.redirect("/register?error=" + encodeURIComponent(messageErreur) + "&email=" + encodeURIComponent(emailSaisi));
         }
     },
 
@@ -85,33 +90,38 @@ const authController = {
         }
     },
 
+    // Traitement du lien de confirmation d'email
     async getVerifyEmail(req, res) {
         try {
             const token = req.query.token;
             await authService.verifyEmail(token);
-            res.redirect("/login?message=" + encodeURIComponent("Votre adresse e-mail a été vérifiée avec succès ! Vous pouvez maintenant vous connecter."));
-        } catch (err) {
-            res.redirect("/login?error=" + encodeURIComponent(err.message));
+
+            const messageSucces = "Votre adresse e-mail a été vérifiée avec succès ! Vous pouvez maintenant vous connecter.";
+            return res.redirect("/login?message=" + encodeURIComponent(messageSucces));
+        } catch (erreur) {
+            const messageErreur = erreur.message;
+            return res.redirect("/login?error=" + encodeURIComponent(messageErreur));
         }
     },
 
+    // Deconnexion immediate en 1 clic (destruction session et purge cookie)
     logout(req, res) {
+        // 1. Supprimer le cookie de session sur le navigateur du client
+        res.clearCookie("hosbank_session", { path: "/" });
+
+        // 2. Detruire la session cote serveur si elle existe
         if (req.session) {
             req.session.user = null;
             req.session.advisor = null;
             req.session.admin = null;
+
             req.session.destroy(() => {
-                res.clearCookie("hosbank_session", { path: "/" });
-                res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
+                const message = "Vous avez été déconnecté avec succès.";
+                return res.redirect("/login?message=" + encodeURIComponent(message));
             });
         } else {
-            res.clearCookie("hosbank_session", { path: "/" });
-            res.redirect("/login");
+            return res.redirect("/login");
         }
-    },
-
-    getLogout(req, res) {
-        return this.logout(req, res);
     }
 };
 

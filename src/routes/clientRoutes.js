@@ -14,7 +14,6 @@ router.post("/beneficiaries", requireClientAuth, clientController.postAddBenefic
 router.post("/beneficiaries/:id/delete", requireClientAuth, clientController.postDeleteBeneficiary);
 
 router.post("/transfers", requireClientAuth, clientController.postTransfer);
-router.post("/beneficiaries", requireClientAuth, clientController.postAddBeneficiary);
 router.get("/cards", requireClientAuth, clientController.getCards);
 router.post("/cards/opposition", requireClientAuth, clientController.postOpposeCard);
 router.post("/cards/virtual", requireClientAuth, clientController.postCreateVirtualCard);

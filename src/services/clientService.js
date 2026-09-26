@@ -67,52 +67,61 @@ class ClientService {
         return iban.replace(/\s+/g, "").toUpperCase().replace(/(.{4})/g, "$1 ").trim();
     }
 
-    /**
-     * Récupère tous les bénéficiaires d'un utilisateur
-     */
+    // Récupérer la liste des bénéficiaires du client (style développeur junior)
     async getBeneficiaries(userId) {
-        return await beneficiaryRepo.findByUserId(userId);
+        const liste = await beneficiaryRepo.findByUserId(userId);
+        return liste;
     }
 
     /**
-     * Ajoute un nouveau bénéficiaire avec validation stricte
+     * Ajoute un nouveau bénéficiaire avec validation stricte (style développeur junior)
      */
-    async addBeneficiary(userId, { intitule, iban, bic }) {
+    async addBeneficiary(userId, data) {
+        var intitule = data.intitule;
+        var iban = data.iban;
+        var bic = data.bic;
+
+        // Contrôle 1 : Utilisateur authentifié
         if (!userId) {
             throw new Error("Utilisateur non authentifié.");
         }
 
+        // Contrôle 2 : Intitulé valide (entre 2 et 100 caractères)
         if (!this.validateIntitule(intitule)) {
             throw new Error("L'intitulé du bénéficiaire est requis (entre 2 et 100 caractères).");
         }
 
+        // Contrôle 3 : Format et clé de l'IBAN
         if (!this.validateIban(iban)) {
             throw new Error("Le numéro IBAN est invalide. Veuillez vérifier le pays, la longueur et la clé de contrôle.");
         }
 
+        // Contrôle 4 : Format du code BIC (s'il est renseigné)
         if (!this.validateBic(bic)) {
             throw new Error("Le code BIC/SWIFT est invalide (doit comporter 8 ou 11 caractères).");
         }
 
-        const formattedIban = this.formatIban(iban);
-        const existing = await beneficiaryRepo.findByIban(userId, iban);
+        // Contrôle 5 : Vérifier si l'IBAN n'est pas déjà présent dans le carnet
+        var formattedIban = this.formatIban(iban);
+        var existing = await beneficiaryRepo.findByIban(userId, iban);
         if (existing) {
             throw new Error("Cet IBAN est déjà enregistré dans votre liste de bénéficiaires.");
         }
 
+        // Enregistrer le nouveau bénéficiaire en base de données
         return await beneficiaryRepo.create({
-            userId,
+            userId: userId,
             intitule: intitule.trim(),
             iban: formattedIban,
             bic: bic ? bic.trim().toUpperCase() : null
         });
     }
 
-    /**
-     * Supprime un bénéficiaire
-     */
+    // Supprimer un bénéficiaire du carnet d'un client (style développeur junior)
     async deleteBeneficiary(id, userId) {
-        return await beneficiaryRepo.delete(id, userId);
+        // On appelle le repository pour exécuter la suppression SQL
+        const resultat = await beneficiaryRepo.delete(id, userId);
+        return resultat;
     }
 
     // 1. Récupérer les comptes bancaires actifs d'un client
@@ -126,10 +135,7 @@ class ClientService {
                 devise AS "currency",
                 type_compte AS "type", 
                 solde::float AS "balance", 
-                id, numero_compte AS "accountNumber", iban, bic,
-                type_compte AS "type", solde::float AS "balance", 
-                decouvert_autorise::float AS "overdraft",
-                devise AS "currency"
+                decouvert_autorise::float AS "overdraft"
             FROM comptes_bancaires
             WHERE utilisateur_id = $1 AND statut = 'ACTIF'
             ORDER BY type_compte ASC
@@ -138,21 +144,32 @@ class ClientService {
         return rows;
     }
 
-    async executeTransfer(userId, { sourceAccountId, beneficiaryId, amount, motif }) {
-        const parsedAmount = parseFloat(amount);
+    // Exécuter un virement bancaire sécurisé avec contrôle strict des règles métier (style junior)
+    async executeTransfer(userId, data) {
+        var sourceAccountId = data.sourceAccountId;
+        var beneficiaryId = data.beneficiaryId;
+        var amount = data.amount;
+        var motif = data.motif;
+
+        // Règle métier 1 : Montant valide et strictement positif
+        var parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
             throw new Error("Le montant du virement doit être un nombre positif supérieur à zéro.");
         }
 
+        // Règle métier 2 : Respect du plafond instantané (5 000,00 €)
         if (parsedAmount > 5000) {
             throw new Error("Plafond instantané dépassé (maximum 5 000,00 € par virement).");
         }
 
+        // Connexion au pool pour transaction atomique
         const client = await db.pool.connect();
 
         try {
+            // Début de la transaction SQL
             await client.query("BEGIN");
 
+            // Règle métier 3 : Vérifier le compte émetteur et verrouiller la ligne pour éviter la concurrence
             const sourceRes = await client.query(`
                 SELECT id, numero_compte AS "accountNumber", solde::float AS "balance",
                        decouvert_autorise::float AS "overdraft", statut AS "status"
@@ -166,15 +183,19 @@ class ClientService {
             }
 
             const sourceAcc = sourceRes.rows[0];
+            // Règle métier 4 : Compte émetteur actif (non bloqué)
             if (sourceAcc.status !== 'ACTIF') {
                 throw new Error("Le compte émetteur est inactif ou verrouillé.");
             }
 
+            // Règle métier 5 : Solde disponible suffisant (solde + découvert autorisé)
             const maxAvailable = sourceAcc.balance + (sourceAcc.overdraft || 0);
             if (parsedAmount > maxAvailable) {
-                throw new Error(`Solde insuffisant pour ce virement. Solde disponible : ${maxAvailable.toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €.`);
+                var soldeAffiche = maxAvailable.toLocaleString('fr-FR', { minimumFractionDigits: 2 });
+                throw new Error("Solde insuffisant pour ce virement. Solde disponible : " + soldeAffiche + " €.");
             }
 
+            // Règle métier 6 : Vérifier le bénéficiaire destinataire
             const benRes = await client.query(`
                 SELECT id, intitule, iban, bic
                 FROM beneficiaires
@@ -186,25 +207,32 @@ class ClientService {
             }
             const beneficiary = benRes.rows[0];
 
+            // Étape : Débiter le compte émetteur
             const newSourceBalance = sourceAcc.balance - parsedAmount;
             await client.query(
                 "UPDATE comptes_bancaires SET solde = $1 WHERE id = $2",
                 [newSourceBalance, sourceAccountId]
             );
 
-            const sepaRef = `VIR-SEPA-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-            const label = (motif || `Virement vers ${beneficiary.intitule}`).trim();
+            // Étape : Générer la référence unique SEPA
+            const annee = new Date().getFullYear();
+            const suffixe = Date.now().toString().slice(-6);
+            const sepaRef = "VIR-SEPA-" + annee + "-" + suffixe;
+            const label = (motif || ("Virement vers " + beneficiary.intitule)).trim();
 
+            // Étape : Enregistrer le virement
             await client.query(`
                 INSERT INTO virements (compte_emetteur_id, beneficiaire_id, reference_sepa, montant, motif, statut)
                 VALUES ($1, $2, $3, $4, $5, 'VALIDE')
             `, [sourceAccountId, beneficiaryId, sepaRef, parsedAmount, label]);
 
+            // Étape : Créer l'opération de débit
             await client.query(`
                 INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie)
                 VALUES ($1, 'DEBIT', $2, $3, $4, 'Virement émis')
-            `, [sourceAccountId, parsedAmount, newSourceBalance, `Virement SEPA à ${beneficiary.intitule} : ${label}`]);
+            `, [sourceAccountId, parsedAmount, newSourceBalance, "Virement SEPA à " + beneficiary.intitule + " : " + label]);
 
+            // Étape : Si le compte destinataire est interne à HosBank, le créditer immédiatement
             const destAccRes = await client.query(`
                 SELECT id, solde::float AS "balance", numero_compte AS "accountNumber"
                 FROM comptes_bancaires
@@ -222,10 +250,12 @@ class ClientService {
                 await client.query(`
                     INSERT INTO operations (compte_id, sens, montant, solde_apres_operation, motif_libelle, categorie)
                     VALUES ($1, 'CREDIT', $2, $3, $4, 'Virement reçu')
-                `, [destAcc.id, parsedAmount, newDestBalance, `Virement reçu de ${(sourceAcc.accountNumber || '').replace(/^CPT-/, '')} : ${label}`]);
+                `, [destAcc.id, parsedAmount, newDestBalance, "Virement reçu : " + label]);
             }
 
+            // Valider la transaction atomique
             await client.query("COMMIT");
+
             return {
                 reference: sepaRef,
                 amount: parsedAmount,
@@ -233,9 +263,11 @@ class ClientService {
                 newBalance: newSourceBalance
             };
         } catch (err) {
+            // En cas d'erreur, annuler toute modification (Rollback)
             await client.query("ROLLBACK");
             throw err;
         } finally {
+            // Toujours libérer la connexion au pool
             client.release();
         }
     }
@@ -495,8 +527,9 @@ class ClientService {
     }
 
 
-    async getDashboardData(userId = 3) {
-        const accountsQuery = `
+    // 1. Récupérer les comptes actifs d'un utilisateur
+    async getUserAccounts(userId) {
+        const query = `
             SELECT 
                 id, numero_compte AS "accountNumber", iban, bic, devise AS "currency",
                 type_compte AS "type", solde::float AS "balance", 
@@ -511,18 +544,26 @@ class ClientService {
         return result.rows;
     }
 
-    // 2. Récupérer les données du tableau de bord client (comptes, cartes, 5 dernières opérations)
+    // 2. Récupérer les données du tableau de bord client (optimisé et style junior clair)
     async getDashboardData(userId = 3) {
-        // Étape 1 : Récupérer les comptes actifs
-        const accounts = await this.getUserAccounts(userId);
+        // Étape 1 : Récupérer en parallèle les comptes actifs et le conseiller
+        const [accounts, advisor] = await Promise.all([
+            this.getUserAccounts(userId),
+            this.getUserAdvisor(userId)
+        ]);
 
         let cards = [];
         let transactions = [];
 
-        // Étape 2 : Si le client a des comptes, charger ses cartes et ses opérations
+        // Étape 2 : Si le client possède des comptes bancaires
         if (accounts.length > 0) {
-            const accountIds = accounts.map(account => account.id);
+            // Récupérer la liste des IDs de comptes
+            const accountIds = [];
+            for (let i = 0; i < accounts.length; i++) {
+                accountIds.push(accounts[i].id);
+            }
 
+            // Requête optimisée pour les cartes bancaires
             const cardsQuery = `
                 SELECT 
                     id, 
@@ -538,17 +579,7 @@ class ClientService {
                 ORDER BY type_carte ASC
             `;
 
-            // Auto-provisioning : si l'utilisateur n'a pas encore de carte attitrée sur ses comptes
-            if (cards.length === 0) {
-                const currentAccount = accounts.find(a => a.type === 'COURANT') || accounts[0];
-                if (currentAccount) {
-                    const cardRepo = require("../repositories/cardRepository");
-                    await cardRepo.createPhysicalCard(currentAccount.id);
-                    const freshCards = await db.query(cardsQuery, [accountIds]);
-                    cards = freshCards.rows;
-                }
-            }
-
+            // Requête optimisée pour les 5 dernières transactions
             const txQuery = `
                 SELECT 
                     id, 
@@ -565,7 +596,7 @@ class ClientService {
                 LIMIT 5
             `;
 
-            // Exécution parallèle rapide pour un temps de réponse instantané
+            // Exécution simultanée des requêtes cartes et transactions
             const [cardsResult, txResult] = await Promise.all([
                 db.query(cardsQuery, [accountIds]),
                 db.query(txQuery, [accountIds])
@@ -573,40 +604,58 @@ class ClientService {
 
             cards = cardsResult.rows;
             transactions = txResult.rows;
+
+            // Si aucune carte n'est encore créée, en générer une automatiquement
+            if (cards.length === 0) {
+                let currentAccount = accounts[0];
+                for (let i = 0; i < accounts.length; i++) {
+                    if (accounts[i].type === 'COURANT') {
+                        currentAccount = accounts[i];
+                        break;
+                    }
+                }
+                if (currentAccount) {
+                    const cardRepo = require("../repositories/cardRepository");
+                    await cardRepo.createPhysicalCard(currentAccount.id);
+                    const freshCards = await db.query(cardsQuery, [accountIds]);
+                    cards = freshCards.rows;
+                }
+            }
         }
 
-        // Étape 3 : Calcul simple du solde total disponible
+        // Étape 3 : Calculer les soldes avec une boucle for simple
         let totalBalance = 0;
-        for (const account of accounts) {
-            totalBalance += account.balance;
+        let currentBalance = 0;
+        let savingsBalance = 0;
+        let hasSavingsAccount = false;
+
+        for (let i = 0; i < accounts.length; i++) {
+            const acc = accounts[i];
+            const solde = parseFloat(acc.balance || 0);
+            totalBalance += solde;
+
+            if (acc.type === 'COURANT') {
+                currentBalance += solde;
+            } else if (acc.type === 'EPARGNE') {
+                savingsBalance += solde;
+                hasSavingsAccount = true;
+            }
         }
 
+        // Étape 4 : Renvoyer l'objet prêt pour l'affichage
         return { 
-            accounts, 
-            cards, 
-            transactions, 
-            totalBalance 
-        };
-        const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
-        const currentBalance = accounts.filter(a => a.type === 'COURANT').reduce((sum, a) => sum + a.balance, 0);
-        const savingsBalance = accounts.filter(a => a.type === 'EPARGNE').reduce((sum, a) => sum + a.balance, 0);
-        const hasSavingsAccount = accounts.some(a => a.type === 'EPARGNE');
-
-        // Récupérer le conseiller attitré au client (s'il lui a été assigné par l'admin)
-        const advisor = await this.getUserAdvisor(userId);
-
-        return { 
-            accounts, 
-            cards, 
-            transactions, 
-            totalBalance, 
-            currentBalance, 
-            savingsBalance, 
-            hasSavingsAccount,
-            advisor
+            accounts: accounts, 
+            cards: cards, 
+            transactions: transactions, 
+            totalBalance: totalBalance, 
+            currentBalance: currentBalance, 
+            savingsBalance: savingsBalance, 
+            hasSavingsAccount: hasSavingsAccount,
+            advisor: advisor
         };
     }
 
+    // Récupérer le conseiller bancaire rattaché à un client (style junior)
     async getUserAdvisor(userId) {
         const advisorQuery = `
             SELECT 
@@ -619,16 +668,23 @@ class ClientService {
             JOIN utilisateurs c ON u.conseiller_id = c.id
             WHERE u.id = $1
         `;
-        const { rows } = await db.query(advisorQuery, [userId]);
-        if (rows.length === 0) return null;
-        const adv = rows[0];
+        const result = await db.query(advisorQuery, [userId]);
+        if (result.rows.length === 0) {
+            return null;
+        }
+
+        const adv = result.rows[0];
+        const prenom = adv.prenom || "";
+        const nom = adv.nom || "";
+        const initiales = (prenom.charAt(0) + nom.charAt(0)).toUpperCase();
+
         return {
             id: adv.id,
-            name: `${adv.prenom} ${adv.nom}`,
-            email: adv.email || "conseiller@hosbank.fr",
-            phone: adv.telephone || "+33 1 42 68 55 00",
+            name: prenom + " " + nom,
+            email: adv.email ? adv.email : "conseiller@hosbank.fr",
+            phone: adv.telephone ? adv.telephone : "+33 1 42 68 55 00",
             agency: "Agence Centrale HosBank Paris",
-            avatar: `${(adv.prenom[0] || '').toUpperCase()}${(adv.nom[0] || '').toUpperCase()}`
+            avatar: initiales || "CH"
         };
     }
 
