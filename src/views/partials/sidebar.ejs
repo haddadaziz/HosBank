@@ -1,74 +1,64 @@
-<%
-    // 1. Récupérer le rôle de l'utilisateur connecté
-    let userRole = 'client';
-    if (typeof role !== 'undefined') {
-        userRole = role;
-    } else if (typeof currentRole !== 'undefined') {
-        userRole = currentRole;
-    }
 
-    // 2. Récupérer le chemin de la page actuelle pour le menu actif
+<% 
+    // 1. Déterminer le chemin actuel
     let path = '';
-    if (typeof currentPath !== 'undefined') {
+    if (typeof currentPath !== 'undefined' && currentPath) {
         path = currentPath;
-    } else if (typeof activePath !== 'undefined') {
+    } else if (typeof activePath !== 'undefined' && activePath) {
         path = activePath;
     }
 
-    // 3. Récupérer les informations de l'utilisateur ou mettre des valeurs par défaut
-    let currentUser = null;
-    if (typeof user !== 'undefined' && user) {
-        currentUser = user;
+    // 2. Déterminer le rôle de l'utilisateur avec précision
+    let userRole = 'client';
+    if (typeof role !== 'undefined' && role) {
+        userRole = role;
+    } else if (path.startsWith('/admin')) {
+        userRole = 'admin';
+    } else if (path.startsWith('/advisor')) {
+        userRole = 'advisor';
+    } else if (path.startsWith('/client')) {
+        userRole = 'client';
     } else if (typeof admin !== 'undefined' && admin) {
-        currentUser = admin;
-    } else {
-        // Profil par défaut selon le rôle
-        let defaultName = 'Client HosBank';
-        let defaultRole = 'Particulier';
-        let defaultAvatar = 'CL';
-
-        if (userRole === 'admin') {
-            defaultName = 'Admin HosBank';
-            defaultRole = 'Superviseur';
-            defaultAvatar = 'HB';
-        } else if (userRole === 'advisor') {
-            defaultName = 'Karim Bennani';
-            defaultRole = 'Conseiller Clientèle';
-            defaultAvatar = 'KB';
+        userRole = 'admin';
+    } else if (typeof advisor !== 'undefined' && advisor) {
+        userRole = 'advisor';
+    } else if (typeof user !== 'undefined' && user) {
+        if (user.role === 'ADMINISTRATEUR') {
+            userRole = 'admin';
+        } else if (user.role === 'CHARGE_CLIENT') {
+            userRole = 'advisor';
+        } else {
+            userRole = 'client';
         }
+    }
 
+    // 3. Récupérer l'utilisateur courant selon son rôle
+    let currentUser = null;
+    if (userRole === 'admin') {
+        currentUser = (typeof admin !== 'undefined' && admin) ? admin : (typeof user !== 'undefined' && user ? user : null);
+    } else if (userRole === 'advisor') {
+        currentUser = (typeof advisor !== 'undefined' && advisor) ? advisor : (typeof user !== 'undefined' && user ? user : null);
+    } else {
+        currentUser = (typeof user !== 'undefined' && user) ? user : null;
+    }
+
+    if (!currentUser) {
         currentUser = {
-            name: defaultName,
-            role: defaultRole,
-            avatar: defaultAvatar
+            name: userRole === 'admin' ? 'Admin HosBank' : (userRole === 'advisor' ? 'Conseiller HosBank' : 'Client HosBank'),
+            role: userRole === 'admin' ? 'Super Admin' : (userRole === 'advisor' ? 'Chargé de Clientèle' : 'Particulier')
         };
     }
-%>
-<% 
-    const userRole = typeof role !== 'undefined' ? role : (typeof currentRole !== 'undefined' ? currentRole : 'admin');
-    const path = typeof currentPath !== 'undefined' ? currentPath : (typeof activePath !== 'undefined' ? activePath : '');
-    const currentUser = (typeof user !== 'undefined' && user) ? user : ((typeof admin !== 'undefined' && admin) ? admin : ((typeof advisor !== 'undefined' && advisor) ? advisor : {
-        name: userRole === 'admin' ? 'Admin HosBank' : (userRole === 'advisor' ? 'Aziz Haddad' : 'Alexandre Moreau'),
-        role: userRole === 'admin' ? 'Superviseur' : (userRole === 'advisor' ? 'Conseiller Clientèle' : 'Particulier')
-    }));
 
-    // Calcul dynamique des initiales prénom + nom (ex: "Alexandre Moreau" -> "AM")
-    let initials = '';
+    // 4. Calcul simple des initiales pour l'avatar (ex: "Sophia Benali" -> "SB")
+    let initials = 'HB';
     if (currentUser.prenom && currentUser.nom) {
         initials = (currentUser.prenom.trim().charAt(0) + currentUser.nom.trim().charAt(0)).toUpperCase();
     } else if (currentUser.name) {
-        const parts = currentUser.name.trim().split(/\s+/).filter(Boolean);
-        if (parts.length >= 2) {
-            initials = (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-        } else if (parts.length === 1) {
-            initials = parts[0].substring(0, 2).toUpperCase();
-        }
-    }
-    if (!initials || initials === 'CL') {
-        if (currentUser.avatar && currentUser.avatar !== 'CL') {
-            initials = currentUser.avatar;
-        } else {
-            initials = userRole === 'admin' ? 'HB' : (userRole === 'advisor' ? 'AH' : 'AM');
+        const words = currentUser.name.trim().split(' ');
+        if (words.length >= 2) {
+            initials = (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+        } else if (words.length === 1 && words[0].length >= 2) {
+            initials = words[0].substring(0, 2).toUpperCase();
         }
     }
 %>
@@ -168,6 +158,14 @@
                             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                     <span>Supervision Conseillers</span>
+                </a>
+
+                <a href="/admin/requests" class="nav-item <%= path === '/admin/requests' ? 'active' : '' %>">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Demandes & Réclamations</span>
                 </a>
 
                 <% } else if (userRole==='advisor' ) { %>
@@ -305,8 +303,6 @@
                     </div>
                 </a>
 
-                <a href="/logout" title="Déconnexion"
-                    style="color: rgba(255,255,255,0.6); padding: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 6px; transition: color 0.15s ease;">
                 <a href="<%= userRole === 'admin' ? '/admin/logout' : '/logout' %>" title="Déconnexion"
                     style="color: rgba(255,255,255,0.6); padding: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; border-radius: 6px; transition: color 0.15s ease; flex-shrink: 0;">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,54 +314,48 @@
         </div>
     </aside>
 
-    <!-- Script JavaScript Universel d'Ouverture/Fermeture du Menu Mobile -->
+    <!-- Script simple pour ouvrir et fermer le menu mobile (Style Développeur Junior) -->
     <script>
-        (function() {
-            const toggleBtn = document.getElementById("mobileMenuToggle");
+        // 1. Fonction pour ouvrir le menu sur mobile
+        function openSidebar() {
             const sidebar = document.getElementById("adminSidebar");
-            const closeBtn = document.getElementById("sidebarMobileClose");
             const overlay = document.getElementById("sidebarMobileOverlay");
+            if (sidebar) sidebar.classList.add("mobile-open");
+            if (overlay) overlay.classList.add("active");
+            document.body.style.overflow = "hidden";
+        }
 
-            function openSidebar() {
-                if (sidebar) sidebar.classList.add("mobile-open");
-                if (overlay) overlay.classList.add("active");
-                document.body.style.overflow = "hidden";
+        // 2. Fonction pour fermer le menu sur mobile
+        function closeSidebar() {
+            const sidebar = document.getElementById("adminSidebar");
+            const overlay = document.getElementById("sidebarMobileOverlay");
+            if (sidebar) sidebar.classList.remove("mobile-open");
+            if (overlay) overlay.classList.remove("active");
+            document.body.style.overflow = "";
+        }
+
+        // 3. Clic sur le bouton hamburger
+        const menuBtn = document.getElementById("mobileMenuToggle");
+        if (menuBtn) {
+            menuBtn.addEventListener("click", openSidebar);
+        }
+
+        // 4. Clic sur le bouton fermer (croix)
+        const closeBtn = document.getElementById("sidebarMobileClose");
+        if (closeBtn) {
+            closeBtn.addEventListener("click", closeSidebar);
+        }
+
+        // 5. Clic sur le fond sombre pour fermer
+        const overlay = document.getElementById("sidebarMobileOverlay");
+        if (overlay) {
+            overlay.addEventListener("click", closeSidebar);
+        }
+
+        // 6. Fermer avec la touche Échap
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") {
+                closeSidebar();
             }
-
-            function closeSidebar() {
-                if (sidebar) sidebar.classList.remove("mobile-open");
-                if (overlay) overlay.classList.remove("active");
-                document.body.style.overflow = "";
-            }
-
-            const triggerBtns = document.querySelectorAll("#mobileMenuToggle, .mobile-hamburger-btn, .mobile-menu-toggle");
-            triggerBtns.forEach(function(btn) {
-                btn.addEventListener("click", function(e) {
-                    e.stopPropagation();
-                    openSidebar();
-                });
-            });
-
-            if (closeBtn) {
-                closeBtn.addEventListener("click", closeSidebar);
-            }
-
-            if (overlay) {
-                overlay.addEventListener("click", closeSidebar);
-            }
-
-            // Fermer automatiquement si la fenêtre est agrandie vers le bureau
-            window.addEventListener("resize", function() {
-                if (window.innerWidth >= 1024 && sidebar && sidebar.classList.contains("mobile-open")) {
-                    closeSidebar();
-                }
-            });
-
-            // Fermer avec la touche Echap
-            document.addEventListener("keydown", function(e) {
-                if (e.key === "Escape" && sidebar && sidebar.classList.contains("mobile-open")) {
-                    closeSidebar();
-                }
-            });
-        })();
+        });
     </script>

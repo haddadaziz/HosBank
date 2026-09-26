@@ -4,69 +4,77 @@ const userRepository = require("../repositories/userRepository");
 const emailService = require("./emailService");
 
 const authService = {
-    // Inscription d'un nouveau client
+    // Inscription d'un nouveau client avec hachage securise
     async register(data, req) {
-        const { civilite, name, email, password, confirmPassword } = data;
+        const civilite = data.civilite || "M.";
+        const name = data.name;
+        const email = data.email;
+        const password = data.password;
+        const confirmPassword = data.confirmPassword;
 
-        // 1. Vérifier que tous les champs sont remplis
+        // 1. Verifier que les champs obligatoires sont remplis
         if (!name || !email || !password || !confirmPassword) {
             throw new Error("Veuillez remplir tous les champs obligatoires.");
         }
 
-        // 2. Vérifier que les deux mots de passe correspondent
+        // 2. Verifier que les deux mots de passe sont identiques
         if (password !== confirmPassword) {
             throw new Error("Les mots de passe ne correspondent pas.");
         }
 
-        // 3. Contrôle de complexité du mot de passe
-        const hasMinLength = password.length >= 8;
-        const hasUpperCase = /[A-Z]/.test(password);
-        const hasLowerCase = /[a-z]/.test(password);
-        const hasNumber = /[0-9]/.test(password);
-        const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        // 3. Controle de complexite du mot de passe
+        const aAuMoins8Caracteres = password.length >= 8;
+        const aUneMajuscule = /[A-Z]/.test(password);
+        const aUneMinuscule = /[a-z]/.test(password);
+        const aUnChiffre = /[0-9]/.test(password);
+        const aUnCaractereSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-        if (!hasMinLength || !hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+        if (!aAuMoins8Caracteres || !aUneMajuscule || !aUneMinuscule || !aUnChiffre || !aUnCaractereSpecial) {
             throw new Error("Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.");
         }
 
-        // 4. Vérifier si l'email existe déjà
-        const existingUser = await userRepository.findByEmail(email);
-        if (existingUser) {
+        // 4. Verifier si l'email existe deja dans la base de donnees
+        const utilisateurExistant = await userRepository.findByEmail(email);
+        if (utilisateurExistant) {
             throw new Error("Un compte existe déjà avec cette adresse e-mail.");
         }
 
-        // 5. Récupérer le prénom et le nom
-        const parts = name.trim().split(" ");
-        const prenom = parts[0];
-        const nom = parts.slice(1).join(" ") || parts[0];
+        // 5. Recuperer le prenom et le nom
+        const partiesNom = name.trim().split(" ");
+        const prenom = partiesNom[0];
+        const nom = partiesNom.slice(1).join(" ") || partiesNom[0];
 
-        // 6. Hacher le mot de passe avec bcrypt (salage coût = 10)
-        const motDePasseHash = await bcrypt.hash(password, 10);
+        // 6. Hacher le mot de passe avec bcrypt (cout de salage = 10)
+        const saltRounds = 10;
+        const motDePasseHash = await bcrypt.hash(password, saltRounds);
 
-        // 7. Générer un token pour la confirmation d'email
+        // 7. Generer un jeton pour l'activation du compte
         const token = crypto.randomBytes(24).toString("hex");
 
-        // 8. Sauvegarder l'utilisateur en base de données
-        const newUser = await userRepository.create({
-            civilite: civilite || "M.",
-            nom,
-            prenom,
-            email,
-            motDePasseHash,
-            token
+        // 8. Sauvegarder le client en base de donnees (jamais le mot de passe en clair)
+        const nouveauClient = await userRepository.create({
+            civilite: civilite,
+            nom: nom,
+            prenom: prenom,
+            email: email,
+            motDePasseHash: motDePasseHash,
+            token: token
         });
 
-        // 9. Créer un compte bancaire initial pour le client
+        // 9. Creer un compte bancaire par defaut
         try {
-            await userRepository.createDefaultAccount(newUser.id);
+            await userRepository.createDefaultAccount(nouveauClient.id);
         } catch (err) {
             console.warn("Compte bancaire non créé :", err.message);
         }
 
-        // 10. Envoyer l'email de vérification
+        // 10. Envoyer l'email d'activation
         await emailService.sendVerificationEmail(email, token, req);
 
-        return { ...newUser, token };
+        return {
+            ...nouveauClient,
+            token: token
+        };
     },
 
     // Connexion
@@ -80,7 +88,6 @@ const authService = {
             throw new Error("Identifiant ou mot de passe incorrect.");
         }
 
-        const isMatch = await bcrypt.compare(password, user.mot_de_passe_hash);
         let isMatch = false;
         try {
             isMatch = await bcrypt.compare(password, user.mot_de_passe_hash);
@@ -109,19 +116,23 @@ const authService = {
         return user;
     },
 
-    // Vérification de l'email
+    // Verification de l'email avec le jeton
     async verifyEmail(token) {
+        // 1. Verifier si le jeton est renseigne
         if (!token) {
             throw new Error("Jeton de vérification manquant.");
         }
 
-        const user = await userRepository.findByToken(token);
-        if (!user) {
+        // 2. Chercher l'utilisateur avec ce jeton valide (non expire)
+        const utilisateur = await userRepository.findByToken(token);
+        if (!utilisateur) {
             throw new Error("Ce lien de vérification est invalide ou a expiré.");
         }
 
-        await userRepository.verifyEmail(user.id);
-        return user;
+        // 3. Valider l'email et annuler le jeton pour garantir l'usage unique
+        await userRepository.verifyEmail(utilisateur.id);
+
+        return utilisateur;
     }
 };
 

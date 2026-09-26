@@ -8,13 +8,314 @@
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================
+           HOSBANK 2026 - ULTRA-REALISTIC 3D BANK CARDS STYLING
+           ========================================================== */
+        .admin-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 28px;
+            padding: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-cards-grid {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+        }
+
+        /* Conteneur 3D Flip */
+        .card-flip-scene {
+            perspective: 1200px;
+            width: 100%;
+            aspect-ratio: 1.586;
+            min-height: 236px;
+        }
+
+        .card-flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        .card-flip-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        /* Face Commune Recto / Verso */
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 18px;
+            overflow: hidden;
+            user-select: none;
+            box-shadow: 0 16px 36px -6px rgba(20, 16, 32, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+            transition: box-shadow 0.25s ease;
+        }
+
+        .card-flip-scene:hover .card-face {
+            box-shadow: 0 20px 42px -6px rgba(20, 16, 32, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+        }
+
+        /* ================= RECTO ================= */
+        .card-front {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: #FFFFFF;
+        }
+
+        /* Reflet holographique subtil */
+        .card-front::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(125deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 40%, transparent 60%, rgba(255, 255, 255, 0.1) 100%);
+            pointer-events: none;
+        }
+
+        .card-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-network-badge {
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #FFFFFF;
+            backdrop-filter: blur(4px);
+        }
+
+        .card-emv-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 4px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .emv-gold-chip {
+            width: 44px;
+            height: 33px;
+            background: linear-gradient(135deg, #E6C775 0%, #F5DE9B 45%, #C9A447 75%, #ECCB7B 100%);
+            border-radius: 6px;
+            border: 1px solid #9D7B24;
+            position: relative;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.6), 0 2px 5px rgba(0,0,0,0.35);
+            overflow: hidden;
+        }
+        .emv-gold-chip::after {
+            content: "";
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 1px;
+            background: #9D7B24;
+        }
+        .emv-gold-chip::before {
+            content: "";
+            position: absolute;
+            left: 45%; top: 0; bottom: 0;
+            width: 1px;
+            background: #9D7B24;
+        }
+
+        .card-embossed-pan {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 2.8px;
+            color: #FFFFFF;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 -1px 1px rgba(255, 255, 255, 0.3);
+            margin: 6px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-lower-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-text-muted-label {
+            font-size: 0.56rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 2px;
+        }
+
+        .card-embossed-name {
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #FFFFFF;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+
+        .card-embossed-expiry {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #FFFFFF;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+            text-align: right;
+        }
+
+        /* Bandeau de données complémentaires sur la carte */
+        .card-strip-data {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.8);
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-flip-hint {
+            font-size: 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.18);
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: #FFFFFF;
+            backdrop-filter: blur(4px);
+            font-weight: 600;
+        }
+
+        /* ================= VERSO ================= */
+        .card-back {
+            transform: rotateY(180deg);
+            background: #201A2B;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            color: #FFFFFF;
+        }
+
+        .mag-stripe {
+            width: 100%;
+            height: 44px;
+            background: linear-gradient(180deg, #111114 0%, #1e1e24 50%, #0c0c0e 100%);
+            margin-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+        }
+
+        .sig-panel-row {
+            padding: 0 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sig-white-strip {
+            flex: 1;
+            height: 32px;
+            background: repeating-linear-gradient(45deg, #f7f7f7, #f7f7f7 6px, #ececec 6px, #ececec 12px);
+            border-radius: 4px;
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            font-family: 'Brush Script MT', cursive, sans-serif;
+            font-size: 1.15rem;
+            color: #1A1A24;
+            letter-spacing: 1px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .cvv-display-box {
+            background: #FFFFFF;
+            color: #111116;
+            font-family: 'Space Mono', monospace;
+            font-weight: 800;
+            font-size: 0.88rem;
+            padding: 6px 10px;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .back-details-area {
+            padding: 0 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .back-detail-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .hologram-seal {
+            width: 32px;
+            height: 24px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #e4e4e4 0%, #999 30%, #fff 60%, #777 100%);
+            box-shadow: inset 0 1px 1px #fff, 0 1px 3px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            font-weight: 900;
+            color: #333;
+            letter-spacing: 0.5px;
+        }
+    </style>
 </head>
 <body>
 
 <div class="admin-layout">
     <!-- Barre latérale unifiée HosBank -->
-    <%- include('../partials/sidebar') %>
+    <%- include('../partials/sidebar', { role: 'admin', currentPath: '/admin/cards' }) %>
 
     <div class="admin-main">
         <!-- Barre supérieure admin -->
@@ -26,6 +327,16 @@
                 <div>
                     <h1 class="page-title">Supervision des Cartes Bancaires</h1>
                     <p class="page-subtitle">Registre centralisé des cartes émises, suivi des cartes actives, virtuelles et mises en opposition</p>
+                </div>
+
+                <!-- Bouton Bascule Tous les Versos -->
+                <div>
+                    <button type="button" id="btnFlipAll" class="btn-secondary" style="border-radius: 10px; font-weight: 700; font-size: 0.84rem; display: inline-flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Tourner toutes les cartes (Verso)</span>
+                    </button>
                 </div>
             </div>
 
@@ -71,9 +382,9 @@
                 </div>
             </div>
 
-            <!-- Carte principale : Filtres et Tableau des Cartes Bancaires -->
+            <!-- Carte principale : Filtres et Grille des Cartes Réalistes -->
             <div class="card">
-                <!-- En-tête de carte avec filtres par type (Physique / Virtuelle) et par statut -->
+                <!-- En-tête avec filtres par type (Physique / Virtuelle) et par statut -->
                 <div class="card-header" style="flex-wrap: wrap; gap: 14px; padding: 18px 24px; border-bottom: 1px solid var(--border-ui, #EFECE6);">
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <span class="card-title" style="font-size: 1.05rem;">Inventaire des Cartes Bancaires</span>
@@ -95,7 +406,7 @@
                             </svg>
                         </div>
 
-                        <!-- Filtre par Type de Carte (Critère 2 : Physique vs Virtuelle) -->
+                        <!-- Filtres par Type de Carte -->
                         <a href="/admin/cards?type=ALL" class="btn-sm <%= filters.typeFilter === 'ALL' && (!filters.statusFilter || filters.statusFilter === 'ALL') ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
                             Toutes (<%= summary.totalCards %>)
                         </a>
@@ -114,148 +425,209 @@
                     </div>
                 </div>
 
-                <!-- Tableau exhaustif des cartes bancaires -->
-                <div class="data-table-wrapper" style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Carte / Masque PAN</th>
-                                <th>Type de Carte</th>
-                                <th>Détail du Titulaire</th>
-                                <th>Compte & IBAN Rattaché</th>
-                                <th>Date d'Expiration</th>
-                                <th>Plafonds (Mois / Semaine)</th>
-                                <th>Statut de la Carte</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (cards && cards.length > 0) { %>
-                                <% cards.forEach(card => { %>
-                                    <tr class="card-row" data-type="<%= card.rawType %>" data-status="<%= card.rawStatus %>">
-                                        <!-- Masque PAN et ID Carte -->
-                                        <td>
+                <!-- Grille des Cartes Réalistes 3D -->
+                <% if (cards && cards.length > 0) { %>
+                    <div class="admin-cards-grid">
+                        <% cards.forEach(card => { %>
+                            <% 
+                                const isOpposed = (card.rawStatus === 'OPPOSEE');
+                                const isBlocked = (card.rawStatus === 'BLOQUEE_TEMPORAIREMENT');
+                                const isVirtual = (card.rawType === 'VIRTUELLE');
+
+                                let cardTheme = 'card-theme-hosbank';
+                                if (isOpposed) {
+                                    cardTheme = 'card-theme-opposed';
+                                } else if (isBlocked) {
+                                    cardTheme = 'card-theme-blocked';
+                                } else if (isVirtual) {
+                                    cardTheme = 'card-theme-virtual';
+                                }
+
+                                // Calcul d'un CVV réaliste déterministe
+                                const cvv = String(Math.abs((card.id * 149 + 382) % 900) + 100);
+                            %>
+                            <div class="card-flip-scene card-row" data-type="<%= card.rawType %>" data-status="<%= card.rawStatus %>">
+                                <div class="card-flip-inner" onclick="this.classList.toggle('is-flipped')" title="Cliquez pour tourner la carte (Recto / Verso)">
+                                    
+                                    <!-- ================= 1. RECTO (FACE AVANT DE LA CARTE) ================= -->
+                                    <div class="card-face card-front <%= cardTheme %>">
+                                        <!-- En-tête : Logo HosBank + Réseau + Statut -->
+                                        <div class="card-top-bar">
                                             <div style="display: flex; align-items: center; gap: 8px;">
-                                                <div style="width: 32px; height: 22px; border-radius: 4px; background: <%= card.rawType === 'PHYSIQUE' ? 'linear-gradient(135deg, #2D253D, #171320)' : 'linear-gradient(135deg, #746B92, #9B8FB8)' %>; display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 0.6rem; font-weight: 800;">
-                                                    <%= card.rawType === 'PHYSIQUE' ? 'CB' : 'VIR' %>
-                                                </div>
-                                                <div>
-                                                    <div style="font-family: monospace; font-size: 0.88rem; font-weight: 700; color: var(--text-main);">
-                                                        <%= card.panMasque %>
-                                                    </div>
-                                                    <span style="font-size: 0.7rem; color: var(--text-muted);">ID #<%= card.id %></span>
-                                                </div>
+                                                <img src="/images/logo-white.svg" alt="HosBank" style="height: 22px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));" />
+                                                <span class="card-network-badge">
+                                                    <%= isVirtual ? 'VIRTUELLE' : 'DEBIT PREMIER' %>
+                                                </span>
                                             </div>
-                                        </td>
 
-                                        <!-- Type de Carte (Critère 2) -->
-                                        <td>
-                                            <% if (card.rawType === 'PHYSIQUE') { %>
-                                                <span class="badge" style="background: rgba(45, 37, 61, 0.12); color: #2D253D; font-weight: 700; border: 1px solid rgba(45, 37, 61, 0.25);">
-                                                    💳 Physique
+                                            <div>
+                                                <% if (isOpposed) { %>
+                                                    <span class="badge danger" style="background: rgba(220, 38, 38, 0.45); color: #FECACA; border: 1px solid rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px); font-size: 0.7rem;">
+                                                        <span class="badge-dot" style="background: #EF4444;"></span> Opposée
+                                                    </span>
+                                                <% } else if (isBlocked) { %>
+                                                    <span class="badge warning" style="background: rgba(217, 119, 6, 0.45); color: #FDE68A; border: 1px solid rgba(245, 158, 11, 0.6); backdrop-filter: blur(4px); font-size: 0.7rem;">
+                                                        <span class="badge-dot" style="background: #F59E0B;"></span> Bloquée
+                                                    </span>
+                                                <% } else { %>
+                                                    <span class="badge success" style="background: rgba(16, 185, 129, 0.4); color: #D1FAE5; border: 1px solid rgba(16, 185, 129, 0.6); backdrop-filter: blur(4px); font-size: 0.7rem;">
+                                                        <span class="badge-dot" style="background: #10B981;"></span> Active
+                                                    </span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+
+                                        <!-- Puce EMV dorée & Sans-Contact -->
+                                        <div class="card-emv-row">
+                                            <% if (isVirtual) { %>
+                                                <span style="font-size: 0.68rem; font-weight: 800; letter-spacing: 1px; background: rgba(255,255,255,0.18); padding: 4px 9px; border-radius: 6px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(4px);">
+                                                    ⚡ E-Card Online
                                                 </span>
                                             <% } else { %>
-                                                <span class="badge" style="background: rgba(116, 107, 146, 0.15); color: #746B92; font-weight: 700; border: 1px solid rgba(116, 107, 146, 0.3);">
-                                                    ⚡ Virtuelle
-                                                </span>
+                                                <div class="emv-gold-chip"></div>
                                             <% } %>
-                                        </td>
 
-                                        <!-- Détail du Titulaire (Critère 3) -->
-                                        <td>
-                                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.88rem;">
-                                                <%= card.clientName %>
+                                            <div style="display: flex; align-items: center; gap: 12px;">
+                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color: rgba(255,255,255,0.85); filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));">
+                                                    <path d="M5.5 18.5a10 10 0 0 1 0-13"/>
+                                                    <path d="M8.5 15.5a6 6 0 0 1 0-7"/>
+                                                    <path d="M11.5 12.5a2 2 0 0 1 0-1"/>
+                                                </svg>
+                                                <span style="font-size: 0.65rem; font-family: monospace; opacity: 0.75; letter-spacing: 0.5px;">#ID-<%= card.id %></span>
                                             </div>
-                                            <div style="font-size: 0.74rem; color: var(--text-muted);">
-                                                <%= card.clientEmail %>
+                                        </div>
+
+                                        <!-- Numéro PAN embossé en relief -->
+                                        <div class="card-embossed-pan">
+                                            <%= card.panMasque %>
+                                        </div>
+
+                                        <!-- Titulaire & Date d'expiration -->
+                                        <div class="card-lower-meta">
+                                            <div>
+                                                <div class="card-text-muted-label">Titulaire de la carte</div>
+                                                <div class="card-embossed-name">
+                                                    <%= card.clientName ? card.clientName.toUpperCase() : 'TITULAIRE' %>
+                                                </div>
                                             </div>
-                                            <span style="font-size: 0.68rem; background: rgba(116, 107, 146, 0.12); color: #746B92; font-weight: 700; padding: 1px 6px; border-radius: 4px; display: inline-block; margin-top: 2px;">
-                                                <%= card.clientId %>
+                                            <div style="text-align: right;">
+                                                <div class="card-text-muted-label">Expire Fin</div>
+                                                <div class="card-embossed-expiry">
+                                                    <%= card.dateExpiration %>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ligne d'informations bancaires imprimée sur la carte -->
+                                        <div class="card-strip-data">
+                                            <span>Compte N° <%= card.numeroCompte %> • Plafond: <%= Number(card.plafondPaiement).toLocaleString('fr-FR') %> €</span>
+                                            <span class="card-flip-hint">
+                                                <span>↻ Verso</span>
                                             </span>
-                                        </td>
+                                        </div>
+                                    </div>
 
-                                        <!-- Compte & IBAN Rattaché -->
-                                        <td>
-                                            <div style="font-weight: 600; font-size: 0.82rem; color: var(--text-main);">
-                                                <%= card.numeroCompte %>
-                                            </div>
-                                            <div style="font-family: monospace; font-size: 0.74rem; color: var(--text-muted);">
-                                                <%= card.iban %>
-                                            </div>
-                                        </td>
+                                    <!-- ================= 2. VERSO (DOS DE LA CARTE RÉALISTE) ================= -->
+                                    <div class="card-face card-back <%= cardTheme %>">
+                                        <!-- Bande magnétique noire en haut -->
+                                        <div class="mag-stripe"></div>
 
-                                        <!-- Date d'Expiration (Critère 3) -->
-                                        <td>
-                                            <div style="font-family: monospace; font-size: 0.95rem; font-weight: 800; color: var(--text-main); letter-spacing: 0.05em;">
-                                                <%= card.dateExpiration %>
+                                        <!-- Bande de signature blanche + CVV cryptogramme -->
+                                        <div class="sig-panel-row">
+                                            <div class="sig-white-strip" title="Signature du titulaire">
+                                                <%= card.clientName || 'Signature Titulaire' %>
                                             </div>
-                                            <span style="font-size: 0.7rem; color: var(--text-muted);">Fin de mois</span>
-                                        </td>
+                                            <div class="cvv-display-box" title="Cryptogramme visuel de sécurité (CVV)">
+                                                <span style="font-size: 0.65rem; color: #666; font-weight: 700;">CVV</span>
+                                                <span><%= cvv %></span>
+                                            </div>
+                                        </div>
 
-                                        <!-- Plafonds (Mois / Semaine) -->
-                                        <td>
-                                            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">
-                                                Paiement : <%= Number(card.plafondPaiement).toLocaleString('fr-FR') %> € / mois
+                                        <!-- Informations bancaires détaillées au dos -->
+                                        <div class="back-details-area">
+                                            <div class="back-detail-line">
+                                                <span style="font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 700;">IBAN Rattaché</span>
+                                                <span style="font-family: 'Space Mono', monospace; font-size: 0.74rem; font-weight: 700;"><%= card.iban %></span>
                                             </div>
-                                            <div style="font-size: 0.74rem; color: var(--text-muted);">
-                                                Retrait : <%= Number(card.plafondRetrait).toLocaleString('fr-FR') %> € / sem.
-                                            </div>
-                                        </td>
 
-                                        <!-- Statut de la Carte (Critère 1 : Active, Bloquée, En opposition) -->
-                                        <td>
-                                            <% if (card.rawStatus === 'ACTIVE') { %>
-                                                <span class="badge success" style="font-weight: 700; padding: 4px 8px;">
-                                                    <span class="badge-dot" style="background: #10B981;"></span>
-                                                    Active
-                                                </span>
-                                            <% } else if (card.rawStatus === 'BLOQUEE_TEMPORAIREMENT') { %>
-                                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700; padding: 4px 8px; border: 1px solid rgba(245, 158, 11, 0.3);">
-                                                    <span class="badge-dot" style="background: #F59E0B;"></span>
-                                                    Bloquée
-                                                </span>
-                                            <% } else if (card.rawStatus === 'OPPOSEE') { %>
-                                                <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700; padding: 4px 8px; border: 1px solid #FCA5A5;">
-                                                    <span class="badge-dot" style="background: #DC2626;"></span>
-                                                    En opposition
-                                                </span>
-                                            <% } else { %>
-                                                <span class="badge" style="background: #F3F4F6; color: #6B7280; font-weight: 600;">
-                                                    Expirée
-                                                </span>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="7" style="text-align: center; padding: 36px; color: var(--text-muted);">
-                                        Aucune carte bancaire ne correspond aux critères sélectionnés.
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
+                                            <div class="back-detail-line">
+                                                <span style="font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 700;">Plafond Paiement</span>
+                                                <span style="font-weight: 700; font-size: 0.75rem;"><%= Number(card.plafondPaiement).toLocaleString('fr-FR') %> € <span style="font-size: 0.65rem; opacity: 0.7;">/ mois</span></span>
+                                            </div>
+
+                                            <div class="back-detail-line">
+                                                <span style="font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 700;">Plafond Retrait</span>
+                                                <span style="font-weight: 700; font-size: 0.75rem;"><%= Number(card.plafondRetrait).toLocaleString('fr-FR') %> € <span style="font-size: 0.65rem; opacity: 0.7;">/ sem.</span></span>
+                                            </div>
+
+                                            <div class="back-detail-line" style="background: transparent; border: none; padding: 2px 0;">
+                                                <div style="font-size: 0.66rem; opacity: 0.85;">
+                                                    <strong><%= card.clientEmail %></strong> • <%= card.clientId %>
+                                                </div>
+                                                <div class="hologram-seal" title="Sceau de sécurité HosBank">
+                                                    HB
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Micro-texte légal et bouton retour -->
+                                        <div style="padding: 0 18px; display: flex; justify-content: space-between; align-items: center; font-size: 0.58rem; color: rgba(255,255,255,0.5);">
+                                            <span>HosBank S.A. • Carte bancaire sécurisée • Support: +33 1 00 00 00 00</span>
+                                            <span class="card-flip-hint" style="background: rgba(255,255,255,0.12);">
+                                                ↻ Recto
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <div class="empty-cards-view">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.4;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <p style="font-weight: 600; font-size: 0.95rem;">Aucune carte bancaire ne correspond aux critères sélectionnés.</p>
+                    </div>
+                <% } %>
             </div>
         </main>
     </div>
 </div>
 
-<!-- Script simple pour la recherche instantanée (Style Junior clair) -->
+<!-- Scripts pour interaction 3D et recherche instantanée -->
 <script>
-    // Recherche instantanée dans le tableau des cartes bancaires
+    // 1. Bouton pour tourner toutes les cartes à la fois (Recto <-> Verso)
+    const btnFlipAll = document.getElementById("btnFlipAll");
+    let allFlipped = false;
+    if (btnFlipAll) {
+        btnFlipAll.addEventListener("click", function() {
+            allFlipped = !allFlipped;
+            document.querySelectorAll(".card-flip-inner").forEach(function(cardInner) {
+                if (allFlipped) {
+                    cardInner.classList.add("is-flipped");
+                } else {
+                    cardInner.classList.remove("is-flipped");
+                }
+            });
+            btnFlipAll.querySelector("span").textContent = allFlipped ? "Tourner toutes les cartes (Recto)" : "Tourner toutes les cartes (Verso)";
+        });
+    }
+
+    // 2. Recherche instantanée dans les cartes bancaires
     const inputRecherche = document.getElementById("cardSearchInput");
     if (inputRecherche) {
         inputRecherche.addEventListener("input", function() {
             const texteRecherche = this.value.toLowerCase().trim();
-            const lignesCartes = document.querySelectorAll(".card-row");
+            const cartes = document.querySelectorAll(".card-row");
 
-            lignesCartes.forEach(function(ligne) {
-                const contenu = ligne.textContent.toLowerCase();
+            cartes.forEach(function(carte) {
+                const contenu = carte.textContent.toLowerCase();
                 if (contenu.includes(texteRecherche)) {
-                    ligne.style.display = "";
+                    carte.style.display = "";
                 } else {
-                    ligne.style.display = "none";
+                    carte.style.display = "none";
                 }
             });
         });
