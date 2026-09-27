@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================
+           HOSBANK 2026 - ACCOUNTS SUPERVISION (100% CAHIER DES CHARGES)
+           Critères : IBAN, Titulaire, Type, Solde, Filtres & Découverts
+           ========================================================== */
+        .accounts-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .accounts-card-grid {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+        }
+
+        .account-card-item {
+            background: #FFFFFF;
+            border: 1px solid rgba(104, 94, 134, 0.14);
+            border-radius: 18px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 4px 16px rgba(40, 33, 56, 0.04);
+            transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s ease;
+            position: relative;
+        }
+
+        .account-card-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(40, 33, 56, 0.09);
+            border-color: rgba(104, 94, 134, 0.28);
+        }
+
+        .acc-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(104, 94, 134, 0.08);
+        }
+
+        .acc-balance-value {
+            font-size: 1.65rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .acc-client-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .acc-client-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2D253D 0%, #685E86 100%);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(45, 37, 61, 0.15);
+        }
+
+        .acc-client-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .acc-client-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .acc-iban-box {
+            background: #FAF8F5;
+            border-radius: 12px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border: 1px solid rgba(104, 94, 134, 0.08);
+        }
+
+        .empty-accounts-view {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- Barre latérale HosBank -->
+    <%- include('../partials/sidebar', { role: 'admin', currentPath: '/admin/accounts' }) %>
+
+    <div class="admin-main">
+        <!-- Barre supérieure admin -->
+        <%- include('../partials/topbar') %>
+
+        <main class="admin-content">
+            <!-- 1. En-tête de la page -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Supervision des Comptes Bancaires</h1>
+                    <p class="page-subtitle">Consultez l'ensemble des comptes ouverts, vérifiez les soldes, découverts et types de comptes</p>
+                </div>
+            </div>
+
+            <!-- 2. Indicateurs globaux (Critères 2 & 3) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <!-- Total des comptes ouverts -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Total Comptes Ouverts</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><%= summary.totalAccounts %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Ensemble des comptes</div>
+                </div>
+
+                <!-- Comptes Courants -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Comptes Courants</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #746B92;"><%= summary.currentAccountsCount %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Comptes de dépôt</div>
+                </div>
+
+                <!-- Comptes Épargne -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Comptes d'Épargne</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #10B981;"><%= summary.savingsAccountsCount %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Comptes sur livret</div>
+                </div>
+
+                <!-- Indicateur des comptes en situation de découvert (Critère 3) -->
+                <div class="card" style="padding: 18px 20px; border-left: 4px solid <%= summary.overdrawnCount > 0 ? '#EF4444' : '#10B981' %>;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">En Situation de Découvert</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: <%= summary.overdrawnCount > 0 ? '#EF4444' : '#10B981' %>;">
+                        <%= summary.overdrawnCount %>
+                    </div>
+                    <div style="font-size: 0.78rem; color: <%= summary.overdrawnCount > 0 ? '#EF4444' : 'var(--text-muted)' %>; margin-top: 4px; font-weight: 600;">
+                        <%= summary.overdrawnCount > 0 ? 'Solde négatif détecté' : 'Aucun compte à découvert' %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Grille des Cartes des Comptes Bancaires (Critères 1, 2 et 3) -->
+            <div class="card">
+                <!-- En-tête avec filtres par compte courant ou compte d'épargne (Critère 2) -->
+                <div class="card-header" style="flex-wrap: wrap; gap: 14px; padding: 18px 24px; border-bottom: 1px solid var(--border-ui, #EFECE6);">
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span class="card-title" style="font-size: 1.05rem;">Comptes Bancaires</span>
+                        <span class="badge purple" style="font-size: 0.8rem;"><%= accounts.length %> affiché(s)</span>
+                    </div>
+
+                    <!-- Filtres par Type de compte & Découvert -->
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <!-- Barre de recherche instantanée (IBAN, titulaire) -->
+                        <div style="position: relative;">
+                            <input 
+                                type="text" 
+                                id="accountSearchInput" 
+                                placeholder="Rechercher IBAN, titulaire..." 
+                                style="padding: 6px 12px 6px 30px; font-size: 0.82rem; border: 1px solid var(--primary-border, #D8CEBB); border-radius: 8px; background: #FFFFFF; outline: none; width: 210px;"
+                            >
+                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 10px; top: 9px; color: var(--text-muted, #7A6F82);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+
+                        <!-- Boutons Filtres par Type de compte (Critère 2) -->
+                        <a href="/admin/accounts?type=ALL" class="btn-sm <%= currentFilter === 'ALL' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Tous (<%= summary.totalAccounts %>)
+                        </a>
+                        <a href="/admin/accounts?type=COURANT" class="btn-sm <%= currentFilter === 'COURANT' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Compte Courant (<%= summary.currentAccountsCount %>)
+                        </a>
+                        <a href="/admin/accounts?type=EPARGNE" class="btn-sm <%= currentFilter === 'EPARGNE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                            Compte d'Épargne (<%= summary.savingsAccountsCount %>)
+                        </a>
+                        <a href="/admin/accounts?type=OVERDRAWN" class="btn-sm <%= currentFilter === 'OVERDRAWN' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none; <%= currentFilter !== 'OVERDRAWN' && summary.overdrawnCount > 0 ? 'border-color: rgba(239, 68, 68, 0.4); color: #EF4444;' : '' %>">
+                            ⚠️ Découverts (<%= summary.overdrawnCount %>)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Grille des Cartes : Affiche STRICTEMENT IBAN, Titulaire, Type, Solde et Découvert -->
+                <% if (accounts && accounts.length > 0) { %>
+                    <div class="accounts-card-grid">
+                        <% accounts.forEach(acc => { %>
+                            <div class="account-card-item account-row" data-type="<%= acc.rawType %>" data-overdrawn="<%= acc.isOverdrawn ? 'true' : 'false' %>" style="<%= acc.isOverdrawn ? 'border-top: 4px solid #EF4444;' : '' %>">
+                                
+                                <!-- 1. Type de Compte (Critère 1 & 2) et Indicateur de Découvert (Critère 3) -->
+                                <div class="acc-card-header">
+                                    <% if (acc.rawType === 'COURANT') { %>
+                                        <span class="badge" style="background: rgba(116, 107, 146, 0.15); color: #534B70; font-weight: 700; border: 1px solid rgba(116, 107, 146, 0.3);">
+                                            Compte Courant
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #047857; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                            Compte d'Épargne
+                                        </span>
+                                    <% } %>
+
+                                    <!-- Indicateur des comptes en situation de découvert (Critère 3) -->
+                                    <% if (acc.isOverdrawn) { %>
+                                        <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700; padding: 4px 8px; border: 1px solid #FCA5A5;">
+                                            <span class="badge-dot" style="background: #DC2626;"></span>
+                                            En situation de découvert
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge success" style="font-weight: 600; padding: 4px 8px;">
+                                            <span class="badge-dot" style="background: #10B981;"></span>
+                                            Solde créditeur
+                                        </span>
+                                    <% } %>
+                                </div>
+
+                                <!-- 2. Solde (Critère 1) -->
+                                <div>
+                                    <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.04em; margin-bottom: 4px;">
+                                        Solde
+                                    </div>
+                                    <div class="acc-balance-value" style="color: <%= acc.isOverdrawn ? '#EF4444' : 'var(--text-main)' %>;">
+                                        <%= acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> <%= acc.currency %>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Titulaire (Critère 1) -->
+                                <div class="acc-client-row">
+                                    <div class="acc-client-avatar">
+                                        <%= acc.clientName ? acc.clientName.trim().charAt(0).toUpperCase() : 'C' %>
+                                    </div>
+                                    <div class="acc-client-details">
+                                        <div style="font-size: 0.68rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Titulaire</div>
+                                        <div class="acc-client-name"><%= acc.clientName %></div>
+                                    </div>
+                                </div>
+
+                                <!-- 4. IBAN (Critère 1) -->
+                                <div class="acc-iban-box">
+                                    <span style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted);">IBAN</span>
+                                    <div style="font-family: 'Space Mono', monospace; font-size: 0.82rem; font-weight: 700; color: var(--text-main); word-break: break-all;">
+                                        <%= acc.iban %>
+                                    </div>
+                                </div>
+
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <div class="empty-accounts-view">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.4;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        <p style="font-weight: 600; font-size: 0.95rem;">Aucun compte bancaire ne correspond aux critères sélectionnés.</p>
+                    </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Script simple pour la recherche instantanée (Style Junior) -->
+<script>
+    const inputRecherche = document.getElementById("accountSearchInput");
+    if (inputRecherche) {
+        inputRecherche.addEventListener("input", function() {
+            const texteRecherche = this.value.toLowerCase().trim();
+            const lignesComptes = document.querySelectorAll(".account-row");
+
+            lignesComptes.forEach(function(ligne) {
+                const contenu = ligne.textContent.toLowerCase();
+                if (contenu.includes(texteRecherche)) {
+                    ligne.style.display = "";
+                } else {
+                    ligne.style.display = "none";
+                }
+            });
+        });
+    }
+</script>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 36" fill="none">
+  <g transform="translate(0, 4)">
+    <rect x="0" y="2" width="5.5" height="24" rx="1.5" fill="#746B92"/>
+    <rect x="18.5" y="2" width="5.5" height="24" rx="1.5" fill="#746B92"/>
+    <path d="M5.5 17.5 L18.5 10.5 L18.5 15.2 L5.5 22.2 Z" fill="#E97A7A"/>
+  </g>
+  <text x="30" y="26" font-family="'Plus Jakarta Sans', 'Inter', sans-serif" font-weight="800" font-size="25" letter-spacing="-0.04em" fill="#282330">os<tspan letter-spacing="-0.03em" fill="#282330">Bank</tspan></text>
+  <circle cx="127" cy="24.5" r="3" fill="#E97A7A"/>
+</svg>
