@@ -9,12 +9,172 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================
+           HOSBANK 2026 - TRANSACTIONS AUDIT CARDS STYLING
+           ========================================================== */
+        .transactions-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .transactions-card-grid {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+        }
+
+        .tx-card-item {
+            background: #FFFFFF;
+            border: 1px solid rgba(104, 94, 134, 0.14);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 4px 16px rgba(40, 33, 56, 0.04);
+            transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s ease;
+            position: relative;
+        }
+
+        .tx-card-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(40, 33, 56, 0.09);
+            border-color: rgba(104, 94, 134, 0.28);
+        }
+
+        .tx-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(104, 94, 134, 0.08);
+        }
+
+        .tx-ref-pill {
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: rgba(104, 94, 134, 0.08);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .tx-amount-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tx-amount-value {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .tx-flow-box {
+            background: #FAF8F5;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid rgba(104, 94, 134, 0.06);
+        }
+
+        .tx-flow-party {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .tx-party-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .tx-party-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tx-party-role {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.03em;
+        }
+
+        .tx-party-name {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tx-party-iban {
+            font-size: 0.74rem;
+            font-family: monospace;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tx-flow-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 3px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            opacity: 0.65;
+        }
+
+        .tx-motif-box {
+            background: #FAF8F5;
+            border-left: 3px solid #685E86;
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .empty-transactions-view {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+    </style>
 </head>
 <body>
 
 <div class="admin-layout">
     <!-- Barre latérale unifiée HosBank -->
-    <%- include('../partials/sidebar') %>
+    <%- include('../partials/sidebar', { role: 'admin', currentPath: '/admin/transactions' }) %>
 
     <div class="admin-main">
         <!-- Barre supérieure admin -->
@@ -155,125 +315,115 @@
                 </div>
             </div>
 
-            <!-- Tableau d'audit complet de tous les virements (Critère 1) -->
+            <!-- Grille des Cartes des Virements -->
             <div class="card">
-                <div class="card-header" style="flex-wrap: wrap; gap: 14px; padding: 18px 24px;">
+                <div class="card-header" style="flex-wrap: wrap; gap: 14px; padding: 18px 24px; border-bottom: 1px solid var(--border-ui, #EFECE6);">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <span class="card-title" style="font-size: 1.05rem;">Journal Centralisé des Virements</span>
                         <span class="badge purple" style="font-size: 0.8rem;"><%= transactions.length %> virement(s) répertorié(s)</span>
                     </div>
                 </div>
 
-                <div class="data-table-wrapper" style="overflow-x: auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Référence SEPA</th>
-                                <th>Horodatage</th>
-                                <th>Émetteur (Compte Source)</th>
-                                <th>Destinataire (Bénéficiaire)</th>
-                                <th>Type de Flux</th>
-                                <th>Montant</th>
-                                <th>Motif</th>
-                                <th>Statut & Alerte</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (transactions && transactions.length > 0) { %>
-                                <% transactions.forEach(tx => { %>
-                                    <tr style="<%= tx.flagged ? 'background-color: rgba(233, 122, 122, 0.04);' : '' %>">
-                                        <!-- Référence SEPA -->
-                                        <td>
-                                            <div style="font-weight: 700; color: var(--text-main); font-size: 0.85rem; font-family: monospace;">
-                                                <%= tx.reference %>
-                                            </div>
-                                        </td>
+                <% if (transactions && transactions.length > 0) { %>
+                    <div class="transactions-card-grid">
+                        <% transactions.forEach(tx => { %>
+                            <div class="tx-card-item" style="<%= tx.flagged ? 'border-top: 4px solid #E97A7A;' : '' %>">
+                                <!-- En-tête : Référence & Type & Statut -->
+                                <div class="tx-card-header">
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                        <div class="tx-ref-pill">
+                                            <%= tx.reference %>
+                                        </div>
+                                        <span class="badge" style="background: rgba(116, 107, 146, 0.12); color: #534B70; font-weight: 700; font-size: 0.74rem;">
+                                            <%= tx.type %>
+                                        </span>
+                                    </div>
 
-                                        <!-- Horodatage précis (date + heure + secondes) -->
-                                        <td>
-                                            <div style="font-weight: 600; font-size: 0.82rem; color: var(--text-main); font-family: monospace;">
-                                                <%= tx.date %>
-                                            </div>
-                                            <span style="font-size: 0.7rem; color: var(--text-muted);">Horodatage UTC/Paris</span>
-                                        </td>
-
-                                        <!-- Émetteur -->
-                                        <td>
-                                            <div style="font-weight: 700; font-size: 0.86rem; color: var(--text-main);">
-                                                <%= tx.sender %>
-                                            </div>
-                                            <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-muted);">
-                                                <%= tx.senderIban %>
-                                            </div>
-                                        </td>
-
-                                        <!-- Destinataire -->
-                                        <td>
-                                            <div style="font-weight: 700; font-size: 0.86rem; color: var(--text-main);">
-                                                <%= tx.recipient %>
-                                            </div>
-                                            <div style="font-size: 0.74rem; font-family: monospace; color: var(--text-muted);">
-                                                <%= tx.recipientIban %>
-                                            </div>
-                                        </td>
-
-                                        <!-- Type de Flux -->
-                                        <td>
-                                            <span class="badge" style="background: rgba(116, 107, 146, 0.15); color: #534B70; font-weight: 700;">
-                                                <%= tx.type %>
+                                    <!-- Statut -->
+                                    <div>
+                                        <% if (tx.status === 'Validé') { %>
+                                            <span class="badge success" style="font-weight: 700;">
+                                                <span class="badge-dot" style="background: #10B981;"></span> Validé
                                             </span>
-                                        </td>
+                                        <% } else if (tx.status === 'En attente') { %>
+                                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #F59E0B;"></span> En attente
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #DC2626;"></span> Rejeté
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                </div>
 
-                                        <!-- Montant -->
-                                        <td>
-                                            <div style="font-weight: 800; font-size: 0.98rem; color: var(--text-main);">
-                                                <%= Number(tx.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
-                                            </div>
-                                        </td>
+                                <!-- Montant & Alerte réglementaire -->
+                                <div class="tx-amount-row">
+                                    <div>
+                                        <div style="font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Montant du Flux</div>
+                                        <div class="tx-amount-value">
+                                            <%= Number(tx.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %> €
+                                        </div>
+                                    </div>
 
-                                        <!-- Motif -->
-                                        <td>
-                                            <div style="font-size: 0.82rem; color: var(--text-muted); max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<%= tx.motif %>">
-                                                <%= tx.motif || 'Aucun motif' %>
-                                            </div>
-                                        </td>
+                                    <% if (tx.flagged) { %>
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; color: #DC2626; background: #FEE2E2; padding: 4px 8px; border-radius: 6px; border: 1px solid #FCA5A5;">
+                                            ⚠️ Seuil >= 5 000 €
+                                        </span>
+                                    <% } %>
+                                </div>
 
-                                        <!-- Statut & Alerte Réglementaire -->
-                                        <td>
-                                            <% if (tx.status === 'Validé') { %>
-                                                <span class="badge success">
-                                                    <span class="badge-dot"></span> Validé
-                                                </span>
-                                            <% } else if (tx.status === 'En attente') { %>
-                                                <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700;">
-                                                    <span class="badge-dot" style="background: #F59E0B;"></span> En attente
-                                                </span>
-                                            <% } else { %>
-                                                <span class="badge danger">
-                                                    <span class="badge-dot"></span> Rejeté
-                                                </span>
-                                            <% } %>
+                                <!-- Circuit du Virement (Émetteur -> Destinataire) -->
+                                <div class="tx-flow-box">
+                                    <!-- Émetteur -->
+                                    <div class="tx-flow-party">
+                                        <div class="tx-party-dot" style="background: #685E86;"></div>
+                                        <div class="tx-party-info">
+                                            <div class="tx-party-role">Émetteur (Source)</div>
+                                            <div class="tx-party-name"><%= tx.sender %></div>
+                                            <div class="tx-party-iban"><%= tx.senderIban %></div>
+                                        </div>
+                                    </div>
 
-                                            <% if (tx.flagged) { %>
-                                                <div style="margin-top: 4px;">
-                                                    <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; color: #DC2626; background: #FEE2E2; padding: 2px 6px; border-radius: 4px; border: 1px solid #FCA5A5;">
-                                                        ⚠️ Seuil >= 5 000 €
-                                                    </span>
-                                                </div>
-                                            <% } %>
-                                        </td>
-                                    </tr>
-                                <% }) %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
-                                        Aucun virement ne correspond aux filtres appliqués.
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
+                                    <div class="tx-flow-divider">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                        </svg>
+                                        <span>Flux SEPA</span>
+                                    </div>
+
+                                    <!-- Destinataire -->
+                                    <div class="tx-flow-party">
+                                        <div class="tx-party-dot" style="background: #10B981;"></div>
+                                        <div class="tx-party-info">
+                                            <div class="tx-party-role">Destinataire (Bénéficiaire)</div>
+                                            <div class="tx-party-name"><%= tx.recipient %></div>
+                                            <div class="tx-party-iban"><%= tx.recipientIban %></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Motif & Horodatage -->
+                                <div class="tx-motif-box">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                        <span style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: #685E86;">Motif :</span>
+                                        <span style="font-size: 0.72rem; font-family: monospace; color: var(--text-muted);"><%= tx.date %></span>
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: var(--text-main); font-weight: 500;">
+                                        <%= tx.motif || 'Aucun motif renseigné' %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                <% } else { %>
+                    <div class="empty-transactions-view">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.4;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        <p style="font-weight: 600; font-size: 0.95rem;">Aucun virement ne correspond aux filtres appliqués.</p>
+                    </div>
+                <% } %>
             </div>
         </main>
     </div>

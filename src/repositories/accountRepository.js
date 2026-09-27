@@ -24,28 +24,41 @@ const accountRepository = {
         `;
         const result = await db.query(query);
 
-        // Transformation simple et lisible en JavaScript
-        return result.rows.map(row => {
-            const balance = parseFloat(row.solde);
+        // Transformation simple et lisible en JavaScript (Style Développeur Junior)
+        const accounts = [];
+        for (let i = 0; i < result.rows.length; i++) {
+            const row = result.rows[i];
+            const balance = parseFloat(row.solde || 0);
             const overdraftLimit = parseFloat(row.decouvert_autorise || 0);
 
-            return {
+            let typeLibelle = "Compte Épargne";
+            if (row.type_compte === "COURANT") {
+                typeLibelle = "Compte Courant";
+            }
+
+            let statutLibelle = "Bloqué";
+            if (row.statut === "ACTIF") {
+                statutLibelle = "Actif";
+            }
+
+            accounts.push({
                 id: row.id,
                 numeroCompte: row.numero_compte,
                 iban: row.iban,
                 bic: row.bic,
                 rawType: row.type_compte, // 'COURANT' ou 'EPARGNE'
-                type: row.type_compte === "COURANT" ? "Compte Courant" : "Compte Épargne",
+                type: typeLibelle,
                 balance: balance,
                 overdraftLimit: overdraftLimit,
-                isOverdrawn: balance < 0, // Indicateur de situation de découvert
+                isOverdrawn: balance < 0, // Compte en découvert si solde < 0
                 currency: row.devise,
-                status: row.statut === "ACTIF" ? "Actif" : "Bloqué",
+                status: statutLibelle,
                 clientId: "CLI-" + row.utilisateur_id,
-                clientName: `${row.prenom} ${row.nom}`,
+                clientName: row.prenom + " " + row.nom,
                 clientEmail: row.email
-            };
-        });
+            });
+        }
+        return accounts;
     },
 
     // Trouver un compte par son ID

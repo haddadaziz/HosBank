@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================
+           HOSBANK 2026 - DEMANDES & RÉCLAMATIONS CARDS STYLING
+           ========================================================== */
+        .requests-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .requests-card-grid {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+        }
+
+        .req-card-item {
+            background: #FFFFFF;
+            border: 1px solid rgba(104, 94, 134, 0.14);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 4px 16px rgba(40, 33, 56, 0.04);
+            transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.22s ease;
+            position: relative;
+        }
+
+        .req-card-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(40, 33, 56, 0.09);
+            border-color: rgba(104, 94, 134, 0.28);
+        }
+
+        .req-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(104, 94, 134, 0.08);
+        }
+
+        .req-ref-pill {
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: rgba(104, 94, 134, 0.08);
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .req-client-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .req-client-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2D253D 0%, #685E86 100%);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(45, 37, 61, 0.15);
+        }
+
+        .req-client-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .req-client-name {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .req-client-email {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .req-meta-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: #FAF8F5;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(104, 94, 134, 0.06);
+        }
+
+        .req-meta-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .req-meta-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+        }
+
+        .req-meta-text {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.82rem;
+            word-break: break-word;
+        }
+
+        .req-comment-box {
+            background: #FAF8F5;
+            border-left: 3px solid #685E86;
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .req-description-box {
+            background: #FAF8F5;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.82rem;
+            color: var(--text-main);
+            line-height: 1.45;
+            border: 1px solid rgba(104, 94, 134, 0.06);
+        }
+
+        .empty-requests-view {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-layout">
+    <!-- Barre latérale unifiée HosBank -->
+    <%- include('../partials/sidebar', { role: 'admin', currentPath: '/admin/requests' }) %>
+
+    <div class="admin-main">
+        <!-- Barre supérieure admin -->
+        <%- include('../partials/topbar') %>
+
+        <main class="admin-content">
+            <!-- 1. En-tête de la page -->
+            <div class="page-header" style="flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <h1 class="page-title">Registre des Demandes & Réclamations</h1>
+                    <p class="page-subtitle">Supervision centralisée des démarches clients, suivi des taux de traitement et identification des blocages de service</p>
+                </div>
+            </div>
+
+            <!-- 2. Cartes statistiques globales (Taux de traitement & Détection des blocages) -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                <!-- Taux Global de Traitement -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Taux de Traitement Global</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: <%= metrics.tauxTraitementGlobal >= 80 ? '#10B981' : '#F59E0B' %>;">
+                        <%= metrics.tauxTraitementGlobal %> %
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Dossiers traités et résolus</div>
+                </div>
+
+                <!-- Total Démarches Bancaires -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Demandes Bancaires</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: var(--text-main);"><%= metrics.totalDemandes %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                        <%= metrics.demandesEnAttente %> en attente d'instruction
+                    </div>
+                </div>
+
+                <!-- Registre des Réclamations -->
+                <div class="card" style="padding: 18px 20px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Réclamations Clients</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: #746B92;"><%= metrics.totalReclamations %></div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+                        <%= metrics.reclamationsEnCours %> en cours avec conseiller
+                    </div>
+                </div>
+
+                <!-- Indicateur des Blocages de Service (> 24h) -->
+                <div class="card" style="padding: 18px 20px; border-left: 4px solid <%= metrics.totalBlocages > 0 ? '#DC2626' : '#10B981' %>;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.05em; margin-bottom: 6px;">Blocages de Service (> 24h)</div>
+                    <div style="font-size: 1.8rem; font-weight: 800; color: <%= metrics.totalBlocages > 0 ? '#DC2626' : '#10B981' %>;">
+                        <%= metrics.totalBlocages %>
+                    </div>
+                    <div style="font-size: 0.78rem; color: <%= metrics.totalBlocages > 0 ? '#DC2626' : 'var(--text-muted)' %>; margin-top: 4px; font-weight: 600;">
+                        <%= metrics.totalBlocages > 0 ? 'Dossiers nécessitant une intervention' : 'Aucun blocage détecté' %>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Navigation par Onglets : Demandes vs Réclamations -->
+            <div style="display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border-ui, #EFECE6); padding-bottom: 10px;">
+                <a 
+                    href="/admin/requests?tab=demandes" 
+                    class="btn-sm <%= activeTab === 'demandes' ? 'btn-primary' : 'btn-secondary' %>"
+                    style="border-radius: 8px; text-decoration: none; font-size: 0.88rem; padding: 8px 16px; display: inline-flex; align-items: center; gap: 8px;"
+                >
+                    <span>📋 Démarches & Demandes Bancaires</span>
+                    <span class="badge" style="background: <%= activeTab === 'demandes' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.08)' %>; color: inherit; padding: 2px 7px;">
+                        <%= demandes.length %>
+                    </span>
+                </a>
+
+                <a 
+                    href="/admin/requests?tab=reclamations" 
+                    class="btn-sm <%= activeTab === 'reclamations' ? 'btn-primary' : 'btn-secondary' %>"
+                    style="border-radius: 8px; text-decoration: none; font-size: 0.88rem; padding: 8px 16px; display: inline-flex; align-items: center; gap: 8px;"
+                >
+                    <span>⚠️ Registre des Réclamations</span>
+                    <span class="badge" style="background: <%= activeTab === 'reclamations' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.08)' %>; color: inherit; padding: 2px 7px;">
+                        <%= reclamations.length %>
+                    </span>
+                </a>
+            </div>
+
+            <!-- 4. CONTENU DE L'ONGLET 1 : DÉMARCHES & DEMANDES BANCAIRES -->
+            <% if (activeTab === 'demandes') { %>
+                <div class="card">
+                    <!-- En-tête avec filtres de catégorie et recherche -->
+                    <div class="card-header" style="flex-wrap: wrap; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--border-ui, #EFECE6);">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span class="card-title" style="font-size: 1.05rem;">Toutes les Démarches Bancaires</span>
+                            <span class="badge purple" style="font-size: 0.8rem;"><%= demandes.length %> affichée(s)</span>
+                        </div>
+
+                        <!-- Filtres par catégorie -->
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <!-- Recherche instantanée -->
+                            <div style="position: relative;">
+                                <input 
+                                    type="text" 
+                                    id="searchDemandesInput" 
+                                    placeholder="Rechercher client, référence..." 
+                                    style="padding: 6px 12px 6px 30px; font-size: 0.82rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none; width: 210px;"
+                                >
+                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 10px; top: 9px; color: var(--text-muted);">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+
+                            <!-- Filtre Catégorie -->
+                            <a href="/admin/requests?tab=demandes&category=ALL" class="btn-sm <%= (!filters.category || filters.category === 'ALL') ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                Toutes
+                            </a>
+                            <a href="/admin/requests?tab=demandes&category=DEMANDE_RIB" class="btn-sm <%= filters.category === 'DEMANDE_RIB' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                RIB (<%= metrics.demandesRib %>)
+                            </a>
+                            <a href="/admin/requests?tab=demandes&category=OUVERTURE_EPARGNE" class="btn-sm <%= filters.category === 'OUVERTURE_EPARGNE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                Épargne (<%= metrics.demandesEpargne %>)
+                            </a>
+                            <a href="/admin/requests?tab=demandes&category=CARTE_VIRTUELLE" class="btn-sm <%= filters.category === 'CARTE_VIRTUELLE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                Cartes (<%= metrics.demandesCartes %>)
+                            </a>
+                            <a href="/admin/requests?tab=demandes&category=OPPOSITION_CARTE" class="btn-sm <%= filters.category === 'OPPOSITION_CARTE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none; <%= filters.category !== 'OPPOSITION_CARTE' && metrics.demandesOppositions > 0 ? 'border-color: rgba(220,38,38,0.4); color: #DC2626;' : '' %>">
+                                Oppositions (<%= metrics.demandesOppositions %>)
+                            </a>
+                            <a href="/admin/requests?tab=demandes&category=RECALCUL_PIN" class="btn-sm <%= filters.category === 'RECALCUL_PIN' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                PIN (<%= metrics.demandesPin %>)
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Grille des Cartes Démarches -->
+                    <% if (demandes && demandes.length > 0) { %>
+                        <div class="requests-card-grid">
+                            <% demandes.forEach(dem => { %>
+                                <div class="req-card-item row-demande">
+                                    <!-- En-tête de la carte : Type & Référence -->
+                                    <div class="req-card-header">
+                                        <span class="badge" style="background: <%= dem.rawType === 'OPPOSITION_CARTE' ? '#FEE2E2' : 'rgba(116, 107, 146, 0.12)' %>; color: <%= dem.rawType === 'OPPOSITION_CARTE' ? '#DC2626' : '#2D253D' %>; font-weight: 700; font-size: 0.78rem;">
+                                            <%= dem.typeLibelle %>
+                                        </span>
+                                        <div class="req-ref-pill">
+                                            <%= dem.reference %>
+                                            <span style="opacity: 0.65; font-size: 0.7rem;">#<%= dem.id %></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Client info -->
+                                    <div class="req-client-row">
+                                        <div class="req-client-avatar">
+                                            <%= dem.clientName ? dem.clientName.trim().charAt(0).toUpperCase() : 'C' %>
+                                        </div>
+                                        <div class="req-client-details">
+                                            <div class="req-client-name"><%= dem.clientName %></div>
+                                            <div class="req-client-email"><%= dem.clientEmail %></div>
+                                        </div>
+                                        <span style="font-size: 0.7rem; background: rgba(116, 107, 146, 0.12); color: #746B92; font-weight: 700; padding: 2px 7px; border-radius: 6px; flex-shrink: 0;">
+                                            <%= dem.clientId %>
+                                        </span>
+                                    </div>
+
+                                    <!-- Métadonnées : Date de dépôt & Conseiller attitré -->
+                                    <div class="req-meta-box">
+                                        <div class="req-meta-col">
+                                            <span class="req-meta-title">Date de Dépôt</span>
+                                            <span class="req-meta-text" style="font-family: monospace;"><%= dem.dateDemande %></span>
+                                        </div>
+                                        <div class="req-meta-col">
+                                            <span class="req-meta-title">Conseiller Attitré</span>
+                                            <span class="req-meta-text"><%= dem.advisorName %></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Statut de Traitement -->
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">État :</span>
+                                        <% if (dem.rawStatus === 'APPROUVEE') { %>
+                                            <span class="badge success" style="font-weight: 700;">
+                                                <span class="badge-dot" style="background: #10B981;"></span>
+                                                Approuvée
+                                            </span>
+                                        <% } else if (dem.rawStatus === 'REJETEE') { %>
+                                            <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #DC2626;"></span>
+                                                Rejetée
+                                            </span>
+                                        <% } else if (dem.rawStatus === 'EN_INSTRUCTION') { %>
+                                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #F59E0B;"></span>
+                                                En instruction
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge" style="background: #FEF3C7; color: #92400E; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #F59E0B;"></span>
+                                                En attente
+                                            </span>
+                                        <% } %>
+                                    </div>
+
+                                    <!-- Traitement / Commentaire -->
+                                    <div class="req-comment-box">
+                                        <span style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: #685E86;">Traitement / Note :</span>
+                                        <div style="font-size: 0.8rem; color: var(--text-main);">
+                                            <%= dem.reponseConseiller || dem.motifRejet || 'En attente d\'instruction par le conseiller' %>
+                                        </div>
+                                        <% if (dem.dateTraitement) { %>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace; margin-top: 2px;">Le <%= dem.dateTraitement %></span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <div class="empty-requests-view">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.4;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <p style="font-weight: 600; font-size: 0.95rem;">Aucune démarche bancaire ne correspond aux critères sélectionnés.</p>
+                        </div>
+                    <% } %>
+                </div>
+            <% } %>
+
+            <!-- 5. CONTENU DE L'ONGLET 2 : REGISTRE DES RÉCLAMATIONS CLIENTS -->
+            <% if (activeTab === 'reclamations') { %>
+                <div class="card">
+                    <!-- En-tête avec filtres de priorité et recherche -->
+                    <div class="card-header" style="flex-wrap: wrap; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--border-ui, #EFECE6);">
+                        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                            <span class="card-title" style="font-size: 1.05rem;">Registre des Réclamations</span>
+                            <span class="badge purple" style="font-size: 0.8rem;"><%= reclamations.length %> réclamation(s)</span>
+                        </div>
+
+                        <!-- Filtres par priorité -->
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <!-- Recherche instantanée -->
+                            <div style="position: relative;">
+                                <input 
+                                    type="text" 
+                                    id="searchReclamationsInput" 
+                                    placeholder="Rechercher client, sujet..." 
+                                    style="padding: 6px 12px 6px 30px; font-size: 0.82rem; border: 1px solid #D8CEBB; border-radius: 8px; background: #FFFFFF; outline: none; width: 210px;"
+                                >
+                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="position: absolute; left: 10px; top: 9px; color: var(--text-muted);">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+
+                            <!-- Filtre Priorité -->
+                            <a href="/admin/requests?tab=reclamations&category=ALL" class="btn-sm <%= (!filters.category || filters.category === 'ALL') ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                Toutes
+                            </a>
+                            <a href="/admin/requests?tab=reclamations&category=URGENTE" class="btn-sm <%= filters.category === 'URGENTE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                🚨 Urgentes
+                            </a>
+                            <a href="/admin/requests?tab=reclamations&category=HAUTE" class="btn-sm <%= filters.category === 'HAUTE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                Haute
+                            </a>
+                            <a href="/admin/requests?tab=reclamations&category=MOYENNE" class="btn-sm <%= filters.category === 'MOYENNE' ? 'btn-primary' : 'btn-secondary' %>" style="border-radius: 8px; text-decoration: none;">
+                                Moyenne
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Grille des Cartes Réclamations -->
+                    <% if (reclamations && reclamations.length > 0) { %>
+                        <div class="requests-card-grid">
+                            <% reclamations.forEach(rec => { %>
+                                <div class="req-card-item row-reclamation" style="<%= rec.rawPriority === 'URGENTE' ? 'border-top: 4px solid #DC2626;' : '' %>">
+                                    <!-- En-tête : Référence & Priorité -->
+                                    <div class="req-card-header">
+                                        <div class="req-ref-pill">
+                                            <%= rec.reference %>
+                                            <span style="opacity: 0.65; font-size: 0.7rem;">#<%= rec.id %></span>
+                                        </div>
+                                        
+                                        <!-- Priorité -->
+                                        <div>
+                                            <% if (rec.rawPriority === 'URGENTE') { %>
+                                                <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700; font-size: 0.76rem;">
+                                                    🚨 Urgente
+                                                </span>
+                                            <% } else if (rec.rawPriority === 'HAUTE') { %>
+                                                <span class="badge" style="background: #FEF3C7; color: #B45309; font-weight: 700; font-size: 0.76rem;">
+                                                    ⚠️ Haute
+                                                </span>
+                                            <% } else { %>
+                                                <span class="badge" style="background: rgba(116, 107, 146, 0.12); color: #534B70; font-weight: 600; font-size: 0.76rem;">
+                                                    Moyenne
+                                                </span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <!-- Client info -->
+                                    <div class="req-client-row">
+                                        <div class="req-client-avatar">
+                                            <%= rec.clientName ? rec.clientName.trim().charAt(0).toUpperCase() : 'C' %>
+                                        </div>
+                                        <div class="req-client-details">
+                                            <div class="req-client-name"><%= rec.clientName %></div>
+                                            <div class="req-client-email"><%= rec.clientEmail %></div>
+                                        </div>
+                                        <span style="font-size: 0.7rem; background: rgba(116, 107, 146, 0.12); color: #746B92; font-weight: 700; padding: 2px 7px; border-radius: 6px; flex-shrink: 0;">
+                                            <%= rec.clientId %>
+                                        </span>
+                                    </div>
+
+                                    <!-- Sujet & Description -->
+                                    <div class="req-description-box">
+                                        <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main); margin-bottom: 4px;">
+                                            <%= rec.sujet %>
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                                            <%= rec.description %>
+                                        </div>
+                                    </div>
+
+                                    <!-- Métadonnées : Conseiller & Dates -->
+                                    <div class="req-meta-box">
+                                        <div class="req-meta-col">
+                                            <span class="req-meta-title">Conseiller en Charge</span>
+                                            <span class="req-meta-text"><%= rec.advisorName %></span>
+                                            <span style="font-size: 0.7rem; color: var(--text-muted);"><%= rec.advisorEmail || 'Conseiller HosBank' %></span>
+                                        </div>
+                                        <div class="req-meta-col">
+                                            <span class="req-meta-title">Dates (Dépôt / Clôture)</span>
+                                            <span class="req-meta-text" style="font-family: monospace;"><%= rec.dateDepot %></span>
+                                            <% if (rec.dateCloture) { %>
+                                                <span style="font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">Fin : <%= rec.dateCloture %></span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+
+                                    <!-- Statut de la réclamation -->
+                                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                                        <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Statut :</span>
+                                        <% if (rec.rawStatus === 'RESOLUE') { %>
+                                            <span class="badge success" style="font-weight: 700;">
+                                                <span class="badge-dot" style="background: #10B981;"></span>
+                                                Résolue
+                                            </span>
+                                        <% } else if (rec.rawStatus === 'EN_COURS') { %>
+                                            <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #B45309; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #F59E0B;"></span>
+                                                En cours
+                                            </span>
+                                        <% } else if (rec.rawStatus === 'REJETEE') { %>
+                                            <span class="badge danger" style="background: #FEE2E2; color: #DC2626; font-weight: 700;">
+                                                <span class="badge-dot" style="background: #DC2626;"></span>
+                                                Rejetée
+                                            </span>
+                                        <% } else { %>
+                                            <span class="badge" style="background: #EFF6FF; color: #1D4ED8; font-weight: 700; border: 1px solid #BFDBFE;">
+                                                <span class="badge-dot" style="background: #3B82F6;"></span>
+                                                Ouverte
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                    <% } else { %>
+                        <div class="empty-requests-view">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.4;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                            </svg>
+                            <p style="font-weight: 600; font-size: 0.95rem;">Aucune réclamation ne correspond aux critères sélectionnés.</p>
+                        </div>
+                    <% } %>
+                </div>
+            <% } %>
+
+        </main>
+    </div>
+</div>
+
+<!-- Script simple pour la recherche instantanée (Style Junior) -->
+<script>
+    // 1. Recherche instantanée pour les démarches
+    const searchDem = document.getElementById("searchDemandesInput");
+    if (searchDem) {
+        searchDem.addEventListener("input", function() {
+            const query = this.value.toLowerCase().trim();
+            document.querySelectorAll(".row-demande").forEach(function(row) {
+                if (row.textContent.toLowerCase().includes(query)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    }
+
+    // 2. Recherche instantanée pour les réclamations
+    const searchRec = document.getElementById("searchReclamationsInput");
+    if (searchRec) {
+        searchRec.addEventListener("input", function() {
+            const query = this.value.toLowerCase().trim();
+            document.querySelectorAll(".row-reclamation").forEach(function(row) {
+                if (row.textContent.toLowerCase().includes(query)) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        });
+    }
+</script>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

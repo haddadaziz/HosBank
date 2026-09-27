@@ -263,23 +263,25 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, true);
 
-    // 4. Interception des selects de confirmation [data-confirm-change]
-    document.addEventListener("focusin", (e) => {
-        const select = e.target.closest(".hos-confirm-select, [data-confirm-change]");
+    // 4. Interception des sélecteurs de confirmation de rôle [data-confirm-change] (style junior)
+    document.addEventListener("focusin", function (e) {
+        var select = e.target.closest(".hos-confirm-select, [data-confirm-change]");
         if (select) {
+            // Mémoriser la valeur avant toute modification
             select.dataset.prevValue = select.value;
         }
     });
 
-    document.addEventListener("change", async (e) => {
-        const select = e.target.closest(".hos-confirm-select, [data-confirm-change]");
+    document.addEventListener("change", async function (e) {
+        var select = e.target.closest(".hos-confirm-select, [data-confirm-change]");
         if (!select) return;
 
-        const message = select.getAttribute("data-confirm-change") || "Confirmer cette modification ?";
-        const prevVal = select.dataset.prevValue !== undefined ? select.dataset.prevValue : select.value;
-        const newVal = select.value;
+        var message = select.getAttribute("data-confirm-change") || "Confirmer cette modification ?";
+        var valeurPrecedente = select.dataset.prevValue !== undefined ? select.dataset.prevValue : select.value;
+        var nouvelleValeur = select.value;
 
-        const confirmed = await window.hosConfirm({
+        // Afficher la boîte de dialogue de confirmation HosBank
+        var confirme = await window.hosConfirm({
             title: "Confirmation de mise à jour",
             message: message,
             confirmText: "Appliquer",
@@ -287,14 +289,16 @@ document.addEventListener("DOMContentLoaded", () => {
             type: "primary"
         });
 
-        if (confirmed) {
-            select.dataset.prevValue = newVal;
-            const form = select.closest("form");
+        // Si l'administrateur confirme, soumettre le formulaire
+        if (confirme) {
+            select.dataset.prevValue = nouvelleValeur;
+            var form = select.closest("form");
             if (form) {
                 HTMLFormElement.prototype.submit.call(form);
             }
         } else {
-            select.value = prevVal;
+            // En cas d'annulation, rétablir l'ancien rôle
+            select.value = valeurPrecedente;
         }
     });
 

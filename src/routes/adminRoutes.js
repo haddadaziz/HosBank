@@ -13,7 +13,7 @@ const requireAdminAuth = (req, res, next) => {
 
 router.get("/login", (req, res) => res.redirect("/login"));
 router.post("/login", (req, res) => res.redirect(307, "/login"));
-router.get("/logout", adminController.logout);
+router.get("/logout", (req, res) => res.redirect("/logout"));
 
 router.get("/", (req, res) => res.redirect("/admin/dashboard"));
 router.get("/dashboard", requireAdminAuth, adminController.getDashboard);
@@ -37,5 +37,7 @@ router.get("/transactions/export", requireAdminAuth, adminController.exportTrans
 
 router.get("/advisors-workload", requireAdminAuth, adminController.getAdvisorsWorkload);
 router.post("/advisors/:id/remind", requireAdminAuth, adminController.postSendReminder);
+
+router.get("/requests", requireAdminAuth, adminController.getRequests);
 
 module.exports = router;

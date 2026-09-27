@@ -13,6 +13,7 @@ const userRepository = {
         return result.rows[0] || null;
     },
 
+    // Trouver un utilisateur par son jeton de verification (actif et non expire)
     async findByToken(token) {
         const query = `
             SELECT * FROM utilisateurs 
@@ -112,7 +113,15 @@ const userRepository = {
         return result.rows[0] || null;
     },
 
-    async create({ civilite, nom, prenom, email, motDePasseHash, token }) {
+    // Creation d'un nouveau client (mot de passe hache uniquement)
+    async create(donnees) {
+        const civilite = donnees.civilite || 'M.';
+        const nom = donnees.nom;
+        const prenom = donnees.prenom;
+        const email = donnees.email.trim().toLowerCase();
+        const motDePasseHash = donnees.motDePasseHash;
+        const token = donnees.token;
+
         const query = `
             INSERT INTO utilisateurs (
                 civilite, nom, prenom, email, mot_de_passe_hash, 
@@ -124,8 +133,8 @@ const userRepository = {
             )
             RETURNING *
         `;
-        const values = [civilite || 'M.', nom, prenom, email.trim().toLowerCase(), motDePasseHash, token];
-        const result = await db.query(query, values);
+        const params = [civilite, nom, prenom, email, motDePasseHash, token];
+        const result = await db.query(query, params);
         return result.rows[0];
     },
 
@@ -214,14 +223,17 @@ const userRepository = {
         return account;
     },
 
-    async verifyEmail(id) {
+    // Activer le compte client et annuler le jeton (usage unique)
+    async verifyEmail(utilisateurId) {
         const query = `
             UPDATE utilisateurs 
-            SET email_verifie = TRUE, token_verification = NULL, expiration_token = NULL 
+            SET email_verifie = TRUE, 
+                token_verification = NULL, 
+                expiration_token = NULL 
             WHERE id = $1
             RETURNING *
         `;
-        const result = await db.query(query, [id]);
+        const result = await db.query(query, [utilisateurId]);
         return result.rows[0] || null;
     },
 

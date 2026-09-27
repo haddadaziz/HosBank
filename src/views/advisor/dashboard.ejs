@@ -18,10 +18,10 @@
 <body class="bg-[#F8F9FA] text-[#282330] min-h-screen antialiased">
 
     <div class="min-h-screen flex flex-col lg:flex-row">
-        <!-- Sidebar unifiée HosBank pour Conseiller -->
+        <!-- 1. Barre latérale unifiée HosBank pour Conseiller -->
         <%- include('../partials/sidebar', { role: 'advisor', currentPath: '/advisor/dashboard', user: advisor, metrics: metrics }) %>
 
-        <!-- Contenu Principal Conseiller -->
+        <!-- 2. Contenu principal du Conseiller -->
         <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 space-y-8">
 
             <!-- En-tête de bienvenue -->
@@ -36,11 +36,23 @@
                 </div>
             </header>
 
+            <!-- Notifications de succès ou d'erreur -->
+            <%- include('../partials/notification') %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>✅ Action enregistrée avec succès.</span>
+                </div>
+            <% } %>
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
+                    <span>⚠️ <%= error %></span>
+                </div>
+            <% } %>
 
-
-            <!-- Grille des 4 Métriques Réelles -->
+            <!-- Grille des 4 indicateurs clés (KPIs) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 
+                <!-- Carte 1 : Clients Affectés -->
                 <a href="/advisor/clients" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-[#7A6F82]">Clients Affectés</span>
@@ -59,6 +71,7 @@
                     </p>
                 </a>
 
+                <!-- Carte 2 : Demandes à Traiter -->
                 <a href="/advisor/demands" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-[#7A6F82]">Demandes à Traiter</span>
@@ -77,6 +90,7 @@
                     </p>
                 </a>
 
+                <!-- Carte 3 : Oppositions Carte -->
                 <a href="/advisor/demands" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-[#7A6F82]">Oppositions Carte</span>
@@ -95,6 +109,7 @@
                     </p>
                 </a>
 
+                <!-- Carte 4 : Réclamations en cours -->
                 <a href="/advisor/claims" class="bg-white border border-[#D8CEBB] hover:border-[#746B92] p-5 rounded-2xl shadow-xs transition-all duration-200 block group hover:-translate-y-0.5">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-semibold text-[#7A6F82]">Réclamations en cours</span>
@@ -132,7 +147,7 @@
                     <% const pendingList = demands.filter(d => d.status === 'En attente' || d.status === 'En instruction').slice(0, 5); %>
                     <% if (pendingList.length === 0) { %>
                         <div class="py-10 text-center text-xs text-[#9D937F]">
-                            Aucune demande en attente
+                            Aucune demande en attente actuellement.
                         </div>
                     <% } else { %>
                         <% pendingList.forEach(dem => { %>
@@ -228,21 +243,25 @@
         </main>
     </div>
 
-    <!-- Modal Traitement Demande Rapide -->
+    <!-- Modale de traitement d'une demande -->
     <div id="demandModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
         <div class="bg-[#FFFFFF] border border-[#D8CEBB] rounded-2xl max-w-lg w-full p-6 shadow-xl relative animate-fade">
-            <button onclick="closeDemandModal()" class="absolute top-4 right-4 text-[#7A6F82] hover:text-[#282330] p-1">
+            <!-- Bouton pour fermer la modale -->
+            <button onclick="closeDemandModal()" class="absolute top-4 right-4 text-[#7A6F82] hover:text-[#282330] p-1 cursor-pointer">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
 
+            <!-- Titre et sous-titre de la modale -->
             <h3 class="text-base font-bold text-[#282330]" id="modalDemandTitle">Traiter la demande</h3>
             <p class="text-xs text-[#7A6F82] mt-0.5" id="modalDemandClient">Client : </p>
 
+            <!-- Contenu de la demande -->
             <div class="my-4 p-3.5 bg-[#FAF5ED] rounded-xl border border-[#D8CEBB] text-xs text-[#282330]">
                 <span class="font-semibold text-[#746B92]">Objet / Contenu de la demande :</span>
                 <p id="modalDemandDetails" class="mt-1 font-normal leading-relaxed"></p>
             </div>
 
+            <!-- Formulaire de validation ou rejet -->
             <form action="/advisor/demand/update" method="POST" class="space-y-4">
                 <input type="hidden" name="demandId" id="modalDemandId">
 
@@ -266,10 +285,10 @@
                 </div>
 
                 <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeDemandModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-[#7A6F82] hover:bg-[#FAF5ED] transition-colors">
+                    <button type="button" onclick="closeDemandModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-[#7A6F82] hover:bg-[#FAF5ED] transition-colors cursor-pointer">
                         Annuler
                     </button>
-                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-sm transition-colors">
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-[#746B92] hover:bg-[#635B7E] text-white shadow-sm transition-colors cursor-pointer">
                         Enregistrer la décision
                     </button>
                 </div>
@@ -456,7 +475,7 @@
             document.getElementById('modalDemandId').value = id;
             document.getElementById('modalDemandTitle').textContent = 'Traiter la demande : ' + type;
             document.getElementById('modalDemandClient').textContent = 'Client : ' + clientName;
-            document.getElementById('modalDemandDetails').textContent = details;
+            document.getElementById('modalDemandDetails').textContent = details || 'Aucun détail fourni';
 
             const modal = document.getElementById('demandModal');
             if (modal) {
@@ -464,6 +483,7 @@
             }
         }
 
+        // 2. Fermer la modale
         function closeDemandModal() {
             const modal = document.getElementById('demandModal');
             if (modal) {
@@ -471,97 +491,14 @@
             }
         }
 
-        // 5. Modale des détails d'un client (Comptes et Cartes)
-        function openClientDetailModal(client) {
-            document.getElementById('cliModalAvatar').textContent = client.name.charAt(0);
-            document.getElementById('cliModalName').textContent = client.civilite + ' ' + client.name;
-            document.getElementById('cliModalJoined').textContent = client.joinedDate;
-            document.getElementById('cliModalCin').textContent = client.cin;
-            document.getElementById('cliModalEmail').textContent = client.email;
-            document.getElementById('cliModalPhone').textContent = client.phone;
-
-            // Remplir la liste des comptes
-            const accList = document.getElementById('cliModalAccountsList');
-            accList.innerHTML = '';
-            client.accounts.forEach(function(acc) {
-                const balanceFormatted = acc.balance.toLocaleString('fr-FR', { minimumFractionDigits: 2 });
-                const item = document.createElement('div');
-                item.className = 'bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between';
-                item.innerHTML = `
-                    <div>
-                        <span class="font-bold text-xs text-[#282330]">${acc.type}</span>
-                        <div class="text-[10px] font-mono text-[#7A6F82]">RIB : ${acc.rib}</div>
-                    </div>
-                    <span class="font-bold font-num text-xs text-[#746B92]">${balanceFormatted} ${acc.currency}</span>
-                `;
-                accList.appendChild(item);
-            });
-
-            // Remplir la liste des cartes
-            const cardsList = document.getElementById('cliModalCardsList');
-            cardsList.innerHTML = '';
-            if (client.cards.length === 0) {
-                cardsList.innerHTML = '<div class="text-xs text-[#9D937F] italic">Aucune carte active.</div>';
-            } else {
-                client.cards.forEach(function(card) {
-                    const isOpposition = card.status.includes('Opposition');
-                    const badgeClass = isOpposition ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800';
-                    const item = document.createElement('div');
-                    item.className = 'bg-[#FAF5ED] p-3 rounded-xl border border-[#D8CEBB] flex items-center justify-between';
-                    item.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-[#746B92]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                            </svg>
-                            <div>
-                                <span class="font-bold text-xs text-[#282330]">${card.type}</span>
-                                <div class="text-[10px] font-mono text-[#7A6F82]">${card.number} • Exp : ${card.expires}</div>
-                            </div>
-                        </div>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${badgeClass}">
-                            ${card.status}
-                        </span>
-                    `;
-                    cardsList.appendChild(item);
-                });
-            }
-
-            const modal = document.getElementById('clientDetailModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function closeClientDetailModal() {
-            const modal = document.getElementById('clientDetailModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        }
-
-        // 6. Modale de réponse à une réclamation client
-        function openClaimModal(id, clientName, object, currentStatus, currentResponse) {
-            document.getElementById('modalClaimId').value = id;
-            document.getElementById('modalClaimClient').textContent = 'Client : ' + clientName + ' (' + id + ')';
-            document.getElementById('modalClaimObject').value = object;
-            document.getElementById('modalClaimStatusSelect').value = currentStatus || 'Clôturée';
-            document.getElementById('modalClaimResponseText').value = currentResponse || '';
-
-            const modal = document.getElementById('claimModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function closeClaimModal() {
-            const modal = document.getElementById('claimModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        }
-        document.querySelectorAll('.btn-open-demand').forEach(btn => {
-            btn.addEventListener('click', function() {
-                openDemandModal(this.dataset.id, this.dataset.type, this.dataset.client, this.dataset.details);
+        // 3. Attacher l'événement click sur tous les boutons "Traiter"
+        document.querySelectorAll('.btn-open-demand').forEach(function(bouton) {
+            bouton.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const type = this.dataset.type;
+                const client = this.dataset.client;
+                const details = this.dataset.details;
+                openDemandModal(id, type, client, details);
             });
         });
     </script>
