@@ -3,10 +3,9 @@ const clientService = require("../services/clientService");
 // 1. Afficher le tableau de bord client (comptes, cartes, mouvements)
 exports.getDashboard = async (req, res) => {
     try {
-        const userId = req.session?.user?.id || 3;
         const rawId = req.session?.user?.id;
         const isClient = req.session?.user?.role === 'CLIENT';
-        const userId = (isClient && !isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const userId = (isClient && !isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : (req.session?.user?.id || 3);
 
         const data = await clientService.getDashboardData(userId);
 
@@ -32,11 +31,9 @@ exports.getDashboard = async (req, res) => {
 // 2. Afficher la page des virements et des bénéficiaires
 exports.getTransfers = async (req, res) => {
     try {
-        const userId = req.session?.user?.id || 3;
-
         // Récupérer les comptes et bénéficiaires du client
         const rawId = req.session?.user?.id;
-        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : 3;
+        const userId = (!isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : (req.session?.user?.id || 3);
         const [accounts, beneficiaries] = await Promise.all([
             clientService.getUserAccounts(userId),
             clientService.getBeneficiaries(userId)
@@ -125,32 +122,7 @@ exports.postDeleteBeneficiary = async (req, res) => {
     }
 };
 
-// 5. Afficher les cartes bancaires
-exports.getCards = (req, res) => {
-    res.render("client/cards", {
-        title: "Mes Cartes | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
-        cards: [],
-        currentPath: "/client/cards"
-    });
-};
 
-// 6. Afficher les documents et le RIB
-exports.getDocuments = (req, res) => {
-    res.render("client/documents", {
-        title: "RIB & Démarches | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
-        currentPath: "/client/documents"
-    });
-};
-
-// 7. Afficher l'historique des opérations
-exports.getTransactions = (req, res) => {
-    res.render("client/transactions", {
-        title: "Historique des opérations | HosBank",
-        user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
-        currentPath: "/client/transactions"
-    });
 exports.postTransfer = async (req, res) => {
     try {
         const userId = req.session?.user?.id || 3;
@@ -276,6 +248,8 @@ exports.getDocuments = async (req, res) => {
             clientService.getUserAdvisor(userId)
         ]);
 
+        const hasSavingsAccount = accounts.some(a => a.type === 'EPARGNE');
+
         res.render("client/documents", {
             title: "RIB & Démarches | HosBank",
             user: req.session.user || { name: "Alexandre Moreau", avatar: "AM" },
@@ -285,6 +259,7 @@ exports.getDocuments = async (req, res) => {
             demandes,
             reclamations,
             advisor,
+            hasSavingsAccount,
             success: req.query.success || null,
             error: req.query.error || null,
             currentPath: "/client/documents"

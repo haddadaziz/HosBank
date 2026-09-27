@@ -53,17 +53,7 @@
                 </div>
             </header>
 
-            <!-- Notifications -->
-            <% if (typeof success !== 'undefined' && success) { %>
-                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
-                    <span>✅ La décision a été enregistrée et communiquée au client.</span>
-                </div>
-            <% } %>
-            <% if (typeof error !== 'undefined' && error) { %>
-                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
-                    <span>⚠️ <%= error %></span>
-                </div>
-            <% } %>
+
 
             <!-- Grille des demandes -->
             <div class="bg-white border border-[#D8CEBB] rounded-2xl p-6 shadow-sm">

@@ -80,7 +80,6 @@ const authService = {
             throw new Error("Identifiant ou mot de passe incorrect.");
         }
 
-        const isMatch = await bcrypt.compare(password, user.mot_de_passe_hash);
         let isMatch = false;
         try {
             isMatch = await bcrypt.compare(password, user.mot_de_passe_hash);

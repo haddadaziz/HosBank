@@ -31,11 +31,6 @@ const adminController = {
 
     logout(req, res) {
         if (req.session) {
-            req.session.destroy(() => {
-                res.clearCookie("hosbank_session");
-                res.redirect("/login?message=" + encodeURIComponent("Vous avez été déconnecté avec succès."));
-            });
-        } else {
             req.session.admin = null;
             req.session.user = null;
             req.session.advisor = null;

@@ -538,17 +538,6 @@ class ClientService {
                 ORDER BY type_carte ASC
             `;
 
-            // Auto-provisioning : si l'utilisateur n'a pas encore de carte attitrée sur ses comptes
-            if (cards.length === 0) {
-                const currentAccount = accounts.find(a => a.type === 'COURANT') || accounts[0];
-                if (currentAccount) {
-                    const cardRepo = require("../repositories/cardRepository");
-                    await cardRepo.createPhysicalCard(currentAccount.id);
-                    const freshCards = await db.query(cardsQuery, [accountIds]);
-                    cards = freshCards.rows;
-                }
-            }
-
             const txQuery = `
                 SELECT 
                     id, 
@@ -573,20 +562,20 @@ class ClientService {
 
             cards = cardsResult.rows;
             transactions = txResult.rows;
+
+            // Auto-provisioning uniquement si l'utilisateur n'a AUCUNE carte enregistrée en base
+            if (cards.length === 0) {
+                const currentAccount = accounts.find(a => a.type === 'COURANT') || accounts[0];
+                if (currentAccount) {
+                    const cardRepo = require("../repositories/cardRepository");
+                    await cardRepo.createPhysicalCard(currentAccount.id);
+                    const freshCards = await db.query(cardsQuery, [accountIds]);
+                    cards = freshCards.rows;
+                }
+            }
         }
 
-        // Étape 3 : Calcul simple du solde total disponible
-        let totalBalance = 0;
-        for (const account of accounts) {
-            totalBalance += account.balance;
-        }
 
-        return { 
-            accounts, 
-            cards, 
-            transactions, 
-            totalBalance 
-        };
         const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
         const currentBalance = accounts.filter(a => a.type === 'COURANT').reduce((sum, a) => sum + a.balance, 0);
         const savingsBalance = accounts.filter(a => a.type === 'EPARGNE').reduce((sum, a) => sum + a.balance, 0);
@@ -778,6 +767,15 @@ class ClientService {
         );
         if (userRes.rows.length === 0 || !userRes.rows[0].conseiller_id) {
             throw new Error("Vous devez disposer d'un conseiller bancaire attitré pour effectuer une demande d'ouverture de Livret Épargne. Un conseiller vous sera prochainement affecté.");
+        }
+
+        // Sécurité : Vérifier que le client ne possède pas déjà un Livret d'Épargne actif
+        const existingSavings = await db.query(
+            "SELECT id FROM comptes_bancaires WHERE utilisateur_id = $1 AND type_compte = 'EPARGNE' AND statut = 'ACTIF'",
+            [userId]
+        );
+        if (existingSavings.rows.length > 0) {
+            throw new Error("Vous disposez déjà d'un Livret d'Épargne actif auprès de HosBank.");
         }
 
         const deposit = parseFloat(initialDeposit);

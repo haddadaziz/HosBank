@@ -45,44 +45,9 @@
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/documents', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 transition-all">
-
-        <!-- Mobile Top Bar (< lg screens) -->
-        <div class="lg:hidden flex items-center justify-between bg-white border border-gray-200/80 px-4 py-3 mb-6 rounded-2xl shadow-sm">
-            <button type="button" class="mobile-menu-toggle p-2 text-hos-dark hover:bg-gray-100 rounded-xl" id="mobileMenuToggle" aria-label="Menu de navigation">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-            </button>
-            <div class="flex items-center gap-2">
-                <img src="/images/logo-white.svg" alt="HosBank" class="h-6 w-auto" style="filter: brightness(0) saturate(100%) invert(14%) sepia(18%) saturate(1450%) hue-rotate(217deg) brightness(93%) contrast(92%);">
-            </div>
-            <div class="w-8 h-8 rounded-full bg-hos-dark text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                <%= (user && user.name) ? user.name.split(' ').map(n=>n[0]).join('') : 'CL' %>
-            </div>
-        </div>
     <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0">
         
-        <!-- Messages de feedback (Succès / Erreur) -->
-        <% if (success) { %>
-            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-sm animate-fade-in">
-                <div class="flex items-center gap-3">
-                    <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm shrink-0">✔</span>
-                    <div><%= success %></div>
-                </div>
-                <a href="/client/documents" class="text-emerald-700 hover:text-emerald-900 font-bold ml-4">✕</a>
-            </div>
-        <% } %>
 
-        <% if (error) { %>
-            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center justify-between shadow-sm animate-fade-in">
-                <div class="flex items-center gap-3">
-                    <span class="w-7 h-7 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-sm shrink-0">✕</span>
-                    <div><%= error %></div>
-                </div>
-                <a href="/client/documents" class="text-rose-700 hover:text-rose-900 font-bold ml-4">✕</a>
-            </div>
-        <% } %>
 
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -96,21 +61,30 @@
                 <p class="text-sm text-gray-500 mt-1">Consultez et téléchargez vos coordonnées bancaires, et suivez vos démarches en direct.</p>
             </div>
             <div class="flex items-center gap-3 flex-wrap">
+                <% const hasSavings = (typeof hasSavingsAccount !== 'undefined' ? hasSavingsAccount : (typeof accounts !== 'undefined' && accounts.some(a => a.type === 'EPARGNE'))); %>
+                <% if (!hasSavings) { %>
+                    <% if (typeof advisor !== 'undefined' && advisor) { %>
+                        <button type="button" onclick="openSavingsModal()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                            <span></span> Ouvrir un Livret Épargne
+                        </button>
+                    <% } else { %>
+                        <button type="button" onclick="openNoAdvisorModal('livret')" class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer" title="Un conseiller attitré est requis pour ouvrir un livret d'épargne">
+                            <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                            Conseiller requis (Livret)
+                        </button>
+                    <% } %>
+                <% } %>
                 <% if (typeof advisor !== 'undefined' && advisor) { %>
-                    <button type="button" onclick="openSavingsModal()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
-                        <span>✨</span> Ouvrir un Livret Épargne
+                    <button type="button" onclick="openReclamationModal()" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
+                        <span></span> Déposer une réclamation
                     </button>
                 <% } else { %>
-                    <button type="button" onclick="openNoAdvisorModal('livret')" class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/70 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer" title="Un conseiller attitré est requis pour ouvrir un livret d'épargne">
-                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                        Conseiller requis (Livret)
+                    <button type="button" onclick="openNoAdvisorModal('reclamation')" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-500 border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer">
+                        <span>💬</span> Conseiller requis (Réclamation)
                     </button>
                 <% } %>
-                <button type="button" onclick="openReclamationModal()" class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-hos-dark border border-gray-200 hover:border-hos-primary px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:-translate-y-0.5 cursor-pointer">
-                    <span>💬</span> Déposer une réclamation
-                </button>
             </div>
         </header>
 
@@ -235,7 +209,7 @@
                                         </div>
                                     <% } else { %>
                                         <div class="text-[11px] text-gray-500 mt-2 bg-gray-50/70 p-2 rounded-lg">
-                                            ⏳ Dossier en cours de revue par votre conseiller référent.
+                                            ⏳ Dossier en cours de revue par votre conseiller <%= (typeof advisor !== 'undefined' && advisor ? advisor.name : (d.advisorName || '')) %>.
                                         </div>
                                     <% } %>
                                 </div>
@@ -307,9 +281,15 @@
                     <p class="text-xs text-gray-600 leading-relaxed mb-4">
                         Une opération suspecte ou un litige sur votre compte ? Déposez une réclamation directement en ligne pour une prise en charge prioritaire par votre conseiller.
                     </p>
-                    <button type="button" onclick="document.getElementById('reclamationModal').classList.remove('hidden')" class="w-full text-center bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
-                        Déposer une réclamation
-                    </button>
+                    <% if (typeof advisor !== 'undefined' && advisor) { %>
+                        <button type="button" onclick="openReclamationModal()" class="w-full text-center bg-hos-dark hover:bg-hos-hover text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm cursor-pointer">
+                            Déposer une réclamation
+                        </button>
+                    <% } else { %>
+                        <button type="button" onclick="openNoAdvisorModal('reclamation')" class="w-full text-center bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer">
+                            Conseiller requis pour réclamer
+                        </button>
+                    <% } %>
                 </div>
 
             </div>
@@ -388,15 +368,7 @@
                     <input type="text" name="sujet" placeholder="Ex: Frais bancaires non reconnus, Litige carte..." required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold">
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-hos-dark mb-1.5">Niveau de priorité</label>
-                    <select name="priorite" required class="w-full px-4 py-2.5 rounded-xl border border-gray-300 focus:border-hos-primary outline-none text-xs font-semibold bg-white">
-                        <option value="MOYENNE">Moyenne (Sous 48h)</option>
-                        <option value="HAUTE">Haute (Sous 24h)</option>
-                        <option value="URGENTE">Urgente (Immédiate)</option>
-                        <option value="FAIBLE">Faible (Information)</option>
-                    </select>
-                </div>
+
 
                 <div>
                     <label class="block text-xs font-bold text-hos-dark mb-1.5">Description détaillée de votre situation</label>
@@ -416,7 +388,6 @@
     </div>
 </div>
 
-    <script src="/js/admin.js"></script>
 <!-- Modal Information Conseiller Requis (HOS-Security) -->
 <div id="noAdvisorModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] text-center my-auto">
@@ -476,6 +447,8 @@
                     textEl.innerHTML = "Pour votre sécurité financière, l'ouverture d'un <strong>Livret Épargne</strong> nécessite la validation préalable d'un conseiller bancaire attitré.<br><br>Votre compte est en cours d'affectation auprès de notre agence. Un conseiller vous sera attribué très prochainement.";
                 } else if (type === 'carte') {
                     textEl.innerHTML = "Pour votre sécurité financière, la création d'une <strong>carte virtuelle</strong> requiert la supervision de votre conseiller attitré.<br><br>Un conseiller bancaire vous sera affecté très prochainement.";
+                } else if (type === 'reclamation') {
+                    textEl.innerHTML = "Pour la prise en charge et l'instruction de vos litiges, le dépôt d'une <strong>réclamation</strong> nécessite qu'un conseiller bancaire vous soit préalablement affecté.<br><br>Un conseiller vous sera attribué très prochainement.";
                 }
             }
             modal.classList.remove('hidden');

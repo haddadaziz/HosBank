@@ -35,30 +35,7 @@
                 <p class="text-sm text-[#7A6F82] mt-1">Consultez vos informations professionnelles et sécurisez vos identifiants d'accès</p>
             </header>
 
-            <!-- Notifications / Alertes -->
-            <% if (typeof success !== 'undefined' && success) { %>
-                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center justify-between shadow-xs">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span><%= success %></span>
-                    </div>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-emerald-700 hover:text-emerald-900 font-bold">&times;</button>
-                </div>
-            <% } %>
 
-            <% if (typeof error !== 'undefined' && error) { %>
-                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center justify-between shadow-xs">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><%= error %></span>
-                    </div>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-rose-700 hover:text-rose-900 font-bold">&times;</button>
-                </div>
-            <% } %>
 
             <!-- Carte d'identité Conseiller -->
             <div class="bg-white border border-[#D8CEBB] rounded-2xl p-6 lg:p-7 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -74,14 +51,6 @@
                             </span>
                         </div>
                         <p class="text-xs text-[#7A6F82] mt-1"><%= advisor.agency || 'HosBank Agence Centrale • Paris Opéra' %></p>
-                        <div class="flex items-center gap-4 mt-2 text-[11px] text-[#9D937F]">
-                            <span>Affectation : <strong class="text-[#282330]"><%= advisor.dateCreation || '2024' %></strong></span>
-                            <span>•</span>
-                            <span class="flex items-center gap-1.5 text-emerald-600 font-semibold">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Session active
-                            </span>
-                        </div>
                     </div>
                 </div>
 

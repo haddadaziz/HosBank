@@ -1,49 +1,4 @@
-<%
-    // 1. Récupérer le rôle de l'utilisateur connecté
-    let userRole = 'client';
-    if (typeof role !== 'undefined') {
-        userRole = role;
-    } else if (typeof currentRole !== 'undefined') {
-        userRole = currentRole;
-    }
 
-    // 2. Récupérer le chemin de la page actuelle pour le menu actif
-    let path = '';
-    if (typeof currentPath !== 'undefined') {
-        path = currentPath;
-    } else if (typeof activePath !== 'undefined') {
-        path = activePath;
-    }
-
-    // 3. Récupérer les informations de l'utilisateur ou mettre des valeurs par défaut
-    let currentUser = null;
-    if (typeof user !== 'undefined' && user) {
-        currentUser = user;
-    } else if (typeof admin !== 'undefined' && admin) {
-        currentUser = admin;
-    } else {
-        // Profil par défaut selon le rôle
-        let defaultName = 'Client HosBank';
-        let defaultRole = 'Particulier';
-        let defaultAvatar = 'CL';
-
-        if (userRole === 'admin') {
-            defaultName = 'Admin HosBank';
-            defaultRole = 'Superviseur';
-            defaultAvatar = 'HB';
-        } else if (userRole === 'advisor') {
-            defaultName = 'Karim Bennani';
-            defaultRole = 'Conseiller Clientèle';
-            defaultAvatar = 'KB';
-        }
-
-        currentUser = {
-            name: defaultName,
-            role: defaultRole,
-            avatar: defaultAvatar
-        };
-    }
-%>
 <% 
     const userRole = typeof role !== 'undefined' ? role : (typeof currentRole !== 'undefined' ? currentRole : 'admin');
     const path = typeof currentPath !== 'undefined' ? currentPath : (typeof activePath !== 'undefined' ? activePath : '');
@@ -259,7 +214,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <span>RIB & Relevés</span>
+                            <span>RIB & Documents</span>
                         </a>
 
                         <a href="/client/profile" class="nav-item <%= path === '/client/profile' ? 'active' : '' %>">
@@ -369,3 +324,6 @@
             });
         })();
     </script>
+
+    <!-- Système Harmonisé de Notifications Toast HosBank -->
+    <%- include('./notification') %>

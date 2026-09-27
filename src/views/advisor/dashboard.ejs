@@ -36,17 +36,7 @@
                 </div>
             </header>
 
-            <!-- Notifications -->
-            <% if (typeof success !== 'undefined' && success) { %>
-                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
-                    <span>✅ Action enregistrée avec succès.</span>
-                </div>
-            <% } %>
-            <% if (typeof error !== 'undefined' && error) { %>
-                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-semibold flex items-center gap-3 shadow-xs">
-                    <span>⚠️ <%= error %></span>
-                </div>
-            <% } %>
+
 
             <!-- Grille des 4 Métriques Réelles -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -63,16 +53,6 @@
                     <div class="mt-3">
                         <span class="text-3xl font-extrabold font-num text-[#282330]"><%= metrics.assignedClients %></span>
                     </div>
-                </div>
-
-                <a 
-                    href="/logout" 
-                    title="Déconnexion" 
-                    class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition-colors"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
                     <p class="text-[11px] text-[#746B92] font-semibold mt-2 group-hover:underline flex items-center gap-1">
                         <span>Consulter la liste</span>
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
@@ -472,10 +452,6 @@
         }
 
         // 4. Modale de traitement d'une demande bancaire
-        function openDemandModal(id, type, clientName, details) {
-            document.getElementById('modalDemandId').value = id;
-            document.getElementById('modalDemandTitle').textContent = 'Traiter la demande : ' + type + ' (' + id + ')';
-    <script>
         function openDemandModal(id, type, clientName, details) {
             document.getElementById('modalDemandId').value = id;
             document.getElementById('modalDemandTitle').textContent = 'Traiter la demande : ' + type;

@@ -68,9 +68,9 @@
             background: linear-gradient(
                 180deg,
                 rgba(10, 11, 16, 0.55) 0%,
-                rgba(10, 11, 16, 0.1) 20%,
-                rgba(10, 11, 16, 0.05) 60%,
-                rgba(10, 11, 16, 0.75) 100%
+                rgba(10, 11, 16, 0.12) 20%,
+                rgba(10, 11, 16, 0.08) 60%,
+                rgba(10, 11, 16, 0.80) 100%
             );
         }
 
@@ -85,6 +85,27 @@
             filter: blur(80px);
             pointer-events: none;
             z-index: 2;
+        }
+
+        .underline-input {
+            border: none;
+            border-bottom: 1.5px solid #D8CEBB;
+            background: transparent;
+            outline: none;
+            transition: border-color 0.2s ease, padding-left 0.2s ease;
+            color: #282330;
+        }
+        .underline-input::placeholder {
+            color: #9D937F;
+            font-weight: 400;
+        }
+        .underline-input:focus {
+            border-bottom-color: #746B92;
+            padding-left: 2px;
+        }
+
+        .brand-wordmark {
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
     </style>
 </head>
@@ -102,7 +123,7 @@
                 <div class="flex items-baseline brand-wordmark">
                     <span class="text-[24px] sm:text-[26px] font-[800] tracking-[-0.04em] text-white leading-none">os</span>
                     <span class="text-[24px] sm:text-[26px] font-[800] tracking-[-0.03em] text-white/95 leading-none ml-[0.5px]">Bank</span>
-                    <span class="w-[6px] h-[6px] rounded-full bg-[#E97A7A] ml-1.5 self-end mb-1 shadow-[0_0_8px_rgba(233,122,122,0.65)]"></span>
+                    <span class="w-[6px] h-[6px] rounded-full bg-[#E97A7A] ml-1 self-end mb-1 shadow-[0_0_8px_rgba(233,122,122,0.65)]"></span>
                 </div>
             </div>
         </a>
@@ -117,14 +138,14 @@
         </div>
     </header>
 
-    <div id="scrollTrack" class="relative w-full h-[320vh]">
+    <div id="scrollTrack" class="relative w-full h-[380vh]">
 
         <div class="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center justify-center bg-[#0A0B10]">
 
             <img 
                 id="heroImageStart"
                 src="/assets/images/hero_start_frame.jpg"
-                alt="Mercury PC Desk"
+                alt="HosBank PC Desk"
                 class="absolute inset-0 w-full h-full object-cover pointer-events-none select-none z-0"
                 loading="eager"
             >
@@ -142,6 +163,7 @@
             <div class="absolute inset-0 hero-vignette pointer-events-none z-[1]"></div>
             <div class="glow-ambient"></div>
 
+            <!-- Hero Intro Content (Title, subtitle, email pill) -->
             <div id="heroContent" class="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 max-w-4xl mx-auto transition-transform duration-75 ease-out">
                 
                 <h1 class="text-4xl sm:text-6xl md:text-7xl font-extrabold font-brand tracking-tight text-white leading-[1.1] drop-shadow-lg">
@@ -172,6 +194,293 @@
 
             </div>
 
+            <!-- Laptop Physical Screen Overlay: Perfectly stays inside the laptop display glass at close-up -->
+            <div 
+                id="laptopScreenOverlay" 
+                class="absolute z-20 pointer-events-none will-change-transform overflow-hidden shadow-[inset_0_0_15px_rgba(0,0,0,0.5)] bg-[#F6EFE0]"
+                style="display: none;"
+            >
+                <!-- Screen Glass (Exact 16:10 ratio, 800x500 reference, dynamically scaled to fit the physical laptop display) -->
+                <div id="mockupScaleWrapper" class="relative w-[800px] h-[500px] origin-top-left flex shrink-0 select-none bg-[#F6EFE0]">
+                    
+                    <!-- Purple Panel (Sliding between right and left) -->
+                    <div 
+                        id="mockupPurple" 
+                        class="absolute top-0 bottom-0 left-0 w-[440px] h-full bg-[#746B92] text-white p-7 sm:p-9 flex flex-col justify-between z-20 overflow-hidden shadow-xl"
+                        style="transform: translate3d(360px, 0, 0);"
+                    >
+                        <!-- Curve SVG Right (for Register mode) -->
+                        <div id="mockupCurveRight" class="absolute top-0 right-0 bottom-0 w-[140px] h-full pointer-events-none z-30 opacity-0 transition-opacity duration-75">
+                            <svg viewBox="0 0 180 800" preserveAspectRatio="none" class="w-full h-full">
+                                <path d="M 180,0 L 40,0 C 120,160 210,380 0,800 L 180,800 Z" fill="#F6EFE0"></path>
+                            </svg>
+                        </div>
+
+                        <!-- Curve SVG Left (for Login mode) -->
+                        <div id="mockupCurveLeft" class="absolute top-0 left-0 bottom-0 w-[140px] h-full pointer-events-none -translate-x-[1px] z-30 opacity-100 transition-opacity duration-75">
+                            <svg viewBox="0 0 180 800" preserveAspectRatio="none" class="w-full h-full">
+                                <path d="M 0,0 L 35,0 C 5,120 160,220 140,400 C 125,540 50,680 0,800 Z" fill="#F6EFE0"></path>
+                            </svg>
+                        </div>
+
+                        <!-- HosBank Logo -->
+                        <div id="mockupLogo" class="relative z-40 flex items-center" style="transform: translate3d(45px, 0, 0);">
+                            <div class="flex items-center">
+                                <svg class="h-6 w-auto mr-[2px]" viewBox="0 0 25 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="0" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
+                                    <rect x="18.5" y="2" width="5.5" height="24" rx="1.5" fill="#FFFFFF"/>
+                                    <path d="M5.5 17.5 L18.5 10.5 L18.5 15.2 L5.5 22.2 Z" fill="#E97A7A"/>
+                                </svg>
+                                <div class="flex items-baseline brand-wordmark">
+                                    <span class="text-[20px] sm:text-[22px] font-[800] tracking-[-0.04em] text-white leading-none">os</span>
+                                    <span class="text-[20px] sm:text-[22px] font-[800] tracking-[-0.03em] text-white/95 leading-none ml-[0.5px]">Bank</span>
+                                    <span class="w-[5px] h-[5px] rounded-full bg-[#E97A7A] ml-1 self-end mb-0.5 shadow-[0_0_8px_rgba(233,122,122,0.65)]"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Text Content -->
+                        <div id="mockupText" class="relative z-40 my-auto max-w-xs" style="transform: translate3d(45px, 0, 0);">
+                            <!-- Login Text -->
+                            <div id="mockupTextLogin" class="opacity-100">
+                                <h2 class="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-white">
+                                    Ravi de vous revoir !
+                                </h2>
+                                <p class="text-xs text-[#DDD7EB] font-normal leading-relaxed mt-2">
+                                    Reprenez là où vous vous étiez arrêté en toute sérénité.
+                                </p>
+                            </div>
+
+                            <!-- Register Text -->
+                            <div id="mockupTextReg" class="opacity-0 absolute top-0 left-0 right-0">
+                                <h2 class="text-xl sm:text-2xl font-bold tracking-tight leading-tight text-white">
+                                    Heureux de vous compter parmi nous !
+                                </h2>
+                                <p class="text-xs text-[#DDD7EB] font-normal leading-relaxed mt-2">
+                                    Rejoignez des milliers de clients satisfaits d'une gestion moderne et fluide.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Vector Illustrations -->
+                        <div id="mockupIllustr" class="relative z-40 w-full max-w-[300px] mx-auto pb-1" style="transform: translate3d(35px, 0, 0);">
+                            <!-- Login Illustration (Couple) -->
+                            <div id="mockupIllustrLogin" class="opacity-100 max-w-[250px] mx-auto">
+                                <svg viewBox="0 0 460 340" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <ellipse cx="230" cy="190" rx="170" ry="110" fill="#887EA2" opacity="0.45"/>
+                                    <ellipse cx="230" cy="305" rx="180" ry="14" fill="#62597C" opacity="0.6"/>
+                                    <g id="sparks">
+                                        <line x1="230" y1="120" x2="230" y2="108" stroke="#F6EFE0" stroke-width="2.5" stroke-linecap="round"/>
+                                        <line x1="223" y1="124" x2="214" y2="117" stroke="#F6EFE0" stroke-width="2.2" stroke-linecap="round"/>
+                                        <line x1="237" y1="124" x2="246" y2="117" stroke="#F6EFE0" stroke-width="2.2" stroke-linecap="round"/>
+                                    </g>
+                                    <g id="man-left">
+                                        <path d="M192 195 L180 298" stroke="#B46A5E" stroke-width="12" stroke-linecap="round"/>
+                                        <path d="M210 195 L202 298" stroke="#B46A5E" stroke-width="12" stroke-linecap="round"/>
+                                        <rect x="173" y="295" width="14" height="4" rx="2" fill="#FAF5ED"/>
+                                        <rect x="195" y="295" width="14" height="4" rx="2" fill="#FAF5ED"/>
+                                        <ellipse cx="178" cy="303" rx="10" ry="5" fill="#1C2128"/>
+                                        <ellipse cx="204" cy="303" rx="10" ry="5" fill="#1C2128"/>
+                                        <path d="M172 150 L220 150 L214 200 L178 200 Z" fill="#FAF5ED"/>
+                                        <path d="M188 150 L196 158 L204 150 Z" fill="#DCD5C5"/>
+                                        <path d="M174 154 L162 178 L170 196" stroke="#FAF5ED" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="171" cy="199" r="4.5" fill="#BF9068"/>
+                                        <path d="M216 154 L224 138 L228 126" stroke="#FAF5ED" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M226 128 L230 122 L234 125" stroke="#BF9068" stroke-width="5" stroke-linecap="round"/>
+                                        <circle cx="196" cy="126" r="13.5" fill="#BF9068"/>
+                                        <path d="M184 123 C184 109 208 109 209 121 C205 115 198 114 192 117 Z" fill="#2E2319"/>
+                                        <circle cx="193" cy="126" r="1.2" fill="#1C2128"/>
+                                        <circle cx="201" cy="126" r="1.2" fill="#1C2128"/>
+                                        <path d="M194 131 Q198 135 202 131" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+                                    </g>
+                                    <g id="woman-right">
+                                        <path d="M256 200 L250 298" stroke="#252F3C" stroke-width="12" stroke-linecap="round"/>
+                                        <path d="M276 200 L286 298" stroke="#252F3C" stroke-width="12" stroke-linecap="round"/>
+                                        <ellipse cx="248" cy="303" rx="9" ry="5" fill="#171D24"/>
+                                        <ellipse cx="290" cy="303" rx="9" ry="5" fill="#171D24"/>
+                                        <path d="M246 150 L290 150 L286 204 L252 204 Z" fill="#F4CEC4"/>
+                                        <path d="M260 150 Q268 156 276 150" stroke="#DFB5AB" stroke-width="2" fill="none"/>
+                                        <path d="M288 154 L298 178 L292 196" stroke="#F4CEC4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="290" cy="199" r="4" fill="#C49B7A"/>
+                                        <path d="M248 154 L238 138 L234 126" stroke="#F4CEC4" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M236 128 L232 122 L228 125" stroke="#C49B7A" stroke-width="5" stroke-linecap="round"/>
+                                        <circle cx="260" cy="126" r="8" fill="#C49B7A"/>
+                                        <path d="M256 120 C256 106 282 106 284 124 L286 156 C286 166 276 166 270 166 L262 166 C258 166 254 160 254 150 Z" fill="#242D38"/>
+                                        <circle cx="256" cy="127" r="2.8" fill="#C49B7A"/>
+                                    </g>
+                                </svg>
+                            </div>
+
+                            <!-- Register Illustration (Team of 4) -->
+                            <div id="mockupIllustrReg" class="opacity-0 absolute top-0 left-0 right-0 max-w-[300px] mx-auto">
+                                <svg viewBox="0 0 460 270" class="w-full h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <ellipse cx="230" cy="250" rx="200" ry="16" fill="#60577B" opacity="0.65"/>
+                                    <g id="p1">
+                                        <path d="M85 190 L82 248" stroke="#7A6655" stroke-width="6.5" stroke-linecap="round"/>
+                                        <path d="M100 190 L103 248" stroke="#7A6655" stroke-width="6.5" stroke-linecap="round"/>
+                                        <ellipse cx="80" cy="250" rx="8" ry="4.5" fill="#1C2128"/>
+                                        <ellipse cx="106" cy="250" rx="8" ry="4.5" fill="#1C2128"/>
+                                        <path d="M80 148 L73 192 L113 192 L106 148 Z" fill="#885A6E"/>
+                                        <path d="M79 116 L107 116 L110 150 L76 150 Z" fill="#FAF5ED"/>
+                                        <polygon points="87,116 93,126 99,116" fill="#F4CEC4"/>
+                                        <path d="M79 118 L66 138 L77 151" stroke="#FAF5ED" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M107 118 L120 138 L109 151" stroke="#FAF5ED" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="93" cy="98" r="12" fill="#B88A68"/>
+                                        <path d="M82 98 C82 82 105 82 105 98 C105 92 99 89 93 89 C87 89 82 92 82 98 Z" fill="#1F242C"/>
+                                        <circle cx="87" cy="88" r="3.5" fill="#1F242C"/>
+                                        <circle cx="90" cy="98" r="1" fill="#1F242C"/>
+                                        <circle cx="97" cy="98" r="1" fill="#1F242C"/>
+                                        <path d="M91 102 Q93.5 104 96 102" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+                                    </g>
+                                    <g id="p2">
+                                        <path d="M168 140 L164 244" stroke="#2D3A44" stroke-width="11" stroke-linecap="round"/>
+                                        <path d="M190 140 L200 240" stroke="#2D3A44" stroke-width="11" stroke-linecap="round"/>
+                                        <ellipse cx="162" cy="246" rx="9" ry="4.5" fill="#182025"/>
+                                        <ellipse cx="204" cy="242" rx="9" ry="4.5" fill="#182025"/>
+                                        <path d="M156 94 L204 94 L198 144 L162 144 Z" fill="#FAF5E8"/>
+                                        <path d="M174 94 L180 102 L186 94 Z" fill="#584D42"/>
+                                        <path d="M200 97 L214 80 L206 64" stroke="#FAF5E8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="206" cy="61" r="4.5" fill="#B98A64"/>
+                                        <path d="M158 97 L148 118 L154 133" stroke="#FAF5E8" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="178" cy="74" r="13" fill="#B98A64"/>
+                                        <path d="M168 70 C168 57 190 57 192 68 C188 63 181 63 174 65 Z" fill="#473727"/>
+                                        <circle cx="174" cy="74" r="1.1" fill="#182025"/>
+                                        <circle cx="182" cy="74" r="1.1" fill="#182025"/>
+                                        <path d="M174 78 Q178 82 182 78" fill="#FFFFFF" stroke="#182025" stroke-width="0.8"/>
+                                    </g>
+                                    <g id="p3">
+                                        <path d="M250 148 L238 230 L233 240" stroke="#7C5D6C" stroke-width="9.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M268 148 L276 240" stroke="#7C5D6C" stroke-width="9.5" stroke-linecap="round"/>
+                                        <ellipse cx="231" cy="243" rx="7" ry="4" fill="#182025"/>
+                                        <ellipse cx="278" cy="243" rx="7" ry="4" fill="#182025"/>
+                                        <path d="M246 108 L280 108 L274 150 L250 150 Z" fill="#2B363F"/>
+                                        <path d="M248 109 L236 90 L242 76" stroke="#2B363F" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="243" cy="74" r="3.5" fill="#A87A5B"/>
+                                        <path d="M280 109 L292 126 L284 138" stroke="#2B363F" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="266" cy="89" r="11" fill="#A87A5B"/>
+                                        <path d="M257 87 C257 74 278 74 278 87 C274 81 267 80 260 83 Z" fill="#1E242C"/>
+                                        <circle cx="263" cy="89" r="1" fill="#1E242C"/>
+                                        <circle cx="270" cy="89" r="1" fill="#1E242C"/>
+                                        <path d="M264 93 Q266.5 95 269 93" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+                                    </g>
+                                    <g id="p4">
+                                        <path d="M322 142 L308 242" stroke="#222C33" stroke-width="11" stroke-linecap="round"/>
+                                        <path d="M346 142 L354 242" stroke="#222C33" stroke-width="11" stroke-linecap="round"/>
+                                        <ellipse cx="305" cy="245" rx="8" ry="4.5" fill="#182025"/>
+                                        <ellipse cx="357" cy="245" rx="8" ry="4.5" fill="#182025"/>
+                                        <path d="M310 96 L360 96 L354 146 L316 146 Z" fill="#F4CEC4"/>
+                                        <path d="M312 99 L299 120 L311 131" stroke="#F4CEC4" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M358 99 L374 114 L368 127" stroke="#F4CEC4" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <circle cx="335" cy="78" r="12" fill="#B07D53"/>
+                                        <path d="M325 74 C325 63 346 63 348 74 C344 68 337 68 330 71 Z" fill="#3D2E21"/>
+                                        <circle cx="331" cy="78" r="1.1" fill="#182025"/>
+                                        <circle cx="339" cy="78" r="1.1" fill="#182025"/>
+                                        <path d="M331 82 Q335 86 339 82" fill="#FFFFFF" stroke="#182025" stroke-width="0.8"/>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Cream Panel (Sliding between left and right) -->
+                    <div 
+                        id="mockupCream" 
+                        class="absolute top-0 bottom-0 left-0 w-[360px] h-full bg-[#F6EFE0] p-6 sm:p-8 flex flex-col justify-center z-10"
+                        style="transform: translate3d(0, 0, 0);"
+                    >
+                        <div id="mockupCornerDecor" class="absolute bottom-0 left-0 w-24 h-24 bg-[#EFE7D4] -z-10 pointer-events-none rounded-tr-[40px]"></div>
+
+                        <div class="relative w-full max-w-[280px] mx-auto">
+                            
+                            <!-- Form Login -->
+                            <div id="mockupFormLogin" class="opacity-100 flex flex-col justify-center">
+                                <h3 class="text-lg sm:text-xl font-bold tracking-tight text-[#282330] mb-4 text-left">
+                                    Connexion
+                                </h3>
+                                <form onsubmit="return false;" class="space-y-3.5 w-full">
+                                    <div>
+                                        <input type="text" placeholder="Identifiant ou E-mail" readonly value="alexandre.moreau@hosbank.fr" class="w-full underline-input pb-1 text-xs text-[#282330]">
+                                    </div>
+                                    <div>
+                                        <input type="password" placeholder="Mot de passe" readonly value="••••••••••••" class="w-full underline-input pb-1 text-xs text-[#282330]">
+                                    </div>
+                                    <div class="flex items-center justify-between text-[10px] pt-0.5">
+                                        <label class="flex items-center text-[#9D937F]">
+                                            <span class="w-3 h-3 rounded border border-[#D8CEBB] bg-[#746B92] flex items-center justify-center mr-1">
+                                                <svg class="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                            </span>
+                                            <span>Se souvenir</span>
+                                        </label>
+                                        <a href="/login" class="text-[#9D937F] hover:text-[#746B92] pointer-events-auto">Oublié ?</a>
+                                    </div>
+                                    <div class="pt-1.5 flex justify-start">
+                                        <a href="/login" id="mockupLoginBtn" class="bg-[#746B92] hover:bg-[#635B7E] text-white text-xs font-semibold px-5 py-2 rounded-lg shadow-sm transition-all pointer-events-auto cursor-pointer inline-flex items-center gap-1.5">
+                                            <span>Se connecter</span>
+                                        </a>
+                                    </div>
+                                </form>
+                                <div class="mt-3.5 text-left text-[10px] text-[#9D937F]">
+                                    <span>Pas encore de compte ?</span>
+                                    <a href="/register" class="text-[#746B92] font-semibold hover:underline ml-1 pointer-events-auto">
+                                        S'inscrire
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Form Register -->
+                            <div id="mockupFormReg" class="opacity-0 absolute top-0 left-0 right-0 flex flex-col justify-center">
+                                <div class="mb-3">
+                                    <h3 class="text-lg sm:text-xl font-bold tracking-tight text-[#282330] text-left">
+                                        Inscription
+                                    </h3>
+                                </div>
+                                <form onsubmit="return false;" class="space-y-3 w-full">
+                                    <div class="pb-1 border-b border-[#D8CEBB] flex items-center justify-between">
+                                        <span class="text-[11px] text-[#9D937F]">Civilité</span>
+                                        <div class="flex items-center gap-3">
+                                            <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                <span class="w-3 h-3 rounded-full border border-[#746B92] bg-[#746B92] flex items-center justify-center">
+                                                    <span class="w-1 h-1 rounded-full bg-[#F6EFE0]"></span>
+                                                </span>
+                                                <span class="text-[11px] text-[#282330] font-medium">M.</span>
+                                            </label>
+                                            <label class="inline-flex items-center gap-1 cursor-pointer">
+                                                <span class="w-3 h-3 rounded-full border border-[#D8CEBB] flex items-center justify-center"></span>
+                                                <span class="text-[11px] text-[#9D937F]">Mme</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <input type="text" id="mockupRegName" placeholder="Nom complet" class="w-full underline-input pb-1 text-xs text-[#282330] pointer-events-auto">
+                                    </div>
+                                    <div>
+                                        <input type="email" id="mockupRegEmail" placeholder="Adresse e-mail" class="w-full underline-input pb-1 text-xs text-[#282330] pointer-events-auto">
+                                    </div>
+                                    <div>
+                                        <input type="password" placeholder="Mot de passe sécurisé" class="w-full underline-input pb-1 text-xs text-[#282330] pointer-events-auto">
+                                    </div>
+                                    <div class="pt-1.5 flex justify-start">
+                                        <button id="mockupRegBtn" type="button" class="bg-[#746B92] hover:bg-[#635B7E] active:scale-95 text-white text-xs font-semibold px-5 py-2 rounded-lg shadow-md transition-all pointer-events-auto cursor-pointer flex items-center gap-1.5">
+                                            <span>Ouvrir un compte</span>
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                        </button>
+                                    </div>
+                                </form>
+                                <div class="mt-3 text-left text-[10px] text-[#9D937F]">
+                                    <span>Déjà un compte ?</span>
+                                    <a href="/login" class="text-[#746B92] font-semibold hover:underline ml-1 pointer-events-auto">
+                                        Se connecter
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -184,25 +493,93 @@
             const imgStart = document.getElementById('heroImageStart');
             const scrollTrack = document.getElementById('scrollTrack');
             const heroContent = document.getElementById('heroContent');
+            const heroEmailInput = document.getElementById('heroEmailInput');
 
-            let videoDuration = 3.0;
-            let isTicking = false;
+            // Laptop Screen elements
+            const laptopOverlay = document.getElementById('laptopScreenOverlay');
+            const mockupScaleWrapper = document.getElementById('mockupScaleWrapper');
+            const mockupPurple = document.getElementById('mockupPurple');
+            const mockupCream = document.getElementById('mockupCream');
+            const mockupLogo = document.getElementById('mockupLogo');
+            const mockupText = document.getElementById('mockupText');
+            const mockupIllustr = document.getElementById('mockupIllustr');
+            const mockupCurveLeft = document.getElementById('mockupCurveLeft');
+            const mockupCurveRight = document.getElementById('mockupCurveRight');
+            const mockupTextLogin = document.getElementById('mockupTextLogin');
+            const mockupTextReg = document.getElementById('mockupTextReg');
+            const mockupIllustrLogin = document.getElementById('mockupIllustrLogin');
+            const mockupIllustrReg = document.getElementById('mockupIllustrReg');
+            const mockupFormLogin = document.getElementById('mockupFormLogin');
+            const mockupFormReg = document.getElementById('mockupFormReg');
+            const mockupCornerDecor = document.getElementById('mockupCornerDecor');
+            const mockupRegEmail = document.getElementById('mockupRegEmail');
+            const mockupRegBtn = document.getElementById('mockupRegBtn');
 
-            function syncDuration() {
-                if (video && video.duration && isFinite(video.duration) && video.duration > 0) {
-                    videoDuration = video.duration;
-                }
+            // Sync email typed in hero input into mockup registration input
+            if (heroEmailInput && mockupRegEmail) {
+                heroEmailInput.addEventListener('input', function(e) {
+                    mockupRegEmail.value = e.target.value;
+                });
             }
 
-            video.addEventListener('loadedmetadata', syncDuration);
-            video.addEventListener('durationchange', syncDuration);
-            video.addEventListener('canplay', syncDuration);
+            // Click on registration button inside laptop mockup
+            if (mockupRegBtn) {
+                mockupRegBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const email = (mockupRegEmail && mockupRegEmail.value.trim()) || (heroEmailInput && heroEmailInput.value.trim()) || '';
+                    if (email) {
+                        window.location.href = '/register?email=' + encodeURIComponent(email);
+                    } else {
+                        window.location.href = '/register';
+                    }
+                });
+            }
+
+            // Calibrated keyframes for laptop screen motion in hero-scrub.mp4 (1920x720)
+            const screenKeyframes = [
+                { t: 0.0,  vw: 46,  cy: 436.5 },
+                { t: 1.5,  vw: 60,  cy: 433 },
+                { t: 2.0,  vw: 100, cy: 422 },
+                { t: 2.5,  vw: 190, cy: 405 },
+                { t: 3.0,  vw: 330, cy: 394 },
+                { t: 3.4,  vw: 465, cy: 388 },
+                { t: 3.7,  vw: 555, cy: 385.5 },
+                { t: 4.0,  vw: 622, cy: 384 }
+            ];
+
+            function getScreenCoords(t) {
+                t = Math.max(0, Math.min(4.0, t));
+                let i = 0;
+                while (i < screenKeyframes.length - 1 && screenKeyframes[i+1].t <= t) i++;
+                if (i >= screenKeyframes.length - 1) {
+                    const last = screenKeyframes[screenKeyframes.length - 1];
+                    const vh = last.vw / 1.611;
+                    return { vx: 960 - (last.vw / 2), vy: last.cy - (vh / 2), vw: last.vw, vh: vh };
+                }
+                const k1 = screenKeyframes[i];
+                const k2 = screenKeyframes[i+1];
+                const factor = (t - k1.t) / (k2.t - k1.t);
+                // Smooth Hermite cubic interpolation between keyframes
+                const s = factor * factor * (3 - 2 * factor);
+                const vw = k1.vw + (k2.vw - k1.vw) * s;
+                const cy = k1.cy + (k2.cy - k1.cy) * s;
+                const vh = vw / 1.611;
+                const vx = 960 - (vw / 2);
+                const vy = cy - (vh / 2);
+                return { vx, vy, vw, vh };
+            }
+
+            // In hero-scrub.mp4 (1920x720), the close-up view of the laptop sitting on the desk is at 4.0s.
+            // Capping at 4.0s ensures the camera stays locked on the PC on the desk and NEVER zooms past it!
+            const zoomEndProgress = 0.45;
+            const maxVideoTime = 4.0;
+            let isTicking = false;
 
             window.addEventListener('DOMContentLoaded', () => {
-                syncDuration();
                 try {
                     video.currentTime = 0.001;
                 } catch(e) {}
+                updateScroll();
             });
 
             function updateScroll() {
@@ -212,9 +589,13 @@
                 const currentScrolled = -rect.top;
                 const progress = Math.max(0, Math.min(1, currentScrolled / totalScrollableDistance));
 
+                // Zoom Phase: from 0.00 to 0.45 (smooth camera travel towards the laptop on the desk)
+                const zoomProgress = Math.min(1, progress / zoomEndProgress);
+                const targetTime = zoomProgress * maxVideoTime;
+
+                // 1. Scrub video up to the close-up laptop frame (t = 4.0s)
+                // Once at 4.0s (progress >= 0.45), the video stays locked at 4.0s!
                 if (video) {
-                    syncDuration();
-                    const targetTime = progress * videoDuration;
                     if (Math.abs(video.currentTime - targetTime) > 0.02) {
                         try {
                             video.currentTime = targetTime;
@@ -222,22 +603,20 @@
                     }
                 }
 
+                // 2. Poster image fade
                 if (imgStart) {
-                    if (progress > 0.03) {
-                        imgStart.style.opacity = '0';
-                    } else {
-                        imgStart.style.opacity = '1';
-                    }
+                    imgStart.style.opacity = progress > 0.02 ? '0' : '1';
                 }
 
-                const textFadeThreshold = 0.22;
+                // 3. Hero content fade & blur exit (0.00 to 0.18)
+                const textFadeThreshold = 0.18;
                 if (heroContent) {
                     if (progress <= textFadeThreshold) {
                         const textProgress = progress / textFadeThreshold;
                         const opacity = Math.max(0, 1 - textProgress);
                         const scale = 1 - (textProgress * 0.08);
-                        const translateY = -textProgress * 50;
-                        const blur = textProgress * 10;
+                        const translateY = -textProgress * 45;
+                        const blur = textProgress * 8;
 
                         heroContent.style.opacity = opacity.toFixed(3);
                         heroContent.style.transform = `translate3d(0, ${translateY}px, 0) scale(${scale.toFixed(3)})`;
@@ -250,6 +629,120 @@
                     }
                 }
 
+                // 4. Laptop Screen Overlay: Tracks the physical laptop display glass frame-by-frame from distance to close-up
+                const cW = window.innerWidth;
+                const cH = window.innerHeight;
+                const vW = 1920;
+                const vH = 720;
+                const vRatio = vW / vH;
+                const cRatio = cW / cH;
+
+                let renderW, renderH, offsetX, offsetY;
+                if (cRatio > vRatio) {
+                    renderW = cW;
+                    renderH = cW / vRatio;
+                    offsetX = 0;
+                    offsetY = (cH - renderH) / 2;
+                } else {
+                    renderH = cH;
+                    renderW = cH * vRatio;
+                    offsetX = (cW - renderW) / 2;
+                    offsetY = 0;
+                }
+
+                // Screen position at current video timestamp targetTime:
+                const box = getScreenCoords(targetTime);
+                const screenX = offsetX + (box.vx / vW) * renderW;
+                const screenY = offsetY + (box.vy / vH) * renderH;
+                const screenW = (box.vw / vW) * renderW;
+                const screenH = (box.vh / vH) * renderH;
+
+                if (laptopOverlay) {
+                    // Smooth fade-in of the HosBank auth mockup as the camera arrives at the laptop (0.32 -> 0.45)
+                    let overlayOpacity = 0;
+                    if (progress >= 0.45) {
+                        overlayOpacity = 1;
+                    } else if (progress >= 0.32) {
+                        const fadeFactor = (progress - 0.32) / (0.45 - 0.32);
+                        overlayOpacity = fadeFactor * fadeFactor * (3 - 2 * fadeFactor);
+                    }
+
+                    if (overlayOpacity > 0.01) {
+                        laptopOverlay.style.display = 'block';
+                        laptopOverlay.style.left = `${screenX.toFixed(1)}px`;
+                        laptopOverlay.style.top = `${screenY.toFixed(1)}px`;
+                        laptopOverlay.style.width = `${screenW.toFixed(1)}px`;
+                        laptopOverlay.style.height = `${screenH.toFixed(1)}px`;
+                        laptopOverlay.style.borderRadius = `${Math.max(2, Math.round(screenW * 0.016))}px`;
+                        laptopOverlay.style.opacity = overlayOpacity.toFixed(3);
+
+                        const scaleFactor = screenW / 800;
+                        if (mockupScaleWrapper) {
+                            mockupScaleWrapper.style.transform = `scale(${scaleFactor.toFixed(4)})`;
+                        }
+
+                        laptopOverlay.style.pointerEvents = progress >= 0.45 ? 'auto' : 'none';
+                    } else {
+                        laptopOverlay.style.display = 'none';
+                        laptopOverlay.style.opacity = '0';
+                        laptopOverlay.style.pointerEvents = 'none';
+                    }
+                }
+
+                // 5. Signature Auth Sliding Animation: Executes INSIDE THE PC SCREEN once arrived (0.45 to 0.95)
+                const animStart = 0.45;
+                const animEnd = 0.95;
+                const authRatio = Math.max(0, Math.min(1, (progress - animStart) / (animEnd - animStart)));
+
+                // Sliding panel coordinates (travel = 360px within 800px width)
+                // authRatio = 0 (Login Mode): Purple at 360px (right), Cream at 0px (left)
+                // authRatio = 1 (Register Mode): Purple at 0px (left), Cream at 440px (right)
+                const purpleX = (1 - authRatio) * 360;
+                const creamX = authRatio * 440;
+
+                if (mockupPurple) {
+                    mockupPurple.style.transform = `translate3d(${purpleX.toFixed(1)}px, 0, 0)`;
+                }
+                if (mockupCream) {
+                    mockupCream.style.transform = `translate3d(${creamX.toFixed(1)}px, 0, 0)`;
+                }
+
+                // Parallax inner shift
+                const innerShift = (1 - authRatio) * 45;
+                if (mockupLogo) mockupLogo.style.transform = `translate3d(${innerShift.toFixed(1)}px, 0, 0)`;
+                if (mockupText) mockupText.style.transform = `translate3d(${innerShift.toFixed(1)}px, 0, 0)`;
+                if (mockupIllustr) mockupIllustr.style.transform = `translate3d(${(innerShift * 0.8).toFixed(1)}px, 0, 0)`;
+
+                // SVGs curve opacity
+                const curveLeftOpacity = Math.max(0, Math.min(1, 1 - authRatio * 2.2));
+                const curveRightOpacity = Math.max(0, Math.min(1, (authRatio - 0.45) * 2.2));
+                if (mockupCurveLeft) mockupCurveLeft.style.opacity = curveLeftOpacity.toFixed(2);
+                if (mockupCurveRight) mockupCurveRight.style.opacity = curveRightOpacity.toFixed(2);
+
+                // Content crossfade (Login vs Register)
+                const loginOpacity = Math.max(0, Math.min(1, (0.52 - authRatio) * 4 + 0.5));
+                const regOpacity = Math.max(0, Math.min(1, (authRatio - 0.48) * 4 + 0.5));
+
+                if (mockupTextLogin) mockupTextLogin.style.opacity = loginOpacity.toFixed(2);
+                if (mockupTextReg) mockupTextReg.style.opacity = regOpacity.toFixed(2);
+                if (mockupIllustrLogin) mockupIllustrLogin.style.opacity = loginOpacity.toFixed(2);
+                if (mockupIllustrReg) mockupIllustrReg.style.opacity = regOpacity.toFixed(2);
+                if (mockupFormLogin) mockupFormLogin.style.opacity = loginOpacity.toFixed(2);
+                if (mockupFormReg) mockupFormReg.style.opacity = regOpacity.toFixed(2);
+
+                // Corner decor radius flip
+                if (mockupCornerDecor) {
+                    if (authRatio < 0.5) {
+                        mockupCornerDecor.style.left = '0';
+                        mockupCornerDecor.style.right = 'auto';
+                        mockupCornerDecor.style.borderRadius = '0 40px 0 0';
+                    } else {
+                        mockupCornerDecor.style.left = 'auto';
+                        mockupCornerDecor.style.right = '0';
+                        mockupCornerDecor.style.borderRadius = '40px 0 0 0';
+                    }
+                }
+
                 isTicking = false;
             }
 
@@ -259,6 +752,13 @@
                     isTicking = true;
                 }
             }, { passive: true });
+
+            window.addEventListener('resize', function() {
+                if (!isTicking) {
+                    window.requestAnimationFrame(updateScroll);
+                    isTicking = true;
+                }
+            });
 
             updateScroll();
         })();

@@ -38,6 +38,7 @@ app.use((req, res, next) => {
     res.locals.admin = req.session ? req.session.admin : null;
     res.locals.advisor = req.session ? req.session.advisor : null;
     res.locals.currentPath = req.path;
+    res.locals.query = req.query;
     next();
 });
 

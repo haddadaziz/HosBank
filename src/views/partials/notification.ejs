@@ -1,0 +1,315 @@
+<%
+    // Harmonisation globale des notifications HosBank
+    let toastNotifications = [];
+
+    const rawSuccess = (typeof success !== 'undefined' && success) ? success : ((typeof query !== 'undefined' && query && query.success) ? query.success : null);
+    const rawSuccessMsg = (typeof successMessage !== 'undefined' && successMessage) ? successMessage : null;
+    const rawMsg = (typeof message !== 'undefined' && message) ? message : ((typeof query !== 'undefined' && query && query.message) ? query.message : null);
+    const rawDeleted = (typeof deleted !== 'undefined' && (deleted === '1' || deleted === 1 || deleted === true)) ? true : ((typeof query !== 'undefined' && query && query.deleted === '1') ? true : false);
+    const rawError = (typeof error !== 'undefined' && error) ? error : ((typeof query !== 'undefined' && query && query.error) ? query.error : null);
+    const rawErrorMsg = (typeof errorMessage !== 'undefined' && errorMessage) ? errorMessage : null;
+
+    if (rawSuccess) {
+        if (rawSuccess === 'opposition') {
+            toastNotifications.push({
+                type: 'success',
+                title: 'Opposition confirmée',
+                message: 'Votre carte bancaire a été définitivement verrouillée pour votre sécurité.'
+            });
+        } else if (rawSuccess === 'virtual_created') {
+            toastNotifications.push({
+                type: 'success',
+                title: 'Carte virtuelle créée',
+                message: 'Votre carte bancaire virtuelle est active et prête pour vos achats en ligne.'
+            });
+        } else if (rawSuccess === 'pin_requested') {
+            toastNotifications.push({
+                type: 'info',
+                title: 'Demande transmise',
+                message: 'Votre demande de renouvellement PIN a été transmise à votre conseiller.'
+            });
+        } else if (rawSuccess === 'transfer_completed') {
+            const amtStr = (typeof amount !== 'undefined' && amount) ? `${Number(amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €` : ((typeof query !== 'undefined' && query && query.amount) ? `${Number(query.amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} €` : '');
+            const destStr = (typeof dest !== 'undefined' && dest) ? dest : ((typeof query !== 'undefined' && query && query.dest) ? query.dest : '');
+            const refStr = (typeof ref !== 'undefined' && ref) ? ` (Réf: ${ref})` : ((typeof query !== 'undefined' && query && query.ref) ? ` (Réf: ${query.ref})` : '');
+            toastNotifications.push({
+                type: 'success',
+                title: 'Virement exécuté avec succès',
+                message: amtStr ? `Virement de ${amtStr} vers ${destStr}${refStr}. Les fonds ont été débités en temps réel.` : 'Votre virement a été exécuté avec succès en temps réel.'
+            });
+        } else if (rawSuccess === 'beneficiary_added') {
+            toastNotifications.push({
+                type: 'success',
+                title: 'Bénéficiaire ajouté',
+                message: 'Le compte a été enregistré avec succès dans votre carnet de bénéficiaires.'
+            });
+        } else {
+            toastNotifications.push({
+                type: 'success',
+                title: 'Opération réussie',
+                message: String(rawSuccess)
+            });
+        }
+    }
+
+    if (rawSuccessMsg) {
+        toastNotifications.push({
+            type: 'success',
+            title: 'Opération réussie',
+            message: String(rawSuccessMsg)
+        });
+    }
+
+    if (rawMsg) {
+        toastNotifications.push({
+            type: 'info',
+            title: 'Information',
+            message: String(rawMsg)
+        });
+    }
+
+    if (rawDeleted) {
+        toastNotifications.push({
+            type: 'info',
+            title: 'Bénéficiaire supprimé',
+            message: 'Le compte a été retiré de votre carnet de bénéficiaires avec succès.'
+        });
+    }
+
+    if (rawError) {
+        toastNotifications.push({
+            type: 'error',
+            title: 'Attention requise',
+            message: String(rawError)
+        });
+    }
+
+    if (rawErrorMsg) {
+        toastNotifications.push({
+            type: 'error',
+            title: 'Attention requise',
+            message: String(rawErrorMsg)
+        });
+    }
+%>
+
+<!-- Conteneur Toast Harmonisé HosBank -->
+<div id="hosbank-toast-container" class="fixed top-5 right-5 sm:right-6 z-[99999] flex flex-col gap-3 max-w-md w-[calc(100%-2.5rem)] pointer-events-none" aria-live="polite">
+    <% toastNotifications.forEach(function(item, idx) { %>
+        <%
+            let borderClass = 'border-emerald-200/90';
+            let badgeBg = 'bg-emerald-500 shadow-emerald-500/20';
+            let titleColor = 'text-emerald-950';
+            let msgColor = 'text-emerald-800/90';
+            let progressBg = 'bg-emerald-500';
+
+            if (item.type === 'error') {
+                borderClass = 'border-rose-200/90';
+                badgeBg = 'bg-rose-500 shadow-rose-500/20';
+                titleColor = 'text-rose-950';
+                msgColor = 'text-rose-800/90';
+                progressBg = 'bg-rose-500';
+            } else if (item.type === 'info') {
+                borderClass = 'border-[#746B92]/30';
+                badgeBg = 'bg-[#746B92] shadow-[#746B92]/20';
+                titleColor = 'text-[#282330]';
+                msgColor = 'text-[#7A6F82]';
+                progressBg = 'bg-[#746B92]';
+            } else if (item.type === 'warning') {
+                borderClass = 'border-amber-200/90';
+                badgeBg = 'bg-amber-500 shadow-amber-500/20';
+                titleColor = 'text-amber-950';
+                msgColor = 'text-amber-800/90';
+                progressBg = 'bg-amber-500';
+            }
+        %>
+        <div class="hosbank-toast pointer-events-auto bg-white/95 backdrop-blur-md border <%= borderClass %> rounded-2xl p-4 shadow-xl shadow-black/8 ring-1 ring-black/5 flex items-start gap-3.5 relative overflow-hidden transition-all duration-300 transform translate-y-0 opacity-100 hover:shadow-2xl" data-autodismiss="5000">
+            <!-- Icône Statut Harmonisée -->
+            <div class="w-9 h-9 rounded-xl <%= badgeBg %> text-white flex items-center justify-center shrink-0 shadow-md">
+                <% if (item.type === 'success') { %>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                    </svg>
+                <% } else if (item.type === 'error') { %>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                <% } else if (item.type === 'warning') { %>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z"/>
+                    </svg>
+                <% } else { %>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                <% } %>
+            </div>
+
+            <!-- Contenu Texte -->
+            <div class="min-w-0 flex-1 pr-1">
+                <h4 class="font-bold text-xs sm:text-sm <%= titleColor %> leading-snug">
+                    <%= item.title %>
+                </h4>
+                <p class="text-xs <%= msgColor %> mt-0.5 leading-relaxed break-words">
+                    <%= item.message %>
+                </p>
+            </div>
+
+            <!-- Bouton de Fermeture -->
+            <button type="button" onclick="dismissHosbankToast(this.closest('.hosbank-toast'))" class="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0 ml-auto cursor-pointer" title="Fermer la notification">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <!-- Barre de Progression Auto-Dismiss -->
+            <div class="toast-progress-bar absolute bottom-0 left-0 right-0 h-1 <%= progressBg %> opacity-40"></div>
+        </div>
+    <% }); %>
+</div>
+
+<style>
+    @keyframes toastProgressAnim {
+        from { width: 100%; }
+        to { width: 0%; }
+    }
+    .toast-progress-bar {
+        animation: toastProgressAnim 5s linear forwards;
+    }
+    .hosbank-toast:hover .toast-progress-bar {
+        animation-play-state: paused;
+    }
+</style>
+
+<script>
+    (function() {
+        // Fonction globale de fermeture avec animation fluide
+        window.dismissHosbankToast = function(toastEl) {
+            if (!toastEl) return;
+            toastEl.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            toastEl.style.opacity = '0';
+            toastEl.style.transform = 'translateY(-12px) scale(0.95)';
+            setTimeout(function() {
+                if (toastEl && toastEl.parentNode) {
+                    toastEl.parentNode.removeChild(toastEl);
+                }
+            }, 320);
+        };
+
+        // Auto-dismiss pour les toasts existants générés par le serveur
+        function initToasts() {
+            const toasts = document.querySelectorAll('.hosbank-toast');
+            toasts.forEach(function(toast) {
+                let dismissTimer;
+                const startTimer = function() {
+                    dismissTimer = setTimeout(function() {
+                        window.dismissHosbankToast(toast);
+                    }, 5000);
+                };
+
+                startTimer();
+
+                toast.addEventListener('mouseenter', function() {
+                    clearTimeout(dismissTimer);
+                });
+                toast.addEventListener('mouseleave', function() {
+                    startTimer();
+                });
+            });
+        }
+
+        // Fonction globale pour déclencher une notification toast dynamiquement en JS
+        window.showToast = function(options) {
+            const type = options.type || 'info';
+            const title = options.title || (type === 'success' ? 'Opération réussie' : (type === 'error' ? 'Attention requise' : 'Notification'));
+            const message = options.message || '';
+            const duration = options.duration || 5000;
+
+            let container = document.getElementById('hosbank-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'hosbank-toast-container';
+                container.className = 'fixed top-5 right-5 sm:right-6 z-[99999] flex flex-col gap-3 max-w-md w-[calc(100%-2.5rem)] pointer-events-none';
+                document.body.appendChild(container);
+            }
+
+            let borderClass = 'border-emerald-200/90';
+            let badgeBg = 'bg-emerald-500 shadow-emerald-500/20';
+            let titleColor = 'text-emerald-950';
+            let msgColor = 'text-emerald-800/90';
+            let progressBg = 'bg-emerald-500';
+            let iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+
+            if (type === 'error') {
+                borderClass = 'border-rose-200/90';
+                badgeBg = 'bg-rose-500 shadow-rose-500/20';
+                titleColor = 'text-rose-950';
+                msgColor = 'text-rose-800/90';
+                progressBg = 'bg-rose-500';
+                iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>';
+            } else if (type === 'warning') {
+                borderClass = 'border-amber-200/90';
+                badgeBg = 'bg-amber-500 shadow-amber-500/20';
+                titleColor = 'text-amber-950';
+                msgColor = 'text-amber-800/90';
+                progressBg = 'bg-amber-500';
+                iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v2m0 4h.01M12 4a8 8 0 100 16 8 8 0 000-16z"/></svg>';
+            } else if (type === 'info') {
+                borderClass = 'border-[#746B92]/30';
+                badgeBg = 'bg-[#746B92] shadow-[#746B92]/20';
+                titleColor = 'text-[#282330]';
+                msgColor = 'text-[#7A6F82]';
+                progressBg = 'bg-[#746B92]';
+                iconSvg = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'hosbank-toast pointer-events-auto bg-white/95 backdrop-blur-md border ' + borderClass + ' rounded-2xl p-4 shadow-xl shadow-black/8 ring-1 ring-black/5 flex items-start gap-3.5 relative overflow-hidden transition-all duration-300 transform -translate-y-4 opacity-0 hover:shadow-2xl';
+            toast.innerHTML = `
+                <div class="w-9 h-9 rounded-xl ${badgeBg} text-white flex items-center justify-center shrink-0 shadow-md">
+                    ${iconSvg}
+                </div>
+                <div class="min-w-0 flex-1 pr-1">
+                    <h4 class="font-bold text-xs sm:text-sm ${titleColor} leading-snug">${title}</h4>
+                    <p class="text-xs ${msgColor} mt-0.5 leading-relaxed break-words">${message}</p>
+                </div>
+                <button type="button" onclick="dismissHosbankToast(this.closest('.hosbank-toast'))" class="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0 ml-auto cursor-pointer" title="Fermer la notification">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                <div class="toast-progress-bar absolute bottom-0 left-0 right-0 h-1 ${progressBg} opacity-40"></div>
+            `;
+
+            container.appendChild(toast);
+
+            // Déclencher l'animation d'entrée
+            requestAnimationFrame(function() {
+                toast.classList.remove('-translate-y-4', 'opacity-0');
+                toast.classList.add('translate-y-0', 'opacity-100');
+            });
+
+            let dismissTimer;
+            const startTimer = function() {
+                dismissTimer = setTimeout(function() {
+                    window.dismissHosbankToast(toast);
+                }, duration);
+            };
+
+            startTimer();
+
+            toast.addEventListener('mouseenter', function() {
+                clearTimeout(dismissTimer);
+            });
+            toast.addEventListener('mouseleave', function() {
+                startTimer();
+            });
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initToasts);
+        } else {
+            initToasts();
+        }
+    })();
+</script>

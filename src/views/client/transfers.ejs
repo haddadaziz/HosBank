@@ -47,50 +47,9 @@
     <%- include('../partials/sidebar', { role: 'client', currentPath: '/client/transfers', user: user }) %>
 
     <!-- Zone principale -->
-    <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 max-w-[1400px] w-full min-w-0 transition-all">
-
-        <!-- Mobile Top Bar (< lg screens) -->
-        <div class="lg:hidden flex items-center justify-between bg-white border border-gray-200/80 px-4 py-3 mb-6 rounded-2xl shadow-sm">
-            <button type="button" class="mobile-menu-toggle p-2 text-hos-dark hover:bg-gray-100 rounded-xl" id="mobileMenuToggle" aria-label="Menu de navigation">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-            </button>
-            <div class="flex items-center gap-2">
-                <img src="/images/logo-white.svg" alt="HosBank" class="h-6 w-auto" style="filter: brightness(0) saturate(100%) invert(14%) sepia(18%) saturate(1450%) hue-rotate(217deg) brightness(93%) contrast(92%);">
-            </div>
-            <div class="w-8 h-8 rounded-full bg-hos-dark text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                <%= (user && user.name) ? user.name.split(' ').map(n=>n[0]).join('') : 'CL' %>
-            </div>
-        </div>
     <main class="ml-0 lg:ml-[275px] flex-1 p-4 sm:p-6 lg:p-10 lg:pt-10 max-w-[1400px] w-full min-w-0 transition-all">
         
-        <!-- En-tête de page -->
-        <!-- Bannières de Feedback Utilisateur -->
-        <% if (success === 'transfer_completed') { %>
-            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center gap-3 shadow-sm animate-fade-in">
-                <span class="text-xl">✅</span>
-                <div>
-                    <span class="block text-emerald-900">Virement de <%= amount ? Number(amount).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '' %> € exécuté avec succès !</span>
-                    <span class="text-xs font-normal text-emerald-700">
-                        Destinataire : <strong><%= dest %></strong> &bull; Référence SEPA : <strong class="font-mono"><%= ref %></strong>. Les fonds ont été débités en temps réel.
-                    </span>
-                </div>
-            </div>
-        <% } else if (success === 'beneficiary_added') { %>
-            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-bold flex items-center gap-3 shadow-sm animate-fade-in">
-                <span class="text-xl">✨</span>
-                <div>
-                    <span class="block text-emerald-900">Nouveau bénéficiaire enregistré !</span>
-                    <span class="text-xs font-normal text-emerald-700">Vous pouvez désormais émettre des virements immédiats vers ce compte.</span>
-                </div>
-            </div>
-        <% } else if (error) { %>
-            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm font-bold flex items-center gap-3 shadow-sm animate-fade-in">
-                <span class="text-xl">⚠️</span>
-                <span><%= error %></span>
-            </div>
-        <% } %>
+
 
         <!-- En-tête -->
         <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -112,30 +71,7 @@
             </button>
         </header>
 
-        <!-- Messages Flash / Feedback -->
-        <% if (typeof successMessage !== 'undefined' && successMessage) { %>
-            <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-sm font-semibold flex items-center justify-between shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    </div>
-                    <span><%= successMessage %></span>
-                </div>
-                <a href="/client/transfers" class="text-emerald-700 hover:text-emerald-900 text-lg font-bold p-1 leading-none">&times;</a>
-            </div>
-        <% } %>
 
-        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
-            <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-800 text-sm font-semibold flex items-center justify-between shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="12" stroke-width="2"/><line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2"/></svg>
-                    </div>
-                    <span><%= errorMessage %></span>
-                </div>
-                <a href="/client/transfers" class="text-rose-700 hover:text-rose-900 text-lg font-bold p-1 leading-none">&times;</a>
-            </div>
-        <% } %>
 
         <!-- Grille Principale 2 Colonnes -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -754,7 +690,6 @@
         });
     });
 </script>
-    <script src="/js/admin.js"></script>
 <script>
     function updateSourceAccountDisplay() {
         const select = document.getElementById('sourceAccountSelect');
