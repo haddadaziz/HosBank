@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 // =========================================================================
-// REPOSITORY : GESTION DES CARTES BANCAIRES (STYLE DÉVELOPPEUR JUNIOR)
+// REPOSITORY : GESTION DES CARTES BANCAIRES
 // =========================================================================
 const cardRepository = {
 
@@ -35,13 +35,13 @@ const cardRepository = {
 
         const parametres = [];
 
-        // Filtre par type de carte (Critère 2 : PHYSIQUE ou VIRTUELLE)
+        // Filtre par type de carte
         if (typeFilter && typeFilter !== "ALL") {
             parametres.push(typeFilter);
             sql += ` AND cb.type_carte = $${parametres.length}`;
         }
 
-        // Filtre par statut (Critère 1 : ACTIVE, BLOQUEE_TEMPORAIREMENT, OPPOSEE)
+        // Filtre par statut
         if (statusFilter && statusFilter !== "ALL") {
             parametres.push(statusFilter);
             sql += ` AND cb.statut = $${parametres.length}`;

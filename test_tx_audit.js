@@ -16,12 +16,12 @@ async function testTransactions() {
       txRes.on('end', () => {
         console.log('--- TEST TRANSACTIONS PAGE ---');
         console.log('Status:', txRes.statusCode);
-        console.log('Critère 1 - Émetteur présent:', data.includes('Alexandre Moreau'));
-        console.log('Critère 1 - Destinataire présent:', data.includes('Bénéficiaire') || data.includes('recipient'));
-        console.log('Critère 1 - Horodatage présent:', data.includes('Horodatage') || data.includes('2026-09'));
-        console.log('Critère 2 - Filtre Montant présent:', data.includes('minAmount') && data.includes('maxAmount'));
-        console.log('Critère 2 - Filtre Date présent:', data.includes('dateStart') && data.includes('dateEnd'));
-        console.log('Critère 2 - Filtre Comptes présent:', data.includes('name="q"'));
+        console.log('Test - Émetteur présent:', data.includes('Alexandre Moreau'));
+        console.log('Test - Destinataire présent:', data.includes('Bénéficiaire') || data.includes('recipient'));
+        console.log('Test - Horodatage présent:', data.includes('Horodatage') || data.includes('2026-09'));
+        console.log('Test - Filtre Montant présent:', data.includes('minAmount') && data.includes('maxAmount'));
+        console.log('Test - Filtre Date présent:', data.includes('dateStart') && data.includes('dateEnd'));
+        console.log('Test - Filtre Comptes présent:', data.includes('name="q"'));
 
         // Test 2: Export CSV
         http.get('http://localhost:3000/admin/transactions/export', { headers: { 'Cookie': cookie } }, exportRes => {
@@ -29,11 +29,11 @@ async function testTransactions() {
           exportRes.on('data', c => csv += c);
           exportRes.on('end', () => {
             console.log('\n--- TEST EXPORT CSV ---');
-            console.log('Critère 3 - Export Status:', exportRes.statusCode);
-            console.log('Critère 3 - Content-Type:', exportRes.headers['content-type']);
-            console.log('Critère 3 - Content-Disposition:', exportRes.headers['content-disposition']);
-            console.log('Critère 3 - CSV Headers:', csv.includes('Reference SEPA;Date et Heure;Emetteur'));
-            console.log('Critère 3 - CSV Data:', csv.includes('VIR-SEPA-2026-001'));
+            console.log('Export Status:', exportRes.statusCode);
+            console.log('Content-Type:', exportRes.headers['content-type']);
+            console.log('Content-Disposition:', exportRes.headers['content-disposition']);
+            console.log('CSV Headers:', csv.includes('Reference SEPA;Date et Heure;Emetteur'));
+            console.log('CSV Data:', csv.includes('VIR-SEPA-2026-001'));
           });
         });
       });

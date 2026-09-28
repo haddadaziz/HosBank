@@ -188,7 +188,7 @@
                     <p class="page-subtitle">Journal d'audit centralisé de tous les virements, détection des anomalies et archivage réglementaire</p>
                 </div>
 
-                <!-- Bouton Exportation CSV (Critère 3) -->
+                <!-- Bouton Exportation CSV -->
                 <div>
                     <a 
                         href="/admin/transactions/export?q=<%= encodeURIComponent(filters.searchQuery || '') %>&minAmount=<%= encodeURIComponent(filters.minAmount || '') %>&maxAmount=<%= encodeURIComponent(filters.maxAmount || '') %>&dateStart=<%= encodeURIComponent(filters.dateStart || '') %>&dateEnd=<%= encodeURIComponent(filters.dateEnd || '') %>" 
@@ -233,7 +233,7 @@
                 </div>
             </div>
 
-            <!-- Formulaire de filtres par montant, date et comptes (Critère 2) -->
+            <!-- Formulaire de filtres par montant, date et comptes -->
             <div class="card" style="margin-bottom: 24px;">
                 <div class="card-header" style="border-bottom: 1px solid var(--border-ui, #EFECE6); padding: 14px 20px;">
                     <span class="card-title" style="font-size: 0.95rem;">Filtres de Contrôle Financier</span>

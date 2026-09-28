@@ -79,7 +79,7 @@ const hasActiveFilters = !!((filters.direction && filters.direction !== 'ALL') |
             </div>
         </header>
 
-        <!-- Cartes récapitulatives de la sélection (Statistiques HOS-28) -->
+        <!-- Cartes récapitulatives de la sélection (Statistiques) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                 <div class="flex items-center justify-between">
@@ -103,7 +103,7 @@ const hasActiveFilters = !!((filters.direction && filters.direction !== 'ALL') |
 
         </div>
 
-        <!-- Formulaire de recherche et filtre par date (HOS-28) -->
+        <!-- Formulaire de recherche et filtre par date -->
         <form method="GET" action="/client/transactions" class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm mb-6">
             <% if (filters.direction && filters.direction !== 'ALL') { %>
                 <input type="hidden" name="direction" value="<%= filters.direction %>">
@@ -244,7 +244,7 @@ const hasActiveFilters = !!((filters.direction && filters.direction !== 'ALL') |
             <% } %>
         </div>
 
-        <!-- Pagination Dynamique (HOS-27) -->
+        <!-- Pagination Dynamique -->
         <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
             <div>
                 <% if (pagination.totalCount > 0) { %>

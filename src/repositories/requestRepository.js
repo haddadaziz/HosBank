@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 // =========================================================================
-// REPOSITORY : DEMANDES ET RÉCLAMATIONS (CODE DÉVELOPPEUR JUNIOR)
+// REPOSITORY : DEMANDES ET RÉCLAMATIONS
 // =========================================================================
 const requestRepository = {
 

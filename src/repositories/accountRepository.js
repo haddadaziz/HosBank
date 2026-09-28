@@ -24,7 +24,7 @@ const accountRepository = {
         `;
         const result = await db.query(query);
 
-        // Transformation simple et lisible en JavaScript (Style Développeur Junior)
+        // Transformation simple et lisible en JavaScript
         const accounts = [];
         for (let i = 0; i < result.rows.length; i++) {
             const row = result.rows[i];
@@ -70,13 +70,13 @@ const accountRepository = {
 
     // Activer ou bloquer un compte bancaire
     async toggleAccountStatus(accountId) {
-        // Étape 1 : Récupérer le compte
+        // Récupérer le compte
         const account = await this.findById(accountId);
         if (!account) {
             return null;
         }
 
-        // Étape 2 : Inverser le statut (si ACTIF on bloque, sinon on active)
+        // Inverser le statut (si ACTIF on bloque, sinon on active)
         let newStatus = "ACTIF";
         if (account.statut === "ACTIF") {
             newStatus = "BLOQUE";
@@ -84,7 +84,7 @@ const accountRepository = {
             newStatus = "ACTIF";
         }
 
-        // Étape 3 : Mettre à jour dans la base de données
+        // Mettre à jour dans la base de données
         const query = `
             UPDATE comptes_bancaires
             SET statut = $1
@@ -97,7 +97,7 @@ const accountRepository = {
 
     // Activer ou bloquer la carte bancaire
     async toggleCardStatus(accountId) {
-        // Étape 1 : Récupérer la carte du compte
+        // Récupérer la carte du compte
         const cardQuery = "SELECT * FROM cartes_bancaires WHERE compte_id = $1 LIMIT 1";
         const cardResult = await db.query(cardQuery, [accountId]);
         const card = cardResult.rows[0];
@@ -106,7 +106,7 @@ const accountRepository = {
             return null;
         }
 
-        // Étape 2 : Inverser le statut de la carte
+        // Inverser le statut de la carte
         let newStatus = "ACTIVE";
         if (card.statut === "ACTIVE") {
             newStatus = "BLOQUEE_TEMPORAIREMENT";
@@ -114,7 +114,7 @@ const accountRepository = {
             newStatus = "ACTIVE";
         }
 
-        // Étape 3 : Sauvegarder le nouveau statut
+        // Sauvegarder le nouveau statut
         const updateQuery = `
             UPDATE cartes_bancaires
             SET statut = $1

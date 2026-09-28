@@ -67,14 +67,14 @@ class ClientService {
         return iban.replace(/\s+/g, "").toUpperCase().replace(/(.{4})/g, "$1 ").trim();
     }
 
-    // Récupérer la liste des bénéficiaires du client (style développeur junior)
+    // Récupérer la liste des bénéficiaires du client
     async getBeneficiaries(userId) {
         const liste = await beneficiaryRepo.findByUserId(userId);
         return liste;
     }
 
     /**
-     * Ajoute un nouveau bénéficiaire avec validation stricte (style développeur junior)
+     * Ajoute un nouveau bénéficiaire avec validation stricte
      */
     async addBeneficiary(userId, data) {
         var intitule = data.intitule;
@@ -117,7 +117,7 @@ class ClientService {
         });
     }
 
-    // Supprimer un bénéficiaire du carnet d'un client (style développeur junior)
+    // Supprimer un bénéficiaire du carnet d'un client
     async deleteBeneficiary(id, userId) {
         // On appelle le repository pour exécuter la suppression SQL
         const resultat = await beneficiaryRepo.delete(id, userId);
@@ -144,7 +144,7 @@ class ClientService {
         return rows;
     }
 
-    // Exécuter un virement bancaire sécurisé avec contrôle strict des règles métier (style junior)
+    // Exécuter un virement bancaire sécurisé avec contrôle strict des règles métier
     async executeTransfer(userId, data) {
         var sourceAccountId = data.sourceAccountId;
         var beneficiaryId = data.beneficiaryId;
@@ -544,9 +544,9 @@ class ClientService {
         return result.rows;
     }
 
-    // 2. Récupérer les données du tableau de bord client (optimisé et style junior clair)
+    // 2. Récupérer les données du tableau de bord client 
     async getDashboardData(userId = 3) {
-        // Étape 1 : Récupérer en parallèle les comptes actifs et le conseiller
+        // Récupérer en parallèle les comptes actifs et le conseiller
         const [accounts, advisor] = await Promise.all([
             this.getUserAccounts(userId),
             this.getUserAdvisor(userId)
@@ -555,7 +555,7 @@ class ClientService {
         let cards = [];
         let transactions = [];
 
-        // Étape 2 : Si le client possède des comptes bancaires
+        // Si le client possède des comptes bancaires
         if (accounts.length > 0) {
             // Récupérer la liste des IDs de comptes
             const accountIds = [];
@@ -637,7 +637,7 @@ class ClientService {
         };
     }
 
-    // Récupérer le conseiller bancaire rattaché à un client (style junior)
+    // Récupérer le conseiller bancaire rattaché à un client
     async getUserAdvisor(userId) {
         const advisorQuery = `
             SELECT 

@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 // =========================================================================
-// REPOSITORY : JOURNAL D'AUDIT (CODE DÉVELOPPEUR JUNIOR)
+// REPOSITORY : JOURNAL D'AUDIT
 // =========================================================================
 const auditRepository = {
 
@@ -22,7 +22,7 @@ const auditRepository = {
 
         const result = await db.query(query, [limit]);
 
-        // Transformation simple en JavaScript (Style Junior)
+        // Transformation simple en JavaScript
         const logs = [];
         for (let i = 0; i < result.rows.length; i++) {
             const row = result.rows[i];

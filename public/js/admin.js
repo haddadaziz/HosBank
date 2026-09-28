@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }, true);
 
-    // 4. Interception des sélecteurs de confirmation de rôle [data-confirm-change] (style junior)
+    // 4. Interception des sélecteurs de confirmation de rôle [data-confirm-change]
     document.addEventListener("focusin", function (e) {
         var select = e.target.closest(".hos-confirm-select, [data-confirm-change]");
         if (select) {
@@ -306,13 +306,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // 5. GESTION DU MENU MOBILE (DRAWER) - CODE JUNIOR CLAIR ET COMMENTÉ
     // =========================================================================
 
-    // Étape 1 : Récupérer les éléments du DOM
+    // Récupérer les éléments du DOM
     const boutonMenuMobile = document.getElementById("mobileMenuToggle");
     const sidebar = document.querySelector(".admin-sidebar");
     const boutonFermer = document.getElementById("sidebarMobileClose");
     let voileFond = document.getElementById("sidebarMobileOverlay");
 
-    // Étape 2 : Créer le fond semi-transparent s'il n'existe pas encore
+    // Créer le fond semi-transparent s'il n'existe pas encore
     if (!voileFond) {
         voileFond = document.createElement("div");
         voileFond.id = "sidebarMobileOverlay";
@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(voileFond);
     }
 
-    // Étape 3 : Fonction simple pour ouvrir le menu
+    // Fonction simple pour ouvrir le menu
     function ouvrirMenu() {
         if (sidebar) {
             sidebar.classList.add("mobile-open");
@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "hidden";
     }
 
-    // Étape 4 : Fonction simple pour fermer le menu
+    // Fonction simple pour fermer le menu
     function fermerMenu() {
         if (sidebar) {
             sidebar.classList.remove("mobile-open");
@@ -344,7 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = "";
     }
 
-    // Étape 5 : Écouteurs d'événements (clic sur le bouton, la croix ou le fond)
+    // Écouteurs d'événements (clic sur le bouton, la croix ou le fond)
     if (boutonMenuMobile) {
         boutonMenuMobile.addEventListener("click", function(event) {
             event.stopPropagation();
@@ -360,7 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
         voileFond.addEventListener("click", fermerMenu);
     }
 
-    // Étape 6 : Fermer le menu automatiquement quand l'utilisateur clique sur un lien de navigation
+    // Fermer le menu automatiquement quand l'utilisateur clique sur un lien de navigation
     const liensMenu = document.querySelectorAll(".sidebar-nav .nav-item");
     liensMenu.forEach(function(lien) {
         lien.addEventListener("click", function() {

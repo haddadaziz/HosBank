@@ -1,16 +1,16 @@
 const clientService = require("../services/clientService");
 
-// 1. Afficher le tableau de bord client (comptes, cartes, mouvements) - Style Développeur Junior
+// 1. Afficher le tableau de bord client (comptes, cartes, mouvements)
 exports.getDashboard = async (req, res) => {
     try {
         const rawId = req.session?.user?.id;
         const isClient = req.session?.user?.role === 'CLIENT';
         const userId = (isClient && !isNaN(rawId) && parseInt(rawId, 10)) ? parseInt(rawId, 10) : (req.session?.user?.id || 3);
 
-        // Étape 2 : Récupérer les données du client via le service
+        // Récupérer les données du client via le service
         const data = await clientService.getDashboardData(userId);
 
-        // Étape 3 : Rendre la page avec toutes les informations
+        // Rendre la page avec toutes les informations
         res.render("client/dashboard", {
             title: "Tableau de bord | HosBank",
             user: req.session && req.session.user ? req.session.user : { name: "Alexandre Moreau", avatar: "AM" },
@@ -30,7 +30,7 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-// 2. Afficher la page des virements et des bénéficiaires (style développeur junior)
+// 2. Afficher la page des virements et des bénéficiaires
 exports.getTransfers = async (req, res) => {
     try {
         // Récupérer les comptes et bénéficiaires du client
@@ -41,7 +41,7 @@ exports.getTransfers = async (req, res) => {
             clientService.getBeneficiaries(userId)
         ]);
 
-        // Étape 3 : Gérer les messages de succès
+        // Gérer les messages de succès
         var successMessage = null;
         if (req.query.success) {
             successMessage = "Bénéficiaire enregistré avec succès !";
@@ -49,13 +49,13 @@ exports.getTransfers = async (req, res) => {
             successMessage = "Bénéficiaire supprimé de votre carnet avec succès.";
         }
 
-        // Étape 4 : Gérer le message d'erreur éventuel
+        // Gérer le message d'erreur éventuel
         var errorMessage = null;
         if (req.query.error) {
             errorMessage = decodeURIComponent(req.query.error);
         }
 
-        // Étape 5 : Rendre la vue des virements
+        // Rendre la vue des virements
         var userSession = req.session && req.session.user ? req.session.user : { name: "Alexandre Moreau", avatar: "AM" };
 
         res.render("client/transfers", {
@@ -81,25 +81,25 @@ exports.getTransfers = async (req, res) => {
 // 3. Ajouter un nouveau bénéficiaire avec validation stricte
 exports.postAddBeneficiary = async (req, res) => {
     try {
-        // Etape 1 : Recuperer l'identifiant du client connecte
+        // Recuperer l'identifiant du client connecte
         let utilisateurId = 3;
         if (req.session && req.session.user && req.session.user.id) {
             utilisateurId = parseInt(req.session.user.id, 10);
         }
 
-        // Etape 2 : Recuperer les donnees du formulaire
+        // Recuperer les donnees du formulaire
         const intitule = req.body.intitule;
         const iban = req.body.iban;
         const bic = req.body.bic;
 
-        // Etape 3 : Creer le beneficiaire via le service
+        // Creer le beneficiaire via le service
         const nouveauBeneficiaire = await clientService.addBeneficiary(utilisateurId, {
             intitule: intitule,
             iban: iban,
             bic: bic
         });
 
-        // Etape 4 : Repondre en JSON si requete AJAX, sinon rediriger avec message de succes
+        // Repondre en JSON si requete AJAX, sinon rediriger avec message de succes
         const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes("json"));
         if (isAjax) {
             return res.json({
@@ -125,22 +125,22 @@ exports.postAddBeneficiary = async (req, res) => {
     }
 };
 
-// 4. Supprimer un bénéficiaire du carnet (style développeur junior)
+// 4. Supprimer un bénéficiaire du carnet
 exports.postDeleteBeneficiary = async (req, res) => {
     try {
-        // Étape 1 : Récupérer l'identifiant du client connecté
+        // Récupérer l'identifiant du client connecté
         var userId = 3;
         if (req.session && req.session.user && req.session.user.id) {
             userId = parseInt(req.session.user.id, 10);
         }
 
-        // Étape 2 : Récupérer l'identifiant du bénéficiaire
+        // Récupérer l'identifiant du bénéficiaire
         var id = req.params.id;
 
-        // Étape 3 : Demander au service de supprimer le bénéficiaire
+        // Demander au service de supprimer le bénéficiaire
         await clientService.deleteBeneficiary(id, userId);
 
-        // Étape 4 : Rediriger avec l'indicateur de suppression réussie
+        // Rediriger avec l'indicateur de suppression réussie
         return res.redirect("/client/transfers?deleted=1");
     } catch (error) {
         console.warn("Erreur suppression bénéficiaire :", error.message);
@@ -148,28 +148,28 @@ exports.postDeleteBeneficiary = async (req, res) => {
     }
 };
 
-// 5. Exécuter un virement bancaire sécurisé (style développeur junior)
+// 5. Exécuter un virement bancaire sécurisé
 exports.postTransfer = async (req, res) => {
     try {
-        // Étape 1 : Récupérer l'identifiant du client connecté
+        // Récupérer l'identifiant du client connecté
         var userId = 3;
         if (req.session && req.session.user && req.session.user.id) {
             userId = parseInt(req.session.user.id, 10);
         }
 
-        // Étape 2 : Récupérer les données du formulaire
+        // Récupérer les données du formulaire
         var sourceAccountId = req.body.sourceAccountId;
         var beneficiaryId = req.body.beneficiaryId;
         var amount = req.body.amount;
         var motif = req.body.motif;
 
-        // Étape 3 : Contrôler la présence des champs indispensables
+        // Contrôler la présence des champs indispensables
         if (!sourceAccountId || !beneficiaryId || !amount) {
             var msgErreur = "Veuillez sélectionner un compte émetteur, un destinataire et renseigner un montant valide.";
             return res.redirect("/client/transfers?error=" + encodeURIComponent(msgErreur));
         }
 
-        // Étape 4 : Exécuter le virement via le service métier (transaction atomique)
+        // Exécuter le virement via le service métier (transaction atomique)
         var resultat = await clientService.executeTransfer(userId, {
             sourceAccountId: parseInt(sourceAccountId, 10),
             beneficiaryId: parseInt(beneficiaryId, 10),
@@ -177,7 +177,7 @@ exports.postTransfer = async (req, res) => {
             motif: motif
         });
 
-        // Étape 5 : Rediriger avec les informations de confirmation
+        // Rediriger avec les informations de confirmation
         var urlSucces = "/client/transfers?success=transfer_completed" +
             "&ref=" + encodeURIComponent(resultat.reference) +
             "&amount=" + encodeURIComponent(resultat.amount.toFixed(2)) +

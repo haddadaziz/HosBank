@@ -44,16 +44,16 @@ const adminController = {
         }
     },
 
-    // Afficher le tableau de bord des statistiques globales (style développeur junior)
+    // Afficher le tableau de bord des statistiques globales
     getDashboard: async (req, res) => {
         try {
-            // Étape 1 : Récupérer toutes les statistiques globales (KPIs, transactions récentes, clients récents)
+            // Récupérer toutes les statistiques globales (KPIs, transactions récentes, clients récents)
             const stats = await adminService.getDashboardStats();
 
-            // Étape 2 : Récupérer la session de l'administrateur
+            // Récupérer la session de l'administrateur
             const admin = req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" };
 
-            // Étape 3 : Rendre la vue du tableau de bord
+            // Rendre la vue du tableau de bord
             res.render("admin/dashboard", {
                 currentPath: "/admin/dashboard",
                 admin: admin,
@@ -175,7 +175,7 @@ const adminController = {
             const id = req.params.id;
             const role = req.body.role;
 
-            // Liste des 3 rôles autorisés par le cahier des charges
+            // Liste des 3 rôles autorisés
             const rolesAutorises = ["CLIENT", "CHARGE_CLIENT", "ADMINISTRATEUR"];
 
             // Vérifier que le rôle envoyé fait partie des rôles autorisés
@@ -211,10 +211,10 @@ const adminController = {
                 advisorId = parseInt(advisorIdInput, 10);
             }
 
-            // Étape 1 : Mettre à jour l'affectation en base de données
+            // Mettre à jour l'affectation en base de données
             await adminService.assignClientAdvisor(clientId, advisorId);
 
-            // Étape 2 : Enregistrer l'opération dans le journal d'audit
+            // Enregistrer l'opération dans le journal d'audit
             const adminEmail = (req.session && req.session.admin) ? req.session.admin.email : "Admin";
             var nomConseiller = advisorId ? ("#" + advisorId) : "aucun";
             await adminService.logAction(
@@ -253,22 +253,22 @@ const adminController = {
         return res.redirect("/admin/clients");
     },
 
-    // 5. Supervision de la charge et réactivité des conseillers (style développeur junior)
+    // 5. Supervision de la charge et réactivité des conseillers
     getAdvisorsWorkload: async (req, res) => {
         try {
-            // Étape 1 : Récupérer l'identifiant du conseiller filtré si sélectionné
+            // Récupérer l'identifiant du conseiller filtré si sélectionné
             let advisorId = null;
             if (req.query.advisorId) {
                 advisorId = parseInt(req.query.advisorId, 10);
             }
 
-            // Étape 2 : Récupérer les métriques de supervision via le service
+            // Récupérer les métriques de supervision via le service
             const supervisionData = await adminService.getAdvisorsSupervision(advisorId);
 
-            // Étape 3 : Récupérer l'administrateur connecté
+            // Récupérer l'administrateur connecté
             const admin = req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" };
 
-            // Étape 4 : Gérer les messages de succès ou d'erreur
+            // Gérer les messages de succès ou d'erreur
             let successMessage = null;
             if (req.query.success) {
                 successMessage = decodeURIComponent(req.query.success);
@@ -279,7 +279,7 @@ const adminController = {
                 errorMessage = decodeURIComponent(req.query.error);
             }
 
-            // Étape 5 : Afficher la vue de supervision
+            // Afficher la vue de supervision
             res.render("admin/advisors_workload", {
                 currentPath: "/admin/advisors-workload",
                 admin: admin,
@@ -297,10 +297,10 @@ const adminController = {
         }
     },
 
-    // Envoyer une relance à un conseiller pour un dossier en retard (style développeur junior)
+    // Envoyer une relance à un conseiller pour un dossier en retard
     postSendReminder: async (req, res) => {
         try {
-            // Étape 1 : Récupérer les données de la relance
+            // Récupérer les données de la relance
             const advisorId = req.params.id;
             const requestId = req.body.requestId;
             const requestType = req.body.requestType;
@@ -310,7 +310,7 @@ const adminController = {
             const adminUser = req.session && req.session.admin ? req.session.admin.email : "Admin";
             const ip = req.ip || "127.0.0.1";
 
-            // Étape 2 : Enregistrer la relance et tracer dans le journal d'audit
+            // Enregistrer la relance et tracer dans le journal d'audit
             const result = await adminService.sendAdvisorReminder(
                 advisorId, 
                 { requestId, requestType, reference, message }, 
@@ -318,7 +318,7 @@ const adminController = {
                 ip
             );
 
-            // Étape 3 : Répondre en JSON si la requête est faite en AJAX
+            // Répondre en JSON si la requête est faite en AJAX
             const isAjax = req.xhr || (req.headers.accept && req.headers.accept.includes("json"));
             if (isAjax) {
                 return res.json({ success: true, message: result.message });
@@ -335,13 +335,13 @@ const adminController = {
     // 6. Supervision et gestion de l'ensemble des comptes bancaires
     getAccounts: async (req, res) => {
         try {
-            // Etape 1 : Recuperer le type de filtre dans l'URL (ALL, COURANT, EPARGNE ou OVERDRAWN)
+            // Recuperer le type de filtre dans l'URL (ALL, COURANT, EPARGNE ou OVERDRAWN)
             const filtreType = req.query.type || "ALL";
 
-            // Etape 2 : Recuperer la liste des comptes filtres et les statistiques
+            // Recuperer la liste des comptes filtres et les statistiques
             const resultat = await adminService.getAccounts(filtreType);
 
-            // Etape 3 : Afficher la page EJS avec les comptes
+            // Afficher la page EJS avec les comptes
             const adminConnecte = req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" };
 
             return res.render("admin/accounts", {
@@ -361,7 +361,7 @@ const adminController = {
     // 7. Audit centralise de l'ensemble des virements et flux financiers
     getTransactions: async (req, res) => {
         try {
-            // Etape 1 : Recuperer les filtres saisis par l'administrateur
+            // Recuperer les filtres saisis par l'administrateur
             const filtres = {
                 searchQuery: req.query.q || "",
                 minAmount: req.query.minAmount || "",
@@ -370,10 +370,10 @@ const adminController = {
                 dateEnd: req.query.dateEnd || ""
             };
 
-            // Etape 2 : Recuperer les transactions et les KPI via le service
+            // Recuperer les transactions et les KPI via le service
             const resultat = await adminService.getTransactionsAudit(filtres);
 
-            // Etape 3 : Afficher la page EJS avec les donnees
+            // Afficher la page EJS avec les donnees
             const adminConnecte = req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" };
 
             return res.render("admin/transactions", {
@@ -390,10 +390,10 @@ const adminController = {
         }
     },
 
-    // 8. Exportation des flux financiers au format CSV (Critere 3)
+    // 8. Exportation des flux financiers au format CSV
     exportTransactionsCsv: async (req, res) => {
         try {
-            // Etape 1 : Recuperer les filtres actifs
+            // Recuperer les filtres actifs
             const filtres = {
                 searchQuery: req.query.q || "",
                 minAmount: req.query.minAmount || "",
@@ -402,16 +402,16 @@ const adminController = {
                 dateEnd: req.query.dateEnd || ""
             };
 
-            // Etape 2 : Generer le contenu texte du fichier CSV
+            // Generer le contenu texte du fichier CSV
             const contenuCsv = await adminService.exportTransactionsCsv(filtres);
             const dateAujourdhui = new Date().toISOString().slice(0, 10);
             const nomFichier = `audit_virements_hosbank_${dateAujourdhui}.csv`;
 
-            // Etape 3 : Configurer les en-tetes HTTP pour forcer le telechargement
+            // Configurer les en-tetes HTTP pour forcer le telechargement
             res.setHeader("Content-Type", "text/csv; charset=utf-8");
             res.setHeader("Content-Disposition", `attachment; filename="${nomFichier}"`);
 
-            // Etape 4 : Envoyer le fichier au navigateur
+            // Envoyer le fichier au navigateur
             return res.send(contenuCsv);
         } catch (erreur) {
             console.error("Erreur exportTransactionsCsv :", erreur.message);
@@ -419,20 +419,20 @@ const adminController = {
         }
     },
 
-    // 9. Supervision de l'ensemble des cartes bancaires (Critères 1, 2 et 3)
+    // 9. Supervision de l'ensemble des cartes bancaires
     getCards: async (req, res) => {
         try {
-            // Etape 1 : Recuperer les filtres de type, statut et texte de recherche
+            // Recuperer les filtres de type, statut et texte de recherche
             const filtres = {
                 typeFilter: req.query.type || "ALL",
                 statusFilter: req.query.status || "ALL",
                 searchQuery: req.query.q || ""
             };
 
-            // Etape 2 : Recuperer la liste des cartes filtrees et le resume des KPI
+            // Recuperer la liste des cartes filtrees et le resume des KPI
             const resultat = await adminService.getCardsSupervision(filtres);
 
-            // Etape 3 : Afficher la page EJS avec les donnees
+            // Afficher la page EJS avec les donnees
             const adminConnecte = req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" };
 
             return res.render("admin/cards", {
@@ -449,26 +449,26 @@ const adminController = {
         }
     },
 
-    // 10. Registre central de toutes les demandes et réclamations (Critères 1, 2 et 3)
+    // 10. Registre central de toutes les demandes et réclamations
     getRequests: async (req, res) => {
         try {
-            // Etape 1 : Determiner l'onglet actif (demandes bancaires ou reclamations)
+            // Determiner l'onglet actif (demandes bancaires ou reclamations)
             let ongletActif = "demandes";
             if (req.query.tab === "reclamations") {
                 ongletActif = "reclamations";
             }
 
-            // Etape 2 : Recuperer les filtres choisis par l'administrateur
+            // Recuperer les filtres choisis par l'administrateur
             const filtres = {
                 category: req.query.category || "ALL",
                 status: req.query.status || "ALL",
                 searchQuery: req.query.q || ""
             };
 
-            // Etape 3 : Recuperer les dossiers et les statistiques depuis le service
+            // Recuperer les dossiers et les statistiques depuis le service
             const resultat = await adminService.getRequestsSupervision(filtres);
 
-            // Etape 4 : Afficher la page EJS avec les donnees
+            // Afficher la page EJS avec les donnees
             const adminConnecte = req.session.admin || { name: "Administrateur HosBank", role: "Super Admin" };
 
             return res.render("admin/requests", {

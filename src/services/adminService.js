@@ -10,16 +10,16 @@ const db = require("../config/db");
 class AdminDataService {
     constructor() {}
 
-    // Récupérer les statistiques globales et les données du tableau de bord (style développeur junior)
+    // Récupérer les statistiques globales et les données du tableau de bord
     async getDashboardStats() {
         try {
-            // Étape 1 : Récupérer les indicateurs clés de performance (KPIs)
+            // Récupérer les indicateurs clés de performance (KPIs)
             const metrics = await transactionRepo.getMetrics();
 
-            // Étape 2 : Récupérer les 5 dernières transactions bancaires
+            // Récupérer les 5 dernières transactions bancaires
             const recentTransactions = await transactionRepo.findAll(5);
 
-            // Étape 3 : Récupérer les derniers clients inscrits
+            // Récupérer les derniers clients inscrits
             const clients = await userRepo.findAll("", "CLIENT");
             const recentClients = [];
             const nbClients = Math.min(clients.length, 4);
@@ -37,7 +37,7 @@ class AdminDataService {
                 });
             }
 
-            // Étape 4 : Renvoyer l'ensemble des données prêtes pour l'affichage
+            // Renvoyer l'ensemble des données prêtes pour l'affichage
             return {
                 metrics: metrics,
                 recentTransactions: recentTransactions,
@@ -176,11 +176,11 @@ class AdminDataService {
      */
     async getAdvisorsSupervision(filterAdvisorId = null) {
         try {
-            // Étape 1 : Récupérer les données brutes
+            // Récupérer les données brutes
             const advisorsRaw = await userRepo.getAdvisorsWorkloadMetrics();
             const overdueRequests = await userRepo.getOverdueRequests(filterAdvisorId);
 
-            // Étape 2 : Préparer les conseillers avec une boucle for simple (Style Junior)
+            // Préparer les conseillers avec une boucle for simple
             const advisors = [];
             for (let i = 0; i < advisorsRaw.length; i++) {
                 const adv = advisorsRaw[i];
@@ -252,7 +252,7 @@ class AdminDataService {
                 });
             }
 
-            // Étape 3 : Calculer les totaux de synthèse avec une boucle for simple
+            // Calculer les totaux de synthèse avec une boucle for simple
             let totalAssignedClients = 0;
             let totalDossiersAll = 0;
             let totalTraitesAll = 0;
@@ -305,13 +305,13 @@ class AdminDataService {
         }
     }
 
-    // Enregistrer une relance pour un conseiller et l'inscrire au journal d'audit (style développeur junior)
+    // Enregistrer une relance pour un conseiller et l'inscrire au journal d'audit
     async sendAdvisorReminder(advisorId, { requestId, requestType, reference, message }, adminUser, ip) {
-        // Étape 1 : Formater le texte explicatif de l'action
+        // Formater le texte explicatif de l'action
         const motif = message || "Délai de traitement dépassé";
         const actionDesc = `Relance envoyée au conseiller ID #${advisorId} pour le dossier ${requestType} [${reference}] : ${motif}`;
 
-        // Étape 2 : Écrire l'action dans le journal d'audit
+        // Écrire l'action dans le journal d'audit
         await auditRepo.log({
             adminUser: adminUser,
             action: "RELANCE_CONSEILLER",
@@ -322,7 +322,7 @@ class AdminDataService {
             detail: actionDesc
         });
 
-        // Étape 3 : Renvoyer un message de succès
+        // Renvoyer un message de succès
         return { 
             success: true, 
             message: "Relance enregistrée avec succès pour le conseiller." 
@@ -330,13 +330,13 @@ class AdminDataService {
     }
 
     // =========================================================================
-    // SUPERVISION DES COMPTES BANCAIRES - STYLE DÉVELOPPEUR JUNIOR
+    // SUPERVISION DES COMPTES BANCAIRES
     // =========================================================================
     async getAccounts(typeFilter = "ALL") {
-        // Etape 1 : Recuperer la liste de tous les comptes bancaires
+        // Recuperer la liste de tous les comptes bancaires
         const tousLesComptes = await accountRepo.findAll();
 
-        // Etape 2 : Calculer les statistiques globales (compteurs et soldes)
+        // Calculer les statistiques globales (compteurs et soldes)
         let nombreCourants = 0;
         let nombreEpargne = 0;
         let nombreDecouverts = 0;
@@ -359,7 +359,7 @@ class AdminDataService {
             }
         }
 
-        // Etape 3 : Filtrer selon le choix (Courant, Epargne, Decouvert ou Tous)
+        // Filtrer selon le choix (Courant, Epargne, Decouvert ou Tous)
         let comptesFiltres = [];
         if (typeFilter === "COURANT") {
             for (let i = 0; i < tousLesComptes.length; i++) {
@@ -383,7 +383,7 @@ class AdminDataService {
             comptesFiltres = tousLesComptes;
         }
 
-        // Etape 4 : Renvoyer les donnees pour la vue EJS
+        // Renvoyer les donnees pour la vue EJS
         return {
             accounts: comptesFiltres,
             filter: typeFilter,
@@ -399,15 +399,15 @@ class AdminDataService {
 
     // =========================================================================
     // =========================================================================
-    // AUDIT ET EXPORT DES VIREMENTS - STYLE DÉVELOPPEUR JUNIOR
+    // AUDIT ET EXPORT DES VIREMENTS
     // =========================================================================
 
     // 1. Recuperer la liste des virements avec calcul des metriques
     async getTransactionsAudit(filters = {}) {
-        // Etape 1 : Recuperer les transactions filtrees
+        // Recuperer les transactions filtrees
         const listeTransactions = await transactionRepo.findWithFilters(filters);
 
-        // Etape 2 : Calculer le volume total et le nombre d'alertes
+        // Calculer le volume total et le nombre d'alertes
         let volumeTotal = 0;
         let nombreAlertes = 0;
 
@@ -421,7 +421,7 @@ class AdminDataService {
             }
         }
 
-        // Etape 3 : Renvoyer l'objet pret pour la vue
+        // Renvoyer l'objet pret pour la vue
         return {
             transactions: listeTransactions,
             filters: filters,
@@ -433,12 +433,12 @@ class AdminDataService {
         };
     }
 
-    // 2. Exporter les virements au format CSV (Critere 3)
+    // 2. Exporter les virements au format CSV
     async exportTransactionsCsv(filters = {}) {
-        // Etape 1 : Recuperer les virements selon les filtres
+        // Recuperer les virements selon les filtres
         const listeVirements = await transactionRepo.findWithFilters(filters);
 
-        // Etape 2 : Definir les colonnes du fichier CSV
+        // Definir les colonnes du fichier CSV
         const colonnes = [
             "Reference SEPA",
             "Date et Heure",
@@ -455,7 +455,7 @@ class AdminDataService {
 
         const lignesCsv = [colonnes.join(";")];
 
-        // Etape 3 : Transformer chaque virement en une ligne CSV securisee
+        // Transformer chaque virement en une ligne CSV securisee
         for (let i = 0; i < listeVirements.length; i++) {
             const v = listeVirements[i];
             const montantTexte = parseFloat(v.amount || 0).toFixed(2);
@@ -478,20 +478,20 @@ class AdminDataService {
             lignesCsv.push(ligne.join(";"));
         }
 
-        // Etape 4 : Ajouter l'en-tete UTF-8 BOM pour Excel et joindre les lignes
+        // Ajouter l'en-tete UTF-8 BOM pour Excel et joindre les lignes
         return "\uFEFF" + lignesCsv.join("\r\n");
     }
 
     // =========================================================================
-    // SUPERVISION DES CARTES BANCAIRES (CRITÈRES 1, 2 ET 3 DU CAHIER DES CHARGES)
+    // SUPERVISION DES CARTES BANCAIRES
     // =========================================================================
-    // SUPERVISION DES CARTES BANCAIRES - STYLE DÉVELOPPEUR JUNIOR
+    // SUPERVISION DES CARTES BANCAIRES
     // =========================================================================
     async getCardsSupervision(filters = {}) {
-        // Etape 1 : Recuperer les cartes correspondant aux filtres demandes
+        // Recuperer les cartes correspondant aux filtres demandes
         const cartesFiltrees = await cardRepo.findAll(filters);
 
-        // Etape 2 : Recuperer la totalite des cartes pour les compteurs globaux (KPIs)
+        // Recuperer la totalite des cartes pour les compteurs globaux (KPIs)
         const toutesLesCartes = await cardRepo.findAll({});
 
         let nombreActives = 0;
@@ -500,11 +500,11 @@ class AdminDataService {
         let nombrePhysiques = 0;
         let nombreVirtuelles = 0;
 
-        // Etape 3 : Compter les cartes par statut et par type
+        // Compter les cartes par statut et par type
         for (let i = 0; i < toutesLesCartes.length; i++) {
             const carte = toutesLesCartes[i];
 
-            // Critere 1 : Statuts (Active, Bloquee, En opposition)
+            // Statuts (Active, Bloquee, En opposition)
             if (carte.rawStatus === "ACTIVE") {
                 nombreActives++;
             } else if (carte.rawStatus === "BLOQUEE_TEMPORAIREMENT") {
@@ -513,7 +513,7 @@ class AdminDataService {
                 nombreOpposees++;
             }
 
-            // Critere 2 : Types (Physique, Virtuelle)
+            // Types (Physique, Virtuelle)
             if (carte.rawType === "PHYSIQUE") {
                 nombrePhysiques++;
             } else if (carte.rawType === "VIRTUELLE") {
@@ -521,7 +521,7 @@ class AdminDataService {
             }
         }
 
-        // Etape 4 : Renvoyer les donnees pretes pour le controleur et la vue
+        // Renvoyer les donnees pretes pour le controleur et la vue
         return {
             cards: cartesFiltrees,
             filters: filters,
@@ -538,19 +538,19 @@ class AdminDataService {
 
     // =========================================================================
     // =========================================================================
-    // REGISTRE CENTRAL DES DEMANDES ET RÉCLAMATIONS - STYLE DÉVELOPPEUR JUNIOR
+    // REGISTRE CENTRAL DES DEMANDES ET RÉCLAMATIONS
     // =========================================================================
     async getRequestsSupervision(filters = {}) {
-        // Etape 1 : Recuperer toutes les démarches bancaires selon les filtres
+        // Recuperer toutes les démarches bancaires selon les filtres
         const listeDemandes = await requestRepo.findAllDemandes(filters);
 
-        // Etape 2 : Recuperer toutes les réclamations selon les filtres
+        // Recuperer toutes les réclamations selon les filtres
         const listeReclamations = await requestRepo.findAllReclamations(filters);
 
-        // Etape 3 : Recuperer les métriques globales et les blocages (> 24h)
+        // Recuperer les métriques globales et les blocages (> 24h)
         const statistiquesGlobales = await requestRepo.getGlobalMetrics();
 
-        // Etape 4 : Renvoyer l'objet final complet
+        // Renvoyer l'objet final complet
         return {
             demandes: listeDemandes,
             reclamations: listeReclamations,

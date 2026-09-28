@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 // =========================================================================
-// REPOSITORY : VIREMENTS ET FLUX FINANCIERS (CODE DÉVELOPPEUR JUNIOR)
+// REPOSITORY : VIREMENTS ET FLUX FINANCIERS
 // =========================================================================
 const transactionRepository = {
 
@@ -9,7 +9,7 @@ const transactionRepository = {
         return this.findWithFilters({ limit });
     },
 
-    // Recherche avec filtres par montant, date et comptes impliqués (Critères 1 et 2)
+    // Recherche avec filtres par montant, date et comptes impliqués
     async findWithFilters(filters = {}) {
         const { searchQuery, minAmount, maxAmount, dateStart, dateEnd, limit = 200 } = filters;
 
@@ -78,7 +78,7 @@ const transactionRepository = {
 
         const result = await db.query(query, params);
 
-        // Transformation simple en JavaScript (Style Junior)
+        // Transformation simple en JavaScript
         const transactions = [];
         for (let i = 0; i < result.rows.length; i++) {
             const row = result.rows[i];
@@ -137,7 +137,7 @@ const transactionRepository = {
         return result.rows[0] || null;
     },
 
-    // Statistiques des KPI stratégiques pour le tableau de bord (style développeur junior)
+    // Statistiques des KPI stratégiques pour le tableau de bord
     async getMetrics() {
         // 1. Total des fonds déposés : Courant, Épargne et Total global
         const resCourant = await db.query(`

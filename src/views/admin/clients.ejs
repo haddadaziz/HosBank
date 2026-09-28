@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ==========================================================
-           HOSBANK 2026 - GESTION DES UTILISATEURS (100% CAHIER DES CHARGES)
+           HOSBANK 2026 - GESTION DES UTILISATEURS
            Créer, Modifier, Désactiver, Gérer les rôles, Affecter conseillers
            ========================================================== */
         .admin-users-grid {
@@ -236,7 +236,7 @@
                             </svg>
                         </div>
 
-                        <!-- Filtre par rôle (Cahier des charges : Client, Chargé Client, Administrateur) -->
+                        <!-- Filtre par rôle -->
                         <select name="role" style="padding: 7px 12px; font-size: 0.84rem; border: 1px solid var(--primary-border, #D8CEBB); border-radius: 8px; background: #FFFFFF; outline: none;" onchange="this.form.submit()">
                             <option value="">Tous les rôles</option>
                             <option value="CLIENT" <%=(typeof currentRole !== 'undefined' && currentRole === 'CLIENT') ? 'selected' : '' %>>Clients Particuliers</option>
@@ -315,7 +315,7 @@
                                         </div>
                                     </div>
 
-                                    <!-- Contrôles Rôles & Affectation Conseiller (Cahier des Charges) -->
+                                    <!-- Contrôles Rôles & Affectation Conseiller -->
                                     <div class="user-controls-panel">
                                         <!-- Gestion du Rôle (Client, Chargé Client, Administrateur) -->
                                         <div class="control-item-row">
@@ -351,7 +351,7 @@
                                     </div>
                                 </div>
 
-                                <!-- Actions : Modifier & Activer/Désactiver (Cahier des Charges) -->
+                                <!-- Actions : Modifier & Activer/Désactiver -->
                                 <div class="user-card-actions">
                                     <button 
                                         type="button" 
@@ -407,7 +407,7 @@
     </div>
 </div>
 
-<!-- Modal 1 : Création Utilisateur (Cahier des Charges) -->
+<!-- Modal 1 : Création Utilisateur -->
 <div class="modal-overlay" id="modalAddClient">
     <div class="modal-container">
         <div class="modal-header">
@@ -471,7 +471,7 @@
     </div>
 </div>
 
-<!-- Modal 2 : Modification Utilisateur (Cahier des Charges) -->
+<!-- Modal 2 : Modification Utilisateur -->
 <div class="modal-overlay" id="modalEditUser">
     <div class="modal-container">
         <div class="modal-header">
@@ -531,7 +531,7 @@
 
 <script src="/js/admin.js"></script>
 <script>
-    // 1. Gestion de la modale de modification d'utilisateur (style développeur junior)
+    // 1. Gestion de la modale de modification d'utilisateur
     document.addEventListener("DOMContentLoaded", function () {
         var editButtons = document.querySelectorAll(".btn-edit-user");
         var editModal = document.getElementById("modalEditUser");

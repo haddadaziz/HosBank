@@ -91,7 +91,7 @@
         <!-- Grille 2 Colonnes -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
             
-            <!-- Colonne Gauche : RIB Officiel Imprimable (HOS-34) (7 colonnes) -->
+            <!-- Colonne Gauche : RIB Officiel Imprimable (7 colonnes) -->
             <div class="lg:col-span-7">
                 <div class="bg-white border border-gray-100 rounded-3xl p-6 lg:p-8 shadow-sm">
                     
@@ -145,7 +145,7 @@
                 </div>
             </div>
 
-            <!-- Colonne Droite : Suivi des démarches en direct (HOS-37) (5 colonnes) -->
+            <!-- Colonne Droite : Suivi des démarches en direct (5 colonnes) -->
             <div class="lg:col-span-5 space-y-6">
                 
                 <!-- Carte Suivi des Demandes et Réclamations -->
@@ -163,7 +163,7 @@
                         </div>
                     </div>
 
-                    <!-- Liste 1 : Mes Demandes Bancaires (HOS-37) -->
+                    <!-- Liste 1 : Mes Demandes Bancaires -->
                     <div id="trackDemandesList" class="space-y-3">
                         <% if (demandes && demandes.length > 0) { %>
                             <% demandes.forEach(d => { 
@@ -221,7 +221,7 @@
                         <% } %>
                     </div>
 
-                    <!-- Liste 2 : Mes Réclamations (HOS-37) -->
+                    <!-- Liste 2 : Mes Réclamations -->
                     <div id="trackReclamationsList" class="space-y-3 hidden">
                         <% if (reclamations && reclamations.length > 0) { %>
                             <% reclamations.forEach(r => { 
@@ -299,7 +299,7 @@
     </main>
 </div>
 
-<!-- Modal Demande d'Ouverture de Compte Épargne (HOS-35) -->
+<!-- Modal Demande d'Ouverture de Compte Épargne -->
 <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] my-auto">
         <div class="flex justify-between items-center mb-4">
@@ -350,7 +350,7 @@
     </div>
 </div>
 
-<!-- Modal Réclamation (HOS-36) -->
+<!-- Modal Réclamation -->
 <div id="reclamationModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] my-auto">
         <div class="flex justify-between items-center mb-4">

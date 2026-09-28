@@ -118,7 +118,7 @@
                             <div>
                                 <h2 class="text-lg font-bold text-hos-dark mb-4">Mes Comptes Bancaires</h2>
 
-                                <!-- Liste de tous les comptes (Courant & Épargne) HOS-18 -->
+                                <!-- Liste de tous les comptes (Courant & Épargne) -->
                                 <% accounts.forEach(account => { %>
                                     <div
                                         class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all mb-4">
@@ -171,7 +171,7 @@
                                 <% }) %>
 
                                 <% if (!hasSavingsAccount) { %>
-                                    <!-- CTA Demande d'ouverture de Livret Épargne (HOS-35) -->
+                                    <!-- CTA Demande d'ouverture de Livret Épargne -->
                                     <div
                                         class="bg-gradient-to-br from-[#746B92]/10 via-[#F6EFE0]/40 to-white border-2 border-dashed border-hos-primary/30 hover:border-hos-primary rounded-2xl p-6 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-5">
                                         <div class="max-w-md">
@@ -427,7 +427,7 @@
             </main>
     </div>
 
-    <!-- Modale Interactive de Demande de Livret Épargne (HOS-35) -->
+    <!-- Modale Interactive de Demande de Livret Épargne -->
     <div id="savingsModal" class="fixed inset-0 bg-[#171320]/60 backdrop-blur-sm z-50 hidden overflow-y-auto flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl w-full max-w-md p-6 lg:p-8 shadow-2xl animate-[fadeIn_0.2s_ease-out] my-auto">
             <div class="flex justify-between items-center mb-4">
@@ -515,7 +515,7 @@
 
     <script>
         // =========================================================================
-        // SCRIPTS D'INTERACTIVITÉ DU TABLEAU DE BORD CLIENT (STYLE DÉVELOPPEUR JUNIOR)
+        // SCRIPTS D'INTERACTIVITÉ DU TABLEAU DE BORD CLIENT
         // =========================================================================
 
         // 1. Copier l'IBAN dans le presse-papier en 1 clic

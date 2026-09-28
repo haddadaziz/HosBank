@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 const beneficiaryRepository = {
-    // 1. Récupérer tous les bénéficiaires d'un client (style développeur junior)
+    // 1. Récupérer tous les bénéficiaires d'un client
     async findByUserId(userId) {
         // Requête SQL simple avec formatage de la date en JJ/MM/AAAA
         const query = `
@@ -55,7 +55,7 @@ const beneficiaryRepository = {
         return result.rows[0];
     },
 
-    // 4. Supprimer un bénéficiaire du client (style développeur junior)
+    // 4. Supprimer un bénéficiaire du client
     async delete(id, userId) {
         // Suppression sécurisée : on filtre par ID ET par utilisateur_id
         const query = `
